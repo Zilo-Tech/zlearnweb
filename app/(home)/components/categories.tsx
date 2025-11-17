@@ -39,7 +39,7 @@ const TopCategories: React.FC = () => {
             courses: '380+ courses',
         },
         {
-            icon: 'ion:fitness',
+            icon: 'mage:health-square',
             title: 'Health & Fitness',
             courses: '540+ courses',
         }
