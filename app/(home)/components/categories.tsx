@@ -9,32 +9,32 @@ const TopCategories: React.FC = () => {
             courses: '1,200+ courses',
         },
         {
-            icon: 'ion:briefcase',
+            icon: 'hugeicons:briefcase-08',
             title: 'Business',
             courses: '850+ courses',
         },
         {
-            icon: 'ion:color-palette',
+            icon: 'streamline-freehand:design-tool-pen-brush-cup',
             title: 'Design',
             courses: '650+ courses',
         },
         {
-            icon: 'ion:trending-up',
+            icon: 'mdi:marketplace-outline',
             title: 'Marketing',
             courses: '720+ courses',
         },
         {
-            icon: 'ion:server',
+            icon: 'solar:server-minimalistic-line-duotone',
             title: 'IT & Software',
             courses: '950+ courses',
         },
         {
-            icon: 'ion:camera',
+            icon: 'solar:camera-square-broken',
             title: 'Photography',
             courses: '420+ courses',
         },
         {
-            icon: 'ion:musical-notes',
+            icon: 'clarity:music-note-line',
             title: 'Music',
             courses: '380+ courses',
         },
@@ -70,11 +70,11 @@ const TopCategories: React.FC = () => {
                         {categories.map((category, index) => (
                             <div
                                 key={index}
-                                className="md:bg-white md:rounded p-6 hover:shadow-lg transition cursor-pointer group border-b-2 md:border-2"
+                                className="md:bg-white md:rounded p-6 cursor-pointer group border-b-2 md:border-2"
                             >
                                 <div className="flex items-start gap-4">
-                                    <div className={` rounded-lg flex items-center justify-center text-2xl  group-hover:scale-110 transition`}>
-                                        <Icon icon={category.icon} className='size-8 md:size-10' />
+                                    <div className={` rounded-lg flex items-center justify-center text-2xl   transition`}>
+                                        <Icon icon={category.icon} className='size-10 md:size-12' />
                                     </div>
                                     <div>
                                         <h3 className="text-xl md:text-4xl font-semibold text-gray-900 ">
