@@ -15,7 +15,7 @@ export default function ModalSearch() {
         <AnimatePresence>
           {isVisible &&
           <motion.div
-            className='fixed inset-0 bg-black/10 flex  justify-center'>
+            className='fixed inset-0 bg-black/10 flex  justify-center z-100'>
             <motion.div
               initial={{ height: 100, width: 100, opacity: 0}}
               animate={{ height: '60%', width: '100%', opacity:1 }}
