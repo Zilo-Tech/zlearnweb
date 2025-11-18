@@ -33,16 +33,16 @@ const TopCategories: React.FC = () => {
             title: 'Photography',
             courses: '420+ courses',
         },
-        {
-            icon: 'clarity:music-note-line',
-            title: 'Music',
-            courses: '380+ courses',
-        },
-        {
-            icon: 'mage:health-square',
-            title: 'Health & Fitness',
-            courses: '540+ courses',
-        }
+        // {
+        //     icon: 'clarity:music-note-line',
+        //     title: 'Music',
+        //     courses: '380+ courses',
+        // },
+        // {
+        //     icon: 'mage:health-square',
+        //     title: 'Health & Fitness',
+        //     courses: '540+ courses',
+        // }
     ];
 
     return (
