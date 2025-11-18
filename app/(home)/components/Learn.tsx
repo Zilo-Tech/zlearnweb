@@ -41,21 +41,21 @@ export default function Learn() {
     return (
         <div className='container max-w-7xl mx-auto px-6 md:px-4 py-2 md:py-20'>
             <div>
-                <h1 className='capitalize text-4xl md:text-5xl xl:text-7xl text-start md:text-center mb-5 md:mb-16'>
+                <h1 className='capitalize text-4xl md:text-5xl xl:text-7xl font-extrabold text-start md:text-center mb-5 md:mb-16'>
                     Learn new skills when and where you like.
                 </h1>
             </div>
 
             <div className='relative mt-12'>
-                <div className='flex flex-col xl:flex-row items-center gap-8 max-w-5xl mx-auto'>
+                <div className='flex flex-col md:flex-row items-center justify-center gap-8 max-w-6xl mx-auto'>
                     {/* Description - Left Side */}
-                    <div className='flex-1 space-y-2 md:space-y-5 flex flex-col order-2 md:order-1'>
-                        <h2 className='text-2xl md:text-2xl xl:text-4xl font-bold text-gray-900  max-w-md tracking-tight'>
+                    <div className='flex-1 space-y-2 md:space-y-5 flex flex-col order-2 md:order-1 w-full'>
+                        <h1 className='text-2xl md:text-2xl xl:text-4xl font-extrabold text-gray-900  max-w-md tracking-tight'>
                             {slides[currentSlide].title}
-                        </h2>
-                        <p className='text-base md:text-lg text-gray-900 max-w-md'>
+                        </h1>
+                        <h1 className='text-base md:text-lg text-gray-900 max-w-md'>
                             {slides[currentSlide].description}
-                        </p>
+                        </h1>
 
                       
 
@@ -63,14 +63,14 @@ export default function Learn() {
                         <div className='flex gap-4 pt-4 w-full'>
                             <button
                                 onClick={prevSlide}
-                                className='transition-colors'
+                                className='transition-colors p-3 bg-gray-300 rounded-full'
                                 aria-label='Previous slide'
                             >
                                 <Icon icon="material-symbols-light:arrow-back" className="size-8" />
                             </button>
                             <button
                                 onClick={nextSlide}
-                                className='transition-colors'
+                                className='transition-colors p-3 bg-gray-300 rounded-full'
                                 aria-label='Next slide'
                             >
                                 <Icon icon="material-symbols-light:arrow-forward" className="size-8" />
@@ -78,7 +78,7 @@ export default function Learn() {
                         </div>
 
                         {/* Slide Indicators */}
-                        <div className='flex gap-2'>
+                        <div className='flex gap-2 p-3'>
                             {slides.map((_, index) => (
                                 <button
                                     key={index}
@@ -95,7 +95,7 @@ export default function Learn() {
 
                     {/* Images - Right Side - Stacked */}
                     <div className='flex-1   order-1 md:order-2  w-full'>
-                        <div className='relative w-[270px] xl:w-[500px] h-[400px] xl:h-[600px] '>
+                        <div className='relative w-[270px] lg:w-[500px] h-[400px] lg:h-[600px] '>
                             {slides.map((slide, index) => {
                                 const offset = index - currentSlide
                                 const isVisible = Math.abs(offset) <= 2
@@ -113,7 +113,7 @@ export default function Learn() {
                                         <img
                                             src={slide.image}
                                             alt={slide.title}
-                                            className='w-[270px] xl:w-[500px] h-[400px] xl:h-[600px] object-cover  shadow-xl'
+                                            className='w-[270px] lg:w-[500px] h-[400px] lg:h-[600px] object-cover  shadow-xl'
                                         />
                                     </div>
                                 ) : null
