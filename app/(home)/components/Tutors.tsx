@@ -36,9 +36,9 @@ export default function HomeTutorsSection() {
 
                 {/* Optional View All Button */}
                 <div className="text-center mt-8">
-                    <div className=" font-medium">
+                    <div className=" font-medium text-base md:text-lg">
                         Want to help people learn, grow and achieve more in life? 
-                        <Link href="/#" className="text-primary-900 font-bold underline ml-1">
+                        <Link href="/#" className="text-primary-900 font-bold underline ml-1 text-xl md:text-2xl xl:text-4xl">
                             Become a Tutor
                         </Link>
                     </div>

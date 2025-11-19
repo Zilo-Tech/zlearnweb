@@ -4,6 +4,8 @@ import TopCategories from "./components/categories";
 import Learn from "./components/Learn";
 import HomeTutorsSection from "./components/Tutors";
 import PartnershipMarquee from "./components/Partnership";
+import TrendingCourse from "./components/TrendingCourses";
+import CallToACtion from "./components/CallToAction";
 
 export default function Home() {
   return (
@@ -11,8 +13,10 @@ export default function Home() {
       <Hero/>
       <TopCategories/>
       <Learn/>
+      <TrendingCourse/>
       <HomeTutorsSection/>
       <PartnershipMarquee/>
+      <CallToACtion/>
     </div>
   );
 }
