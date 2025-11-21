@@ -13,6 +13,7 @@ BODY
   --background: #ffffff;
   --foreground: #171717;
 }
+
 @theme {
   --color-default: #446d6d;
   --color-primary: #f0f5f5;
@@ -70,12 +71,12 @@ BODY
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* @media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #0a0a0a !important;
     --foreground: #ededed;
   }
-} */
+}
 
 body {
   font-family: 'Poppins', Arial, Helvetica, sans-serif !important;

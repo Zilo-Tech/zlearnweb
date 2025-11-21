@@ -41,7 +41,7 @@ export default function LanguageActions() {
         <DropdownMenu>
           <DropdownMenuTrigger className="outline-none">
             <div className="flex gap-2 items-center hover:opacity-80 transition-opacity text-white md:text-gray-800">
-              <Icon icon={selectedLanguage.flag} className='hidden' width="24" height="24" />
+              <Icon icon={selectedLanguage.flag} className='hidden md:block' width="24" height="24" />
               <span className="font-semibold">{selectedLanguage.name}</span>
               <Icon icon="mage:chevron-down" width="20" height="20" />
             </div>

@@ -46,7 +46,7 @@ const TopCategories: React.FC = () => {
     ];
 
     return (
-        <div className=" py-16 md:py-20">
+        <div className=" py-16 md:py-20 dark:bg-black">
             <div className="container max-w-7xl mx-auto px-6">
                 <div className="mx-auto">
                     {/* Header */}
