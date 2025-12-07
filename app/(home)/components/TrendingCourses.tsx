@@ -103,9 +103,13 @@ export default function TrendingCourse() {
     <div className='container max-w-7xl mx-auto px-4 pb-20'>
       <div className='mt-32'>
         <div className='text-center md:text-start mb-14'>
-          <h2 className='capitalize text-4xl md:text-5xl xl:text-7xl font-bold text-gray-900 mb-4'>
-            Trending Courses. Most popular courses this month
+          <p className='text-sm text-primary-600 uppercase tracking-widest mb-3 font-bold'>🔥HOT THIS MONTH</p>
+          <h2 className='capitalize text-4xl md:text-5xl xl:text-7xl font-black text-gray-900 mb-4 tracking-tight'>
+            THE COURSES THAT ARE GETTING PEOPLE HIRED RIGHT NOW
           </h2>
+          <p className='text-lg text-gray-600 font-medium max-w-2xl mt-4'>
+            Join 12,000+ students who enrolled this month. These are the skills employers are hiring for TODAY.
+          </p>
         </div>
 
         <div className='relative'>
@@ -136,15 +140,18 @@ export default function TrendingCourse() {
                           ★ <span className="text-gray-900">{course.rating}</span>
                         </span>
                       </div>
-                      <h1 className='text-lg md:text-xl font-bold text-gray-900 border-t-2 py-4 mt-4 border-gray-900'>
+                      <h1 className='text-lg md:text-xl font-black text-gray-900 border-t-2 py-4 mt-4 border-gray-900'>
                         {course.title}
                       </h1>
-                      <p className='text-gray-600 mb-4 text-sm'>
+                      <p className='text-gray-700 mb-4 text-sm font-medium'>
                         {course.description}
                       </p>
                       <div className='flex items-center justify-between'>
-                        <span className='text-xl md:text-2xl font-bold text-gray-900'>{course.price}</span>
-                        <span className='text-xs md:text-sm text-gray-500'>{course.students}</span>
+                        <div>
+                          <span className='text-xl md:text-2xl font-black text-gray-900'>{course.price}</span>
+                          <span className='text-xs md:text-sm text-gray-500 line-through ml-2'>$199.99</span>
+                        </div>
+                        <span className='text-xs md:text-sm text-primary-600 font-bold'>{course.students} enrolled</span>
                       </div>
                     </div>
                   </div>
@@ -188,9 +195,10 @@ export default function TrendingCourse() {
         </div>
 
         <div className='text-center mt-12'>
-          <button className='px-8 py-4 text-sm md:text-base bg-primary-500 text-white font-bold rounded border-2 border-primary-900 hover:bg-primary-800 transition-colors duration-300'>
-            View All Courses
+          <button className='px-10 py-5 text-base md:text-lg bg-primary-500 text-white font-black rounded-lg border-2 border-primary-900 hover:bg-primary-800 transition-all duration-300 transform hover:scale-105 shadow-xl'>
+            SEE ALL COURSES & START LEARNING 
           </button>
+          <p className='text-sm text-gray-600 mt-4 font-medium'>Pro Tip: Enroll in 3+ courses and save 40%</p>
         </div>
       </div>
     </div>

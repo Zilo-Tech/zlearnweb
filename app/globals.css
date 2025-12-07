@@ -80,13 +80,33 @@ BODY
 
 body {
   font-family: 'Poppins', Arial, Helvetica, sans-serif !important;
-  font-weight: 300;
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
 .dm-mono-light, h1, h2 {
   font-family: "DM Mono", monospace;
-  font-weight: 800;
+  font-weight: 900;
   font-style: normal;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+h1 {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+h2 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+h3 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 :root {

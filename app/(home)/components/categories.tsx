@@ -52,11 +52,12 @@ const TopCategories: React.FC = () => {
                     {/* Header */}
                     <div className="flex flex-col md:flex-row justify-between md:items-center mb-8">
                         <div className="">
-                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                                Top Categories
+                            <p className='text-sm text-primary-600 uppercase tracking-widest mb-2 font-bold'>START HERE</p>
+                            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 tracking-tight">
+                                CHOOSE YOUR PATH TO SUCCESS
                             </h2>
-                            <p className="text-lg text-gray-600">
-                                Explore our most popular course categories and start learning today
+                            <p className="text-lg text-gray-700 font-medium max-w-2xl">
+                                Over 5,000+ courses across 6 high-demand categories. Pick the skills that will boost your income fastest.
                             </p>
                         </div>
                         <div className=" mt-10 hidden md:block">
@@ -77,10 +78,11 @@ const TopCategories: React.FC = () => {
                                         <Icon icon={category.icon} className='size-10 md:size-12' />
                                     </div>
                                     <div>
-                                        <h3 className="text-xl md:text-4xl font-semibold text-gray-900 ">
+                                        <h3 className="text-xl md:text-4xl font-black text-gray-900 tracking-tight">
                                             {category.title}
                                         </h3>
-                                        <p className="text-sm text-gray-600 ml-2">{category.courses}</p>
+                                        <p className="text-sm text-gray-700 ml-2 font-semibold">{category.courses} available</p>
+                                        <p className="text-xs text-primary-600 ml-2 mt-1 font-bold">→ Start Learning</p>
                                     </div>
                                 </div>
                             </div>
