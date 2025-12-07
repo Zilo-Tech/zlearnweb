@@ -44,7 +44,7 @@ export default function Learn() {
                 <h1 className='capitalize text-4xl md:text-5xl xl:text-7xl font-black text-start md:text-center mb-5 md:mb-16 tracking-tight'>
                     STOP WASTING TIME — START EARNING MORE TODAY
                 </h1>
-                <p className='text-center text-lg md:text-xl text-gray-600 font-medium max-w-3xl mx-auto mb-8'>
+                <p className='text-center text-lg md:text-xl text-gray-600  max-w-3xl mx-auto mb-8'>
                     Join 50,000+ professionals who've already transformed their careers. Your future self will thank you.
                 </p>
             </div>
@@ -56,7 +56,7 @@ export default function Learn() {
                         <h1 className='text-2xl md:text-3xl xl:text-5xl font-black text-gray-900  max-w-md tracking-tight leading-tight'>
                             {slides[currentSlide].title}
                         </h1>
-                        <p className='text-base md:text-lg text-gray-700 max-w-md font-medium leading-relaxed'>
+                        <p className='text-base md:text-lg text-gray-700 max-w-md  leading-relaxed'>
                             {slides[currentSlide].description}
                         </p>
 

@@ -14,28 +14,28 @@ const Footer = () => {
             <div className="space-y-4">
               <h3 className="text-xs font-semibold text-gray-900">Communication</h3>
               <ul className="space-y-3">
-                <li><Link href="/live-chat" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center text-[14px]">
+                <li><Link href="/live-chat" className="text-gray-600 hover:text-primary-800 transition-colors flex items-center text-[14px]">
                   Live Chat Support
                 </Link></li>
-                <li><Link href="/discussion-forums" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center text-[14px]">
+                <li><Link href="/discussion-forums" className="text-gray-600 hover:text-primary-800 transition-colors flex items-center text-[14px]">
                   Discussion Forums
                 </Link></li>
-                <li><Link href="/video-calls" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center text-[14px]">
+                <li><Link href="/video-calls" className="text-gray-600 hover:text-primary-800 transition-colors flex items-center text-[14px]">
                   Video Calls with Tutors
                 </Link></li>
-                <li><Link href="/messaging" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center text-[14px]">
+                <li><Link href="/messaging" className="text-gray-600 hover:text-primary-800 transition-colors flex items-center text-[14px]">
                   Direct Messaging
                 </Link></li>
-                <li><Link href="/group-chats" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center text-[14px]">
+                <li><Link href="/group-chats" className="text-gray-600 hover:text-primary-800 transition-colors flex items-center text-[14px]">
                   Group Study Chats
                 </Link></li>
-                <li><Link href="/announcements" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center text-[14px]">
+                <li><Link href="/announcements" className="text-gray-600 hover:text-primary-800 transition-colors flex items-center text-[14px]">
                   Course Announcements
                 </Link></li>
-                <li><Link href="/feedback-system" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center text-[14px]">
+                <li><Link href="/feedback-system" className="text-gray-600 hover:text-primary-800 transition-colors flex items-center text-[14px]">
                   Feedback System
                 </Link></li>
-                <li><Link href="/webinars" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center text-[14px]">
+                <li><Link href="/webinars" className="text-gray-600 hover:text-primary-800 transition-colors flex items-center text-[14px]">
                   Live Webinars
                 </Link></li>
               </ul>
@@ -45,14 +45,14 @@ const Footer = () => {
             <div className="space-y-4">
               <h3 className="text-xs font-semibold text-gray-900">Online Classes</h3>
               <ul className="space-y-3">
-                <li><Link href="/live-classes" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Live Online Classes</Link></li>
-                <li><Link href="/recorded-sessions" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Recorded Sessions</Link></li>
-                <li><Link href="/interactive-courses" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Interactive Courses</Link></li>
-                <li><Link href="/self-paced" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Self-Paced Learning</Link></li>
-                <li><Link href="/virtual-labs" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Virtual Labs</Link></li>
-                <li><Link href="/assignment-portal" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Assignment Portal</Link></li>
-                <li><Link href="/class-resources" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Class Resources</Link></li>
-                <li><Link href="/progress-tracking" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Progress Tracking</Link></li>
+                <li><Link href="/live-classes" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Live Online Classes</Link></li>
+                <li><Link href="/recorded-sessions" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Recorded Sessions</Link></li>
+                <li><Link href="/interactive-courses" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Interactive Courses</Link></li>
+                <li><Link href="/self-paced" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Self-Paced Learning</Link></li>
+                <li><Link href="/virtual-labs" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Virtual Labs</Link></li>
+                <li><Link href="/assignment-portal" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Assignment Portal</Link></li>
+                <li><Link href="/class-resources" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Class Resources</Link></li>
+                <li><Link href="/progress-tracking" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Progress Tracking</Link></li>
               </ul>
             </div>
 
@@ -60,14 +60,14 @@ const Footer = () => {
             <div className="space-y-4">
               <h3 className="text-xs font-semibold text-gray-900">Tutors Nearby</h3>
               <ul className="space-y-3">
-                <li><Link href="/local-tutors" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Find Local Tutors</Link></li>
-                <li><Link href="/in-person-sessions" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">In-Person Sessions</Link></li>
-                <li><Link href="/tutor-reviews" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Tutor Reviews & Ratings</Link></li>
-                <li><Link href="/subject-experts" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Subject Experts</Link></li>
-                <li><Link href="/tutor-availability" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Availability Calendar</Link></li>
-                <li><Link href="/booking-system" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Easy Booking System</Link></li>
-                <li><Link href="/tutor-profiles" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Detailed Tutor Profiles</Link></li>
-                <li><Link href="/location-based" className="text-gray-600 hover:text-blue-600 transition-colors text-sm">Location-Based Search</Link></li>
+                <li><Link href="/local-tutors" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Find Local Tutors</Link></li>
+                <li><Link href="/in-person-sessions" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">In-Person Sessions</Link></li>
+                <li><Link href="/tutor-reviews" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Tutor Reviews & Ratings</Link></li>
+                <li><Link href="/subject-experts" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Subject Experts</Link></li>
+                <li><Link href="/tutor-availability" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Availability Calendar</Link></li>
+                <li><Link href="/booking-system" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Easy Booking System</Link></li>
+                <li><Link href="/tutor-profiles" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Detailed Tutor Profiles</Link></li>
+                <li><Link href="/location-based" className="text-gray-600 hover:text-primary-800 transition-colors text-sm">Location-Based Search</Link></li>
               </ul>
             </div>
 
@@ -79,10 +79,10 @@ const Footer = () => {
               <div className="mb-6">
                 <h4 className="font-medium text-gray-800 mb-3">By Skills</h4>
                 <ul className="space-y-2">
-                  <li><Link href="/tech-certifications" className="text-gray-600 hover:text-blue-600 transition-colors text-xs">Technology Certifications</Link></li>
-                  <li><Link href="/business-certs" className="text-gray-600 hover:text-blue-600 transition-colors text-xs">Business & Management</Link></li>
-                  <li><Link href="/creative-skills" className="text-gray-600 hover:text-blue-600 transition-colors text-xs">Creative Skills</Link></li>
-                  <li><Link href="/language-certs" className="text-gray-600 hover:text-blue-600 transition-colors text-xs">Language Certifications</Link></li>
+                  <li><Link href="/tech-certifications" className="text-gray-600 hover:text-primary-800 transition-colors text-xs">Technology Certifications</Link></li>
+                  <li><Link href="/business-certs" className="text-gray-600 hover:text-primary-800 transition-colors text-xs">Business & Management</Link></li>
+                  <li><Link href="/creative-skills" className="text-gray-600 hover:text-primary-800 transition-colors text-xs">Creative Skills</Link></li>
+                  <li><Link href="/language-certs" className="text-gray-600 hover:text-primary-800 transition-colors text-xs">Language Certifications</Link></li>
                 </ul>
               </div>
 
@@ -90,11 +90,11 @@ const Footer = () => {
               <div>
                 <h4 className="font-medium text-gray-800 mb-3">Professional Certifications</h4>
                 <ul className="space-y-2">
-                  <li><Link href="/industry-recognized" className="text-gray-600 hover:text-blue-600 transition-colors text-xs">Industry Recognized</Link></li>
-                  <li><Link href="/government-approved" className="text-gray-600 hover:text-blue-600 transition-colors text-xs">Government Approved</Link></li>
-                  <li><Link href="/international-certs" className="text-gray-600 hover:text-blue-600 transition-colors text-xs">International Certifications</Link></li>
-                  <li><Link href="/digital-badges" className="text-gray-600 hover:text-blue-600 transition-colors text-xs">Digital Badges</Link></li>
-                  <li><Link href="/certificate-verification" className="text-gray-600 hover:text-blue-600 transition-colors text-xs">Certificate Verification</Link></li>
+                  <li><Link href="/industry-recognized" className="text-gray-600 hover:text-primary-800 transition-colors text-xs">Industry Recognized</Link></li>
+                  <li><Link href="/government-approved" className="text-gray-600 hover:text-primary-800 transition-colors text-xs">Government Approved</Link></li>
+                  <li><Link href="/international-certs" className="text-gray-600 hover:text-primary-800 transition-colors text-xs">International Certifications</Link></li>
+                  <li><Link href="/digital-badges" className="text-gray-600 hover:text-primary-800 transition-colors text-xs">Digital Badges</Link></li>
+                  <li><Link href="/certificate-verification" className="text-gray-600 hover:text-primary-800 transition-colors text-xs">Certificate Verification</Link></li>
                 </ul>
               </div>
             </div>

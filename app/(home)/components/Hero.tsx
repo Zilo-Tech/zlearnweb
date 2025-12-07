@@ -20,12 +20,12 @@ const HeroSection: React.FC = () => {
             <h1 className="text-[28px] md:text-[52px] font-black text-primary-100 mb-3 md:mb-4 leading-tight max-w-md tracking-tight">
               TRANSFORM YOUR CAREER TODAY
             </h1>
-            <p className="text-sm md:text-xl text-white mb-4 md:mb-6 pr-6 hidden md:block max-w-xl font-medium leading-relaxed">
+            <p className="text-sm md:text-xl text-white mb-4 md:mb-6 pr-6 hidden md:block max-w-xl  leading-relaxed">
               Join 50,000+ professionals earning more with expert-led courses and recognized certifications.
             </p>
             <div className="flex gap-4 max-w-sm mb-2">
               <button className="px-8 w-full py-3 md:py-4 bg-primary-500 text-white md:text-lg font-bold rounded-lg hover:bg-[#253F3F] transition">
-                START YOUR SUCCESS STORY NOW
+                START YOUR SUCCESS NOW
               </button>
             </div>
             <p className="text-xs md:text-sm text-primary-200 font-bold">

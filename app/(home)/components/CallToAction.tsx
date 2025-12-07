@@ -45,7 +45,7 @@ export default function CallToACtion() {
                             <button className='px-10 py-5 bg-primary-500 text-white border-2 text-lg md:text-xl border-primary-900 font-black rounded-lg hover:bg-primary-800 transition-all duration-300 inline-flex items-center gap-2  shadow-xl'>
                                 CLAIM YOUR SPOT NOW 
                             </button>
-                            <p className='text-sm text-gray-600 mt-3 font-medium'>30-Day Money-Back Guarantee • No Questions Asked</p>
+                            <p className='text-sm text-gray-600 mt-3 '>30-Day Money-Back Guarantee • No Questions Asked</p>
                         </div>
                     </div>
 

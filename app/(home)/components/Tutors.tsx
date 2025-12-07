@@ -17,7 +17,7 @@ export default function HomeTutorsSection() {
                         <h2 className="text-3xl md:text-4xl xl:text-6xl font-black text-gray-900 mb-2 tracking-tight">
                             LEARN FROM THE BEST IN THE BUSINESS
                         </h2>
-                        <p className="text-gray-700 text-xl font-medium max-w-2xl">
+                        <p className="text-gray-700 text-xl  max-w-2xl">
                             Get mentored by industry leaders who've built real companies and earned real results. These aren't just teachers — they're proven professionals.
                         </p>
                     </div>
@@ -38,7 +38,7 @@ export default function HomeTutorsSection() {
 
                 {/* Optional View All Button */}
                 <div className="text-center mt-8">
-                    <div className=" font-medium text-base md:text-lg text-gray-700">
+                    <div className="  text-base md:text-lg text-gray-700">
                         Ready to share your expertise and earn while teaching? 
                         <Link href="/#" className="text-primary-600 font-black underline ml-1 text-xl md:text-2xl xl:text-4xl hover:text-primary-800 transition">
                             Become a Tutor & Start Earning 

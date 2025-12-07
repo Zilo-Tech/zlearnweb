@@ -56,7 +56,7 @@ const TopCategories: React.FC = () => {
                             <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 tracking-tight">
                                 CHOOSE YOUR PATH TO SUCCESS
                             </h2>
-                            <p className="text-lg text-gray-700 font-medium max-w-2xl">
+                            <p className="text-lg text-gray-700  max-w-2xl">
                                 Over 5,000+ courses across 6 high-demand categories. Pick the skills that will boost your income fastest.
                             </p>
                         </div>

@@ -107,7 +107,7 @@ export default function TrendingCourse() {
           <h2 className='capitalize text-4xl md:text-5xl xl:text-7xl font-black text-gray-900 mb-4 tracking-tight'>
             THE COURSES THAT ARE GETTING PEOPLE HIRED RIGHT NOW
           </h2>
-          <p className='text-lg text-gray-600 font-medium max-w-2xl mt-4'>
+          <p className='text-lg text-gray-600  max-w-2xl mt-4'>
             Join 12,000+ students who enrolled this month. These are the skills employers are hiring for TODAY.
           </p>
         </div>
@@ -143,7 +143,7 @@ export default function TrendingCourse() {
                       <h1 className='text-lg md:text-xl font-black text-gray-900 border-t-2 py-4 mt-4 border-gray-900'>
                         {course.title}
                       </h1>
-                      <p className='text-gray-700 mb-4 text-sm font-medium'>
+                      <p className='text-gray-700 mb-4 text-sm '>
                         {course.description}
                       </p>
                       <div className='flex items-center justify-between'>
@@ -198,7 +198,7 @@ export default function TrendingCourse() {
           <button className='px-10 py-5 text-base md:text-lg bg-primary-500 text-white font-black rounded-lg border-2 border-primary-900 hover:bg-primary-800 transition-all duration-300 transform hover:scale-105 shadow-xl'>
             SEE ALL COURSES & START LEARNING 
           </button>
-          <p className='text-sm text-gray-600 mt-4 font-medium'>Pro Tip: Enroll in 3+ courses and save 40%</p>
+          <p className='text-sm text-gray-600 mt-4 '>Pro Tip: Enroll in 3+ courses and save 40%</p>
         </div>
       </div>
     </div>
