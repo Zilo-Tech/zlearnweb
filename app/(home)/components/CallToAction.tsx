@@ -42,7 +42,7 @@ export default function CallToACtion() {
                         </div>
 
                         <div className='mb-10'>
-                            <button className='px-10 py-5 bg-primary-500 text-white border-2 text-lg md:text-xl border-primary-900 font-black rounded-lg hover:bg-primary-800 transition-all duration-300 inline-flex items-center gap-2  shadow-xl'>
+                            <button className='px-10 py-5 bg-primary-500 text-white border-2 text-lg md:text-xl border-primary-900 font-black rounded hover:bg-primary-800 transition-all duration-300 inline-flex items-center gap-2  shadow-xl'>
                                 CLAIM YOUR SPOT NOW 
                             </button>
                             <p className='text-sm text-gray-600 mt-3 '>30-Day Money-Back Guarantee • No Questions Asked</p>

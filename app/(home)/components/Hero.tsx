@@ -24,7 +24,7 @@ const HeroSection: React.FC = () => {
               Join 50,000+ professionals earning more with expert-led courses and recognized certifications.
             </p>
             <div className="flex gap-4 max-w-sm mb-2">
-              <button className="px-8 w-full py-3 md:py-4 bg-primary-500 text-white md:text-lg font-bold rounded-lg hover:bg-[#253F3F] transition">
+              <button className="px-8 w-full py-3 md:py-4 bg-primary-500 text-white md:text-lg font-bold rounded hover:bg-[#253F3F] transition">
                 START YOUR SUCCESS NOW
               </button>
             </div>

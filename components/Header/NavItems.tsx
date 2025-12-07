@@ -123,7 +123,7 @@ function NavItems({ isMobile = false, onClose = () => {} }) {
           onMouseEnter={() => setIsExploreOpen(true)}
           onMouseLeave={() => setIsExploreOpen(false)}
         >
-          <span className='flex items-center gap-1 text-gray-800 font-semibold hover:text-default transition text-[14.8px]'>
+          <span className='flex items-center gap-1 text-white font-semibold hover:text-default transition text-[14.8px]'>
             Explore
             <Icon icon="ion:chevron-down" className="text-sm" />
           </span>
@@ -174,12 +174,12 @@ function NavItems({ isMobile = false, onClose = () => {} }) {
             </div>
           )}
         </li>
-        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold'>Book a Tutor</li>
-        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold'>Become a Tutor</li>
-        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold'>Our Programs</li>
-        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold'>Download</li>
-        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold'>Plan & Pricing</li>
-        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold'>Contact Us</li>
+        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Book a Tutor</li>
+        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Become a Tutor</li>
+        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Our Programs</li>
+        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Download</li>
+        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Plan & Pricing</li>
+        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Contact Us</li>
       </ul>
     </div>
   );

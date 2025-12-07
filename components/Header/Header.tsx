@@ -14,7 +14,7 @@ export default function Header() {
 
   return (
     <>
-      <div className='flex items-center justify-between  pr-4 md:px-2 xl:px-8 py-4 bg-primary-950 md:bg-white'>
+      <div className='flex items-center justify-between  pr-4 md:px-2 xl:px-8 py-4 bg-primary-950 '>
         <div className="left-section flex items-center gap-10">
           <Logo />
           <div className="hidden min-[1300px]:block text-gray-800">
@@ -28,7 +28,7 @@ export default function Header() {
           </div>
           <LanguageActions />
           <button
-            className="min-[1400px]:hidden text-white md:text-gray-800"
+            className="min-[1400px]:hidden text-white "
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             <Icon
