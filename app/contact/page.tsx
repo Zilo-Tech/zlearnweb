@@ -1,4 +1,4 @@
-"use clientgit"
+"use client"
 import { Icon } from "@iconify/react/dist/iconify.js"
 import { useState } from "react"
 
