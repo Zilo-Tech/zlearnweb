@@ -1,21 +1,22 @@
 import React from 'react'
+import Link from 'next/link'
 
 export default function CallToACtion() {
     return (
         <div className='container max-w-7xl mx-auto px-4'>
             {/* Call to Action Section */}
             <div className='bg-gray-50 rounded-3xl overflow-hidden'>
-                    <div className='mb-6'>
-                            <p className='text-sm text-primary-600 uppercase tracking-widest my-4 font-bold'>DON'T GET LEFT BEHIND</p>
-                            <h2 className='text-4xl lg:text-6xl font-black text-gray-900 leading-tight mb-8 tracking-tight'>
-                                THE FASTEST PATH TO A HIGHER SALARY STARTS HERE
-                            </h2>
-                        </div>
+                <div className='mb-6'>
+                    <p className='text-sm text-primary-600 uppercase tracking-widest my-4 font-bold'>DON'T GET LEFT BEHIND</p>
+                    <h2 className='text-4xl lg:text-6xl font-black text-gray-900 leading-tight mb-8 tracking-tight'>
+                        THE FASTEST PATH TO A HIGHER SALARY STARTS HERE
+                    </h2>
+                </div>
                 <div className='grid grid-cols-1 lg:grid-cols-2 gap-20 items-center'>
 
                     {/* Left Content */}
                     <div className=' flex flex-col justify-center'>
-                    
+
 
                         <div className='space-y-6 mb-10'>
                             <div className='flex items-start gap-3 border-b-2 border-primary-950 pb-4'>
@@ -42,9 +43,11 @@ export default function CallToACtion() {
                         </div>
 
                         <div className='mb-10'>
-                            <button className='px-10 py-5 bg-primary-500 text-white border-2 text-lg md:text-xl border-primary-900 font-black rounded    hover:bg-primary-800 transition-all duration-300 inline-flex items-center gap-2  shadow-xl'>
-                                CLAIM YOUR SPOT NOW 
-                            </button>
+                            <Link href="/auth/register">
+                                <button className='px-10 py-5 bg-primary-500 text-white border-2 text-lg md:text-xl border-primary-900 font-black rounded    hover:bg-primary-800 transition-all duration-300 inline-flex items-center gap-2  shadow-xl'>
+                                    CLAIM YOUR SPOT NOW
+                                </button>
+                            </Link>
                             <p className='text-sm text-gray-600 mt-3 '>30-Day Money-Back Guarantee • No Questions Asked</p>
                         </div>
                     </div>

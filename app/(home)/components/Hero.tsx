@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 const HeroSection: React.FC = () => {
   return (
@@ -24,9 +25,11 @@ const HeroSection: React.FC = () => {
               Join 50,000+ professionals earning more with expert-led courses and recognized certifications.
             </p>
             <div className="flex gap-4 max-w-sm mb-2">
-              <button className="px-8 w-full py-3 md:py-4 bg-primary-500 text-white md:text-lg font-bold rounded hover:bg-[#253F3F] transition">
-                START YOUR SUCCESS NOW
-              </button>
+              <Link href="/auth/register" className="w-full">
+                <button className="px-8 w-full py-3 md:py-4 bg-primary-500 text-white md:text-lg font-bold rounded hover:bg-[#253F3F] transition">
+                  START YOUR SUCCESS NOW
+                </button>
+              </Link>
             </div>
             <p className="text-xs md:text-sm text-primary-200 font-bold">
               First 100 students only — Act fast!
@@ -36,9 +39,9 @@ const HeroSection: React.FC = () => {
           {/* Right Image */}
           <div className="relative order-1 md:order-2 h-full">
             <div className="overflow-hidden h-full ">
-              <img 
-                src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=600&fit=crop&q=80" 
-                alt="Students learning together" 
+              <img
+                src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=600&fit=crop&q=80"
+                alt="Students learning together"
                 className="w-full h-full object-cover"
               />
             </div>
