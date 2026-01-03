@@ -81,8 +81,8 @@ const TopCategories: React.FC = () => {
                                         <h3 className="text-xl md:text-4xl font-black text-gray-900 tracking-tight">
                                             {category.title}
                                         </h3>
-                                        <p className="text-sm text-gray-700 ml-2 font-semibold">{category.courses} available</p>
-                                        <p className="text-xs text-primary-600 ml-2 mt-1 font-bold">→ Start Learning</p>
+                                        <p className="text-sm text-gray-700  font-semibold">{category.courses}available</p>
+                                        <p className="text-xs text-primary-600  mt-1 font-bold">Start Learning</p>
                                     </div>
                                 </div>
                             </div>

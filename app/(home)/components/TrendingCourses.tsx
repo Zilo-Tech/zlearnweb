@@ -26,7 +26,7 @@ export default function TrendingCourse() {
       rating: 4.3,
       title: 'Complete Web Development Bootcamp',
       description: 'Master HTML, CSS, JavaScript, React, and Node.js from scratch',
-      price: '$49.99',
+      price: 'Free',
       students: '12,543 students'
     },
     {
@@ -37,7 +37,7 @@ export default function TrendingCourse() {
       rating: 4.9,
       title: 'Python for Data Science & Machine Learning',
       description: 'Learn Python, pandas, NumPy, and build ML models',
-      price: '$59.99',
+      price: 'Free',
       students: '9,876 students'
     },
     {
@@ -48,7 +48,7 @@ export default function TrendingCourse() {
       rating: 4.2,
       title: 'UI/UX Design Masterclass',
       description: 'Design beautiful interfaces with Figma and user research',
-      price: '$44.99',
+      price: 'Free',
       students: '8,234 students'
     },
     {
@@ -59,7 +59,7 @@ export default function TrendingCourse() {
       rating: 4.6,
       title: 'Complete Digital Marketing Course',
       description: 'SEO, social media, email marketing, and analytics',
-      price: '$39.99',
+      price: 'Free',
       students: '11,432 students'
     },
     {
@@ -70,7 +70,7 @@ export default function TrendingCourse() {
       rating: 4.8,
       title: 'Professional Photography Masterclass',
       description: 'From beginner to pro: composition, lighting, and editing',
-      price: '$54.99',
+      price: 'Free',
       students: '7,654 students'
     },
     {
@@ -81,7 +81,7 @@ export default function TrendingCourse() {
       rating: 4.7,
       title: 'MBA Essentials: Business Strategy',
       description: 'Learn business strategy, finance, and leadership skills',
-      price: '$69.99',
+      price: 'Free',
       students: '6,789 students'
     }
   ]
@@ -149,7 +149,7 @@ export default function TrendingCourse() {
                       <div className='flex items-center justify-between'>
                         <div>
                           <span className='text-xl md:text-2xl font-black text-gray-900'>{course.price}</span>
-                          <span className='text-xs md:text-sm text-gray-500 line-through ml-2'>$199.99</span>
+                          {/* <span className='text-xs md:text-sm text-gray-500 line-through ml-2'>$199.99</span> */}
                         </div>
                         <span className='text-xs md:text-sm text-primary-600 font-bold'>{course.students} enrolled</span>
                       </div>

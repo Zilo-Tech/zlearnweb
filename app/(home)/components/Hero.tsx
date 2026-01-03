@@ -11,7 +11,7 @@ const HeroSection: React.FC = () => {
             <div className="mb-2 md:mb-3">
               <div className="inline-block mb-2">
                 <p className="text-lg md:text-2xl font-black text-yellow-500">
-                  50% OFF
+                  FREE
                 </p>
                 <p className="text-xs md:text-sm text-primary-100 font-bold uppercase tracking-wider">
                   Limited Time Offer
@@ -32,7 +32,7 @@ const HeroSection: React.FC = () => {
               </Link>
             </div>
             <p className="text-xs md:text-sm text-primary-200 font-bold">
-              First 100 students only — Act fast!
+              First 10 students only — Act fast!
             </p>
           </div>
 

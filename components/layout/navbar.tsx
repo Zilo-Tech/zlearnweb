@@ -114,10 +114,10 @@ export function Navbar({ onMenuClick, className }: NavbarProps) {
                         </>
                     ) : (
                         <div className="flex items-center gap-2">
-                            <Button variant="ghost" asChild>
+                            <Button variant="ghost" size="sm" asChild>
                                 <Link href="/auth/login">Log in</Link>
                             </Button>
-                            <Button asChild>
+                            <Button size="sm" asChild>
                                 <Link href="/auth/register">Sign up</Link>
                             </Button>
                         </div>

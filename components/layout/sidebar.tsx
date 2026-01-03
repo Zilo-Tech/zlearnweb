@@ -80,12 +80,12 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed top-16 left-0 z-50 h-[calc(100vh-4rem)] w-64 transform border-r bg-white transition-transform duration-200 ease-in-out md:translate-x-0",
+                    "fixed top-0 left-0 z-50 h-screen w-64 transform border-r bg-white transition-transform duration-200 ease-in-out md:translate-x-0",
                     isOpen ? "translate-x-0" : "-translate-x-full",
                     className
                 )}
             >
-                <div className="flex h-full flex-col overflow-y-auto py-4">
+                <div className="flex h-full flex-col overflow-y-auto py-4 pt-20">
                     <nav className="space-y-1 px-2">
                         {sidebarItems.map((item) => {
                             const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
