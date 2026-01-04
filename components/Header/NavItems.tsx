@@ -103,12 +103,12 @@ function NavItems({ isMobile = false, onClose = () => {} }) {
         
         {/* Mobile Action Buttons */}
         <div className="pt-4 border-t border-gray-200 space-y-3">
-          <button className="w-full py-3 px-4 text-default border-2 border-default rounded-lg font-semibold hover:bg-primary-100 text-[14.8px] transition">
+          <a href="/auth/register" className="w-full py-3 px-4 text-default border-2 border-default rounded-lg font-semibold hover:bg-primary-100 text-[14.8px] transition">
             Sign In
-          </button>
-          <button className="w-full py-3 px-4 bg-default text-white rounded-lg font-semibold hover:bg-[#3A5F5F] transition">
+          </a>
+          <a href="/auth/login" className="w-full py-3 px-4 bg-default text-white rounded-lg font-semibold hover:bg-[#3A5F5F] transition">
             Sign Up
-          </button>
+          </a>
         </div>
       </div>
     );

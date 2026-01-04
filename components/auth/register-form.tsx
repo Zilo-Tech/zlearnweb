@@ -7,6 +7,7 @@ import * as z from 'zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { Controller } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +42,7 @@ export function RegisterForm() {
     const {
         register,
         handleSubmit,
+        control,
         formState: { errors },
     } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
@@ -184,12 +186,19 @@ export function RegisterForm() {
                     </div>
 
                     <div className="flex items-start space-x-2">
-                        <Checkbox
-                            id="terms"
-                            className="mt-1"
-                            {...register('terms')}
-                            disabled={isLoading}
-                        />
+                        <Controller
+                            name="terms"
+                            control={control}
+                            render={({ field }) => (
+                                <Checkbox
+                                id="terms"
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                disabled={isLoading}
+                                className="mt-1"
+                                />
+                            )}
+                            />
                         <label
                             htmlFor="terms"
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-600"
