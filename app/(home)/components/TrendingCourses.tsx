@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function TrendingCourse() {
@@ -103,12 +104,12 @@ export default function TrendingCourse() {
     <div className='container max-w-7xl mx-auto px-4 pb-20'>
       <div className='mt-32'>
         <div className='text-center md:text-start mb-14'>
-          <p className='text-sm text-primary-600 uppercase tracking-widest mb-3 font-bold'>🔥HOT THIS MONTH</p>
+          <p className='text-sm text-primary-600 uppercase tracking-widest mb-3 font-bold'>POPULAR ON Z-LEARN</p>
           <h2 className='capitalize text-4xl md:text-5xl xl:text-7xl font-black text-gray-900 mb-4 tracking-tight'>
-            THE COURSES THAT ARE GETTING PEOPLE HIRED RIGHT NOW
+            COURSES LEARNERS ARE TAKING NOW
           </h2>
-          <p className='text-lg text-gray-600  max-w-2xl mt-4'>
-            Join 12,000+ students who enrolled this month. These are the skills employers are hiring for TODAY.
+          <p className='text-lg text-gray-600 max-w-2xl mt-4 leading-relaxed'>
+            From professional skills to exam prep and curriculum — start with what matters to you. Free to enroll.
           </p>
         </div>
 
@@ -195,10 +196,12 @@ export default function TrendingCourse() {
         </div>
 
         <div className='text-center mt-12'>
-          <button className='px-10 py-5 text-base md:text-lg bg-primary-500 text-white font-black rounded border-2 border-primary-900 hover:bg-primary-800 transition-all duration-300 transform hover:scale-105 shadow-xl'>
-            SEE ALL COURSES & START LEARNING 
-          </button>
-          <p className='text-sm text-gray-600 mt-4 '>Pro Tip: Enroll in 3+ courses and save 40%</p>
+          <Link href="/app/courses">
+            <button className='px-10 py-5 text-base md:text-lg bg-primary-500 text-white font-black rounded border-2 border-primary-900 hover:bg-primary-800 transition-all duration-300 transform hover:scale-105 shadow-xl'>
+              BROWSE COURSES & START LEARNING
+            </button>
+          </Link>
+          <p className='text-sm text-gray-600 mt-4'>Free to start · Progress saved across app and web</p>
         </div>
       </div>
     </div>

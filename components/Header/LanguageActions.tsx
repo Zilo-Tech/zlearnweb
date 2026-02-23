@@ -36,11 +36,11 @@ export default function LanguageActions() {
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0])
 
   return (
-    <div className=''>
+    <div className="px-1">
       <div className="flex justify-between items-center">
         <DropdownMenu>
-          <DropdownMenuTrigger className="outline-none">
-            <div className="flex gap-2 items-center hover:opacity-80 transition-opacity text-white ">
+          <DropdownMenuTrigger className="outline-none rounded-md py-1.5 px-1 hover:bg-primary-900/50 transition-colors">
+            <div className="flex gap-2 items-center hover:opacity-90 transition-opacity text-white ">
               <Icon icon={selectedLanguage.flag} className='hidden md:block' width="24" height="24" />
               <span className="font-semibold">{selectedLanguage.name}</span>
               <Icon icon="mage:chevron-down" width="20" height="20" />

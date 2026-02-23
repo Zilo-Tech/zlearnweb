@@ -9,23 +9,23 @@ export default function Learn() {
 
     const slides = [
         {
-            title: "Learn on YOUR Schedule — No Excuses",
-            description: "Study anywhere, anytime. 24/7 access means you can level up your skills while working full-time. Join thousands who've transformed their careers without quitting their day job.",
+            title: "Learn on Your Schedule — Anywhere",
+            description: "Study on the app or web, anytime. Track progress across devices, pick up where you left off, and earn XP as you go. Built for students and professionals who learn on the move.",
             image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop"
         },
         {
-            title: "Learn from Million-Dollar Experts",
-            description: "Get taught by industry leaders who've built real companies and earned real results. Not theory — proven strategies that actually work in the real world.",
+            title: "Ace Entrance Exams with Real Practice",
+            description: "Mock exams, past papers, and timed practice tests. See where you stand with analytics and leaderboards. Prepare for the exams that matter — with a plan that works.",
             image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&h=400&fit=crop"
         },
         {
-            title: "Build Real Projects That Get You Hired",
-            description: "Create portfolio-worthy projects that impress employers. Every course includes hands-on work you can show off — and that's what gets you the job.",
+            title: "Professional Courses & School Curriculum",
+            description: "Expert-led courses for your career and curriculum-aligned content for school. One account, two paths: level up professionally or stay on track academically.",
             image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=400&fit=crop"
         },
         {
-            title: "Get Hired Faster with a Standout Portfolio",
-            description: "Stop sending empty resumes. Build a portfolio that makes recruiters call YOU. Our students get 3x more interview requests than average.",
+            title: "Community, Study Groups & AI Support",
+            description: "Join study groups, discuss with peers, and get help from our AI tutor. Learn together, stay motivated, and get unstuck when you need it most.",
             image: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=600&h=400&fit=crop"
         }
     ]
@@ -42,10 +42,10 @@ export default function Learn() {
         <div className='container max-w-7xl mx-auto px-6 md:px-4 py-2 md:py-20'>
             <div>
                 <h1 className='capitalize text-4xl md:text-5xl xl:text-7xl font-black text-start md:text-center mb-5 md:mb-16 tracking-tight'>
-                    STOP WASTING TIME — START EARNING MORE TODAY
+                    WHY LEARN WITH Z-LEARN
                 </h1>
-                <p className='text-center text-lg md:text-xl text-gray-600  max-w-3xl mx-auto mb-8'>
-                    Join 50,000+ professionals who've already transformed their careers. Your future self will thank you.
+                <p className='text-center text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed'>
+                    One platform for courses, exam prep, and curriculum. Built for learners who want results.
                 </p>
             </div>
 

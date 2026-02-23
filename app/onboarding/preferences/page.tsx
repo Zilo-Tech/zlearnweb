@@ -18,9 +18,10 @@ const INTERESTS = [
 export default function PreferencesPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const { isSubmitting } = useAppSelector((state) => state.onboarding);
     const { toast } = useToast();
     const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const data = useAppSelector((state) => state.onboarding) as Record<string, unknown>;
 
     const toggleInterest = (interest: string) => {
         if (selectedInterests.includes(interest)) {
@@ -30,12 +31,9 @@ export default function PreferencesPage() {
         }
     };
 
-    const { data } = useAppSelector((state) => state.onboarding);
-
-    // ...
-
     const handleComplete = async () => {
         try {
+            setIsSubmitting(true);
             const updatedData = { ...data, interests: selectedInterests };
             dispatch(updateOnboardingData({ interests: selectedInterests }));
             await dispatch(completeOnboarding(updatedData)).unwrap();
@@ -47,12 +45,14 @@ export default function PreferencesPage() {
             });
 
             router.push('/app/dashboard');
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast({
                 title: 'Something went wrong',
-                description: error.message || 'Could not complete onboarding. Please try again.',
+                description: (error as Error)?.message || 'Could not complete onboarding. Please try again.',
                 variant: 'destructive',
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 

@@ -91,16 +91,18 @@ export function RegisterForm() {
     }, []);
 
     return (
-        <Card className="border-none shadow-none lg:border lg:shadow-sm">
-            <CardHeader className="space-y-1 px-0 lg:px-6">
-                <CardTitle className="text-3xl font-bold tracking-tight text-gray-900">Create an account</CardTitle>
-                <CardDescription className="text-sm text-gray-500">
+        <Card className="border-2 border-primary-200 bg-white shadow-none lg:shadow-md rounded-lg overflow-hidden">
+            <CardHeader className="space-y-0.5 px-0 pt-4 pb-2 lg:px-5 lg:pt-5 lg:pb-3">
+                <CardTitle className="text-xl md:text-2xl font-black tracking-tight text-gray-900">
+                    Create an account
+                </CardTitle>
+                <CardDescription className="text-sm text-gray-600 leading-snug">
                     Enter your details to get started with Z-Learn
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 px-0 lg:px-6">
+            <CardContent className="space-y-3 px-0 pb-4 lg:px-5 lg:pb-5 pt-0">
                 {backendError && (
-                    <div className="rounded-lg bg-red-50 border border-red-200 p-4 flex items-start gap-3">
+                    <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4 flex items-start gap-3">
                         <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
                         <div className="flex-1">
                             <h3 className="text-sm font-semibold text-red-800">Registration Failed</h3>
@@ -112,15 +114,15 @@ export function RegisterForm() {
 
                 <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-gray-200" />
+                        <span className="w-full border-t-2 border-primary-200" />
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                    <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                        <span className="bg-white px-2 text-gray-500 font-semibold">Or continue with</span>
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="space-y-2">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+                    <div className="space-y-1.5">
                         <Input
                             id="name"
                             type="text"
@@ -132,7 +134,7 @@ export function RegisterForm() {
                         />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                         <Input
                             id="email"
                             type="email"
@@ -144,7 +146,7 @@ export function RegisterForm() {
                         />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                         <div className="relative">
                             <Input
                                 id="password"
@@ -173,7 +175,7 @@ export function RegisterForm() {
                         </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                         <Input
                             id="confirmPassword"
                             type={showPassword ? 'text' : 'password'}
@@ -204,11 +206,11 @@ export function RegisterForm() {
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-600"
                         >
                             I agree to the{' '}
-                            <Link href="/terms" className="text-[#446D6D] hover:underline">
+                            <Link href="/terms" className="font-bold text-primary-600 hover:text-primary-800 hover:underline transition">
                                 Terms of Service
                             </Link>{' '}
                             and{' '}
-                            <Link href="/privacy" className="text-[#446D6D] hover:underline">
+                            <Link href="/privacy" className="font-bold text-primary-600 hover:text-primary-800 hover:underline transition">
                                 Privacy Policy
                             </Link>
                         </label>
@@ -217,15 +219,15 @@ export function RegisterForm() {
                         <p className="text-sm text-red-500">{errors.terms.message}</p>
                     )}
 
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button type="submit" className="w-full py-2.5 rounded-lg font-bold text-sm" disabled={isLoading}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Create account
                     </Button>
                 </form>
             </CardContent>
-            <CardFooter className="flex flex-wrap items-center justify-center gap-1 px-0 lg:px-6">
-                <span className="text-sm text-gray-500">Already have an account?</span>
-                <Link href="/auth/login" className="text-sm font-medium text-[#446D6D] hover:underline">
+            <CardFooter className="flex flex-wrap items-center justify-center gap-1 px-0 lg:px-5 pt-2 pb-4 lg:pb-5">
+                <span className="text-sm text-gray-600">Already have an account?</span>
+                <Link href="/auth/login" className="text-sm font-bold text-primary-600 hover:text-primary-800 hover:underline transition">
                     Sign in
                 </Link>
             </CardFooter>

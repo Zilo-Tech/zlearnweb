@@ -77,23 +77,13 @@ export function Footer() {
                         <h3 className="text-sm font-semibold text-gray-900">Support</h3>
                         <ul className="mt-4 space-y-2">
                             <li>
-                                <Link href="/help" className="text-sm text-gray-500 hover:text-[#446D6D]">
-                                    Help Center
+                                <Link href="/app/support" className="text-sm text-gray-500 hover:text-[#446D6D]">
+                                    Help & Support
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/contact" className="text-sm text-gray-500 hover:text-[#446D6D]">
-                                    Contact Us
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/faq" className="text-sm text-gray-500 hover:text-[#446D6D]">
-                                    FAQs
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/feedback" className="text-sm text-gray-500 hover:text-[#446D6D]">
-                                    Feedback
+                                    Contact
                                 </Link>
                             </li>
                         </ul>

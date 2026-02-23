@@ -27,11 +27,11 @@ export default function PartnershipMarquee() {
             <div className="">
                 <div className="text-center mb-12 text-white bg-primary-950 p-8 md:py-26 mx-4 md:mx-0 rounded-lg md:rounded-none">
                     <div className='container max-w-7xl mx-auto'>
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold  mb-8">
-                            Our Trusted Partners
+                        <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8">
+                            Trusted by Learners Everywhere
                         </h2>
-                        <p className="text-lg md:text-xl  max-w-2xl mx-auto">
-                            Collaborating with industry leaders to deliver exceptional learning experiences
+                        <p className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                            Join a growing community learning on Z-Learn — on web and mobile
                         </p>
                     </div>
                 </div>

@@ -20,17 +20,15 @@ const GOALS = [
 export default function ProfessionalGoalsPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const { isSubmitting } = useAppSelector((state) => state.onboarding);
     const { toast } = useToast();
     const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
-
-    const { data } = useAppSelector((state) => state.onboarding);
-
-    // ...
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const data = useAppSelector((state) => state.onboarding) as Record<string, unknown>;
 
     const handleComplete = async () => {
         if (selectedGoal) {
             try {
+                setIsSubmitting(true);
                 const updatedData = { ...data, goal: selectedGoal };
                 dispatch(updateOnboardingData({ goal: selectedGoal }));
                 await dispatch(completeOnboarding(updatedData)).unwrap();
@@ -42,12 +40,14 @@ export default function ProfessionalGoalsPage() {
                 });
 
                 router.push('/app/dashboard');
-            } catch (error: any) {
+            } catch (error: unknown) {
                 toast({
                     title: 'Something went wrong',
-                    description: error.message || 'Could not complete onboarding. Please try again.',
+                    description: (error as Error)?.message || 'Could not complete onboarding. Please try again.',
                     variant: 'destructive',
                 });
+            } finally {
+                setIsSubmitting(false);
             }
         }
     };

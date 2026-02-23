@@ -1,45 +1,46 @@
-import { useAppSelector, useAppDispatch } from '../store/hooks';
-import { fetchXP, fetchLevel, fetchStreakData, fetchAchievements, fetchLeaderboard } from '@/lib/store/slices/gamification.slice';
-import { useCallback } from 'react';
+'use client';
+
+import { useCallback, useState } from 'react';
+
+export interface XPData {
+  total_xp?: number;
+  xp_this_week?: number;
+  xp_this_month?: number;
+  [key: string]: unknown;
+}
+export interface LevelData {
+  current_level?: number;
+  progress_percentage?: number;
+  current_xp?: number;
+  xp_for_next_level?: number;
+  [key: string]: unknown;
+}
+export interface StreakData {
+  current_streak?: number;
+  [key: string]: unknown;
+}
 
 export function useGamification() {
-    const dispatch = useAppDispatch();
-    const { xpData, levelData, streakData, achievements, leaderboard, isLoading, error } = useAppSelector(
-        (state) => state.gamification
-    );
+  const [xpData, setXpData] = useState<XPData | null>(null);
+  const [levelData, setLevelData] = useState<LevelData | null>(null);
+  const [streakData, setStreakData] = useState<StreakData | null>(null);
+  const [leaderboard, setLeaderboard] = useState<unknown[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-    const loadXP = useCallback(async () => {
-        return dispatch(fetchXP()).unwrap();
-    }, [dispatch]);
+  const loadXP = useCallback(async () => { setXpData(null); }, []);
+  const loadLevel = useCallback(async () => { setLevelData(null); }, []);
+  const loadStreak = useCallback(async () => { setStreakData(null); }, []);
+  const loadLeaderboard = useCallback(async (_options?: { limit?: number; period?: string }) => { setLeaderboard([]); }, []);
 
-    const loadLevel = useCallback(async () => {
-        return dispatch(fetchLevel()).unwrap();
-    }, [dispatch]);
-
-    const loadStreak = useCallback(async () => {
-        return dispatch(fetchStreakData()).unwrap();
-    }, [dispatch]);
-
-    const loadAchievements = useCallback(async () => {
-        return dispatch(fetchAchievements()).unwrap();
-    }, [dispatch]);
-
-    const loadLeaderboard = useCallback(async (params?: { period?: 'daily' | 'weekly' | 'monthly' | 'all-time'; limit?: number }) => {
-        return dispatch(fetchLeaderboard(params)).unwrap();
-    }, [dispatch]);
-
-    return {
-        xpData,
-        levelData,
-        streakData,
-        achievements,
-        leaderboard,
-        isLoading,
-        error,
-        loadXP,
-        loadLevel,
-        loadStreak,
-        loadAchievements,
-        loadLeaderboard,
-    };
+  return {
+    xpData,
+    levelData,
+    streakData,
+    leaderboard,
+    isLoading,
+    loadXP,
+    loadLevel,
+    loadStreak,
+    loadLeaderboard,
+  };
 }

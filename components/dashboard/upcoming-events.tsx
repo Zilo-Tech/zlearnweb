@@ -84,19 +84,19 @@ export function UpcomingEvents() {
 
     if (examsLoading || communityLoading) {
         return (
-            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm animate-pulse">
-                <div className="h-6 w-32 bg-gray-200 rounded mb-4" />
+            <div className="rounded-xl border-2 border-primary-200 bg-white p-6 animate-pulse">
+                <div className="h-6 w-32 bg-primary-100 rounded mb-4" />
                 <div className="space-y-4">
-                    <div className="h-16 w-full bg-gray-100 rounded-lg" />
-                    <div className="h-16 w-full bg-gray-100 rounded-lg" />
+                    <div className="h-16 w-full bg-primary-50 rounded-lg" />
+                    <div className="h-16 w-full bg-primary-50 rounded-lg" />
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h3 className="font-semibold text-gray-900 mb-4">Upcoming</h3>
+        <div className="rounded-xl border-2 border-primary-200 bg-white p-6">
+            <h3 className="font-bold text-primary-900 tracking-tight mb-4 uppercase text-sm">Upcoming</h3>
             <div className="space-y-4">
                 {upcomingEvents.map((event) => {
                     const Icon = event.icon;

@@ -13,7 +13,7 @@ import { SCHOOLS } from '@/lib/constants';
 export default function SchoolSelectionPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const { data } = useAppSelector((state) => state.onboarding);
+    const data = useAppSelector((state) => state.onboarding) as { education_level?: string };
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
 

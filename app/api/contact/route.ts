@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withCSRFProtection } from '@/lib/csrf-middleware';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.z-learn.app';
+
 /**
  * API Route: POST /api/contact
- * 
- * Handles contact form submissions with CSRF protection.
- * 
- * This endpoint validates:
- * - CSRF token from X-CSRF-Token header or request body
- * - Origin/Referer headers
- * - Request method (only POST allowed)
+ * Proxies to backend POST /api/contact/ (public, no auth).
  */
 
 async function handleContactSubmission(request: NextRequest) {
@@ -17,7 +13,6 @@ async function handleContactSubmission(request: NextRequest) {
     const body = await request.json();
     const { name, email, subject, message } = body;
 
-    // Validate required fields
     if (!name || !email || !subject || !message) {
       return NextResponse.json(
         { error: 'All fields are required' },
@@ -25,7 +20,6 @@ async function handleContactSubmission(request: NextRequest) {
       );
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
@@ -34,30 +28,16 @@ async function handleContactSubmission(request: NextRequest) {
       );
     }
 
-    // TODO: Implement actual email sending or database storage
-    // For now, we'll just log the submission
-    console.log('Contact form submission:', {
-      name,
-      email,
-      subject,
-      message,
-      timestamp: new Date().toISOString(),
+    const res = await fetch(`${BACKEND_URL}/api/contact/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, subject, message }),
     });
 
-    // In production, you would:
-    // 1. Send an email notification
-    // 2. Store the submission in a database
-    // 3. Send a confirmation email to the user
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Thank you for your message! We will get back to you soon.',
-      },
-      { status: 200 }
-    );
+    const data = await res.json().catch(() => ({}));
+    return NextResponse.json(data, { status: res.status });
   } catch (error) {
-    console.error('Error processing contact form:', error);
+    console.error('Error proxying contact form to backend:', error);
     return NextResponse.json(
       { error: 'Failed to process contact form submission' },
       { status: 500 }

@@ -1,115 +1,35 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { examsService } from '@/lib/services';
-import { ExamsState } from '@/lib/types';
+import { apiService } from '@/lib/services/api.service';
 
-const initialState: ExamsState = {
-    exams: [],
-    practiceTests: [],
-    currentExam: null,
-    results: [],
-    isLoading: false,
-    error: null,
-};
+interface ExamsState {
+  results: unknown[];
+  isLoading: boolean;
+  error: string | null;
+}
 
-export const fetchExams = createAsyncThunk(
-    'exams/fetchExams',
-    async (filters: any, { rejectWithValue }) => {
-        try {
-            const response = await examsService.getExams(filters);
-            return response.results;
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
+const initialState: ExamsState = { results: [], isLoading: false, error: null };
 
-export const fetchPracticeTests = createAsyncThunk(
-    'exams/fetchPracticeTests',
-    async (_, { rejectWithValue }) => {
-        try {
-            return await examsService.getPracticeTests();
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
-
-export const fetchExamDetails = createAsyncThunk(
-    'exams/fetchDetails',
-    async (examId: string, { rejectWithValue }) => {
-        try {
-            return await examsService.getExamDetails(examId);
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
-
-export const startExam = createAsyncThunk(
-    'exams/start',
-    async (examId: string, { rejectWithValue }) => {
-        try {
-            return await examsService.startExam(examId);
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
-
-export const submitExam = createAsyncThunk(
-    'exams/submit',
-    async ({ examId, answers }: { examId: string; answers: any[] }, { rejectWithValue }) => {
-        try {
-            return await examsService.submitExam(examId, answers);
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
-
-export const fetchExamResults = createAsyncThunk(
-    'exams/fetchResults',
-    async (_, { rejectWithValue }) => {
-        try {
-            return await examsService.getExamResults();
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
-
-const examsSlice = createSlice({
-    name: 'exams',
-    initialState,
-    reducers: {
-        setCurrentExam: (state, action) => {
-            state.currentExam = action.payload;
-        },
-    },
-    extraReducers: (builder) => {
-        builder
-            .addCase(fetchExams.pending, (state) => {
-                state.isLoading = true;
-            })
-            .addCase(fetchExams.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.exams = action.payload;
-            })
-            .addCase(fetchExams.rejected, (state, action) => {
-                state.isLoading = false;
-                state.error = action.payload as string;
-            })
-            .addCase(fetchPracticeTests.fulfilled, (state, action) => {
-                state.practiceTests = action.payload;
-            })
-            .addCase(fetchExamDetails.fulfilled, (state, action) => {
-                state.currentExam = action.payload;
-            })
-            .addCase(fetchExamResults.fulfilled, (state, action) => {
-                state.results = action.payload;
-            });
-    },
+export const fetchExamResults = createAsyncThunk('exams/fetchResults', async () => {
+  const data = await apiService.get<unknown>('/api/exams/results/');
+  return Array.isArray(data) ? data : (data as { results?: unknown[] })?.results ?? [];
 });
 
-export const { setCurrentExam } = examsSlice.actions;
+const examsSlice = createSlice({
+  name: 'exams',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchExamResults.pending, (state) => { state.isLoading = true; state.error = null; })
+      .addCase(fetchExamResults.fulfilled, (state, action) => {
+        state.results = action.payload ?? [];
+        state.isLoading = false;
+      })
+      .addCase(fetchExamResults.rejected, (state, action) => {
+        state.error = action.error.message ?? 'Failed';
+        state.isLoading = false;
+      });
+  },
+});
+
 export default examsSlice.reducer;

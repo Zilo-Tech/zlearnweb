@@ -1,204 +1,251 @@
-"use client"
-import { Icon } from "@iconify/react/dist/iconify.js"
-import { useState } from "react"
+'use client';
 
-// Contact Page Component
-function ContactPage() {
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Mail, Globe, Loader2, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { APP_CONFIG } from '@/lib/constants';
+
+export default function ContactPage() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         subject: '',
-        message: ''
-    })
+        message: '',
+    });
+    const [csrfToken, setCsrfToken] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [submitMessage, setSubmitMessage] = useState('');
 
-    const handleSubmit = () => {
+    useEffect(() => {
+        let cancelled = false;
+        fetch('/api/csrf', { credentials: 'include' })
+            .then((res) => res.json())
+            .then((data: { csrfToken?: string }) => {
+                if (!cancelled && data?.csrfToken) setCsrfToken(data.csrfToken);
+            })
+            .catch(() => {});
+        return () => { cancelled = true; };
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
         if (!formData.name || !formData.email || !formData.subject || !formData.message) {
-            alert('Please fill in all fields')
-            return
+            setSubmitStatus('error');
+            setSubmitMessage('Please fill in all fields.');
+            return;
         }
-        console.log('Form submitted:', formData)
-        alert('Thank you for your message! We will get back to you soon.')
-        setFormData({ name: '', email: '', subject: '', message: '' })
-    }
+        if (!csrfToken) {
+            setSubmitStatus('error');
+            setSubmitMessage('Security token not loaded. Please refresh the page.');
+            return;
+        }
+        setIsSubmitting(true);
+        setSubmitStatus('idle');
+        setSubmitMessage('');
+        try {
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken,
+                },
+                body: JSON.stringify({
+                    ...formData,
+                    csrfToken,
+                }),
+                credentials: 'include',
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success) {
+                setSubmitStatus('success');
+                setSubmitMessage(data.message || 'Thank you for your message! We will get back to you soon.');
+                setFormData({ name: '', email: '', subject: '', message: '' });
+            } else {
+                setSubmitStatus('error');
+                setSubmitMessage(data.error || 'Something went wrong. Please try again.');
+            }
+        } catch {
+            setSubmitStatus('error');
+            setSubmitMessage('Failed to send. Please check your connection and try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
-    const handleChange = (e: any) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        })
-    }
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    };
 
     const contactInfo = [
         {
-            icon: "material-symbols-light:mail-outline",
-            title: "Email Us",
-            info: "support@example.com",
-            link: "mailto:support@example.com"
+            icon: Mail,
+            title: 'Email us',
+            info: APP_CONFIG.supportEmail,
+            link: `mailto:${APP_CONFIG.supportEmail}`,
         },
         {
-            icon: "material-symbols-light:call-outline",
-            title: "Call Us",
-            info: "+1 (555) 123-4567",
-            link: "tel:+15551234567"
+            icon: Globe,
+            title: 'Website',
+            info: APP_CONFIG.website,
+            link: APP_CONFIG.website,
         },
-        {
-            icon: "material-symbols-light:location-on-outline",
-            title: "Visit Us",
-            info: "123 Learning Street, Education City",
-            link: "#"
-        },
-        {
-            icon: "material-symbols-light:schedule",
-            title: "Office Hours",
-            info: "Mon-Fri: 9AM - 6PM",
-            link: "#"
-        }
-    ]
+    ];
 
     return (
-        <div className='container max-w-7xl mx-auto px-6 md:px-4 py-2 md:py-20'>
-            <div>
-                <h1 className='capitalize text-4xl md:text-5xl xl:text-7xl font-extrabold text-start md:text-center mb-5 md:mb-16'>
-                    Get in Touch With Us Today
-                </h1>
-            </div>
+        <div className="bg-gray-50 min-h-screen text-base antialiased">
+            <div className="container max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-20">
+                <div className="mb-10 md:mb-14">
+                    <p className="text-sm text-primary-600 uppercase tracking-widest font-bold mb-2">
+                        Contact
+                    </p>
+                    <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight text-start md:text-center mb-4">
+                        Get in touch
+                    </h1>
+                    <p className="text-lg text-gray-600 text-start md:text-center max-w-2xl mx-auto leading-relaxed">
+                        Have a question or feedback? We&apos;re here to help.
+                    </p>
+                </div>
 
-            <div className='relative mt-12'>
-                <div className='flex flex-col md:flex-row items-start justify-center gap-8 max-w-6xl mx-auto'>
-                    {/* Contact Form - Left Side */}
-                    <div className='flex-1 w-full order-2 md:order-1'>
-                        <div className='bg-white p-6 md:p-8 rounded-lg shadow-lg'>
-                            <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-6'>
-                                Send Us a Message
+                <div className="flex flex-col lg:flex-row items-start justify-center gap-8 md:gap-12 max-w-6xl mx-auto">
+                    {/* Form */}
+                    <div className="flex-1 w-full">
+                        <div className="bg-white border-2 border-primary-200 p-6 md:p-8 rounded-2xl shadow-sm">
+                            <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight mb-6">
+                                Send us a message
                             </h2>
-                            <div className='space-y-5'>
+                            <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
-                                    <label htmlFor='name' className='block text-sm font-medium text-gray-700 mb-2'>
-                                        Your Name
+                                    <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Your name
                                     </label>
                                     <input
-                                        type='text'
-                                        id='name'
-                                        name='name'
+                                        type="text"
+                                        id="name"
+                                        name="name"
                                         value={formData.name}
                                         onChange={handleChange}
-                                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition-all'
-                                        placeholder='John Doe'
+                                        className="w-full h-11 px-4 py-2.5 border-2 border-primary-200 rounded-lg bg-white text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition"
+                                        placeholder="Your name"
                                     />
                                 </div>
-
                                 <div>
-                                    <label htmlFor='email' className='block text-sm font-medium text-gray-700 mb-2'>
-                                        Email Address
+                                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Email address
                                     </label>
                                     <input
-                                        type='email'
-                                        id='email'
-                                        name='email'
+                                        type="email"
+                                        id="email"
+                                        name="email"
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition-all'
-                                        placeholder='john@example.com'
+                                        className="w-full h-11 px-4 py-2.5 border-2 border-primary-200 rounded-lg bg-white text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition"
+                                        placeholder="you@example.com"
                                     />
                                 </div>
-
                                 <div>
-                                    <label htmlFor='subject' className='block text-sm font-medium text-gray-700 mb-2'>
+                                    <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-1.5">
                                         Subject
                                     </label>
                                     <input
-                                        type='text'
-                                        id='subject'
-                                        name='subject'
+                                        type="text"
+                                        id="subject"
+                                        name="subject"
                                         value={formData.subject}
                                         onChange={handleChange}
-                                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition-all'
-                                        placeholder='How can we help?'
+                                        className="w-full h-11 px-4 py-2.5 border-2 border-primary-200 rounded-lg bg-white text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition"
+                                        placeholder="How can we help?"
                                     />
                                 </div>
-
                                 <div>
-                                    <label htmlFor='message' className='block text-sm font-medium text-gray-700 mb-2'>
+                                    <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-1.5">
                                         Message
                                     </label>
                                     <textarea
-                                        id='message'
-                                        name='message'
+                                        id="message"
+                                        name="message"
                                         value={formData.message}
                                         onChange={handleChange}
                                         rows={5}
-                                        className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition-all resize-none'
-                                        placeholder='Tell us more about your inquiry...'
+                                        className="w-full px-4 py-2.5 border-2 border-primary-200 rounded-lg bg-white text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition resize-none"
+                                        placeholder="Tell us more about your inquiry..."
                                     />
                                 </div>
-
-                                <button
-                                    onClick={handleSubmit}
-                                    className='w-full bg-gray-900 text-white py-4 px-6 rounded-lg font-semibold hover:bg-gray-800 transition-colors duration-300'
+                                {submitStatus === 'success' && (
+                                    <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                                        {submitMessage}
+                                    </p>
+                                )}
+                                {submitStatus === 'error' && (
+                                    <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                                        {submitMessage}
+                                    </p>
+                                )}
+                                <Button
+                                    type="submit"
+                                    className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg"
+                                    disabled={isSubmitting || !csrfToken}
                                 >
-                                    Send Message
-                                </button>
-                            </div>
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                                            Sending...
+                                        </>
+                                    ) : (
+                                        'Send message'
+                                    )}
+                                </Button>
+                            </form>
                         </div>
                     </div>
 
-                    {/* Contact Info - Right Side */}
-                    <div className='flex-1 w-full order-1 md:order-2'>
-                        <div className='space-y-6'>
+                    {/* Contact info */}
+                    <div className="flex-1 w-full">
+                        <div className="space-y-6">
                             <div>
-                                <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-4'>
-                                    Contact Information
+                                <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight mb-3">
+                                    Contact information
                                 </h2>
-                                <p className='text-base md:text-lg text-gray-700 mb-8'>
-                                    We're here to help and answer any question you might have. We look forward to hearing from you.
+                                <p className="text-base text-gray-600 leading-relaxed mb-6">
+                                    We&apos;re here to help. Reach out by email or visit our website.
                                 </p>
                             </div>
-
-                            <div className='space-y-4'>
-                                {contactInfo.map((item, index) => (
-                                    <a
-                                        key={index}
-                                        href={item.link}
-                                        className='flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors'
-                                    >
-                                        <div className='p-3 bg-gray-900 rounded-full'>
-                                            <Icon icon={item.icon} className="size-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <h3 className='font-semibold text-gray-900 mb-1'>
-                                                {item.title}
-                                            </h3>
-                                            <p className='text-gray-700'>
-                                                {item.info}
-                                            </p>
-                                        </div>
-                                    </a>
-                                ))}
+                            <div className="space-y-4">
+                                {contactInfo.map((item) => {
+                                    const Icon = item.icon;
+                                    return (
+                                        <a
+                                            key={item.title}
+                                            href={item.link}
+                                            target={item.link.startsWith('http') ? '_blank' : undefined}
+                                            rel={item.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+                                            className="flex items-start gap-4 p-4 bg-white border-2 border-primary-200 rounded-xl hover:border-primary-300 hover:bg-primary-50/50 transition"
+                                        >
+                                            <div className="p-2.5 bg-primary-600 rounded-lg shrink-0 text-white">
+                                                <Icon className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 mb-0.5">{item.title}</h3>
+                                                <p className="text-gray-600 text-sm">{item.info}</p>
+                                            </div>
+                                        </a>
+                                    );
+                                })}
                             </div>
-
-                            <div className='mt-8 p-6 bg-gray-900 text-white rounded-lg'>
-                                <h3 className='text-xl font-bold mb-3'>Follow Us</h3>
-                                <div className='flex gap-4'>
-                                    <a href='#' className='p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all'>
-                                        <Icon icon="mdi:facebook" className="size-6" />
-                                    </a>
-                                    <a href='#' className='p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all'>
-                                        <Icon icon="mdi:twitter" className="size-6" />
-                                    </a>
-                                    <a href='#' className='p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all'>
-                                        <Icon icon="mdi:instagram" className="size-6" />
-                                    </a>
-                                    <a href='#' className='p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all'>
-                                        <Icon icon="mdi:linkedin" className="size-6" />
-                                    </a>
-                                </div>
+                            <div className="pt-4">
+                                <Link
+                                    href="/app/support"
+                                    className="inline-flex items-center gap-2 text-primary-600 font-semibold hover:underline"
+                                >
+                                    <ArrowLeft className="h-4 w-4" />
+                                    Help &amp; Support
+                                </Link>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    )
+    );
 }
-
-export default ContactPage

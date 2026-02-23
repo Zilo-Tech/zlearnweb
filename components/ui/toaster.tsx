@@ -9,16 +9,24 @@ import {
     ToastViewport,
 } from '@/components/ui/toast';
 import { useAppSelector, useAppDispatch } from '@/lib/store/hooks';
-// Note: We'll need a way to manage toasts globally. 
-// For now, I'll create a simple toast hook and state if needed, 
-// but usually, people use a library like sonner or a custom context.
-// Let's implement a simple toast hook and state in a new slice or context.
+import { removeToast } from '@/lib/store/slices/toast.slice';
 
 export function Toaster() {
-    // This will be implemented once we have a toast state management
+    const toasts = useAppSelector((s) => s.toast?.toasts ?? []);
+    const dispatch = useAppDispatch();
     return (
         <ToastProvider>
-            {/* Toasts will be rendered here */}
+            {toasts.map((t) => (
+                <Toast
+                    key={t.id}
+                    variant={t.variant}
+                    onOpenChange={(open) => { if (!open) dispatch(removeToast(t.id)); }}
+                >
+                    <ToastTitle>{t.title}</ToastTitle>
+                    {t.description && <ToastDescription>{t.description}</ToastDescription>}
+                    <ToastClose />
+                </Toast>
+            ))}
             <ToastViewport />
         </ToastProvider>
     );

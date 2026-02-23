@@ -1,115 +1,38 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { communityService } from '@/lib/services';
-import { CommunityState } from '@/lib/types';
+import { apiService } from '@/lib/services/api.service';
 
-const initialState: CommunityState = {
-    forums: [],
-    discussions: [],
-    studyGroups: [],
-    notifications: [],
-    isLoading: false,
-    error: null,
-};
+interface CommunityState {
+  forums: unknown[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+const initialState: CommunityState = { forums: [], isLoading: false, error: null };
 
 export const fetchForums = createAsyncThunk(
-    'community/fetchForums',
-    async (params: any, { rejectWithValue }) => {
-        try {
-            const response = await communityService.getForums(params);
-            return response.results;
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
-
-export const fetchDiscussions = createAsyncThunk(
-    'community/fetchDiscussions',
-    async (params: any, { rejectWithValue }) => {
-        try {
-            const response = await communityService.getDiscussions(params);
-            return response.results;
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
-
-export const createDiscussion = createAsyncThunk(
-    'community/createDiscussion',
-    async (data: any, { rejectWithValue, dispatch }) => {
-        try {
-            const result = await communityService.createDiscussion(data);
-            dispatch(fetchDiscussions({}));
-            return result;
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
-
-export const fetchStudyGroups = createAsyncThunk(
-    'community/fetchStudyGroups',
-    async (params: any, { rejectWithValue }) => {
-        try {
-            const response = await communityService.getStudyGroups(params);
-            return response.results;
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
-
-export const joinStudyGroup = createAsyncThunk(
-    'community/joinStudyGroup',
-    async (groupId: string, { rejectWithValue }) => {
-        try {
-            return await communityService.joinStudyGroup(groupId);
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
-
-export const fetchNotifications = createAsyncThunk(
-    'community/fetchNotifications',
-    async (params: any, { rejectWithValue }) => {
-        try {
-            const response = await communityService.getNotifications(params);
-            return response.results;
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
+  'community/fetchForums',
+  async (_: Record<string, unknown>) => {
+    const data = await apiService.get<{ results?: unknown[] }>('/api/community/forums/');
+    return Array.isArray(data) ? data : (data as { results?: unknown[] }).results ?? [];
+  }
 );
 
 const communitySlice = createSlice({
-    name: 'community',
-    initialState,
-    reducers: {},
-    extraReducers: (builder) => {
-        builder
-            .addCase(fetchForums.pending, (state) => {
-                state.isLoading = true;
-            })
-            .addCase(fetchForums.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.forums = action.payload;
-            })
-            .addCase(fetchForums.rejected, (state, action) => {
-                state.isLoading = false;
-                state.error = action.payload as string;
-            })
-            .addCase(fetchDiscussions.fulfilled, (state, action) => {
-                state.discussions = action.payload;
-            })
-            .addCase(fetchStudyGroups.fulfilled, (state, action) => {
-                state.studyGroups = action.payload;
-            })
-            .addCase(fetchNotifications.fulfilled, (state, action) => {
-                state.notifications = action.payload;
-            });
-    },
+  name: 'community',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchForums.pending, (state) => { state.isLoading = true; state.error = null; })
+      .addCase(fetchForums.fulfilled, (state, action) => {
+        state.forums = action.payload ?? [];
+        state.isLoading = false;
+      })
+      .addCase(fetchForums.rejected, (state, action) => {
+        state.error = action.error.message ?? 'Failed to fetch';
+        state.isLoading = false;
+      });
+  },
 });
 
 export default communitySlice.reducer;

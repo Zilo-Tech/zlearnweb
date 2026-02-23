@@ -1,14 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { Navbar } from './navbar';
+import { useState, useEffect } from 'react';
 import { Sidebar } from './sidebar';
-import { Footer as AppFooter } from './footer';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer';
 import { Toaster } from '@/components/ui/toaster';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useAppSelector } from '@/lib/store/hooks';
 
 import { BottomNav } from './bottom-nav';
 
@@ -19,6 +18,15 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const pathname = usePathname();
+    const router = useRouter();
+    const { isAuthenticated, onboardingComplete } = useAppSelector((state) => state.auth);
+
+    // Redirect to onboarding when on app route but onboarding not complete (aligned with mobile)
+    useEffect(() => {
+        if (pathname?.startsWith('/app') && isAuthenticated && !onboardingComplete) {
+            router.replace('/onboarding/user-type');
+        }
+    }, [pathname, isAuthenticated, onboardingComplete, router]);
 
     // Check if we are in the app section (authenticated routes)
     const isAppRoute = pathname?.startsWith('/app');
@@ -39,10 +47,10 @@ export function AppLayout({ children }: AppLayoutProps) {
         );
     }
 
-    // For public pages, render without sidebar but with original Header and Footer
+    // For public pages, render without sidebar but with Header and Footer (brand: zinc-50)
     if (isPublicPage) {
         return (
-            <div className="min-h-screen flex flex-col">
+            <div className="min-h-screen flex flex-col bg-zinc-50 font-sans text-base antialiased">
                 <Header />
                 <main className="flex-1">
                     {children}
@@ -52,12 +60,14 @@ export function AppLayout({ children }: AppLayoutProps) {
         );
     }
 
-    // For app routes, render full layout with sidebar
+    // For app routes, use same Header (auth-aware) with sidebar toggle
     return (
-        <div className="min-h-screen bg-gray-50">
-            <Navbar onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <div className="min-h-screen flex flex-col bg-zinc-50 font-sans text-base antialiased">
+            <header className="sticky top-0 z-50 shrink-0">
+                <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+            </header>
 
-            <div className="flex pt-16">
+            <div className="flex flex-1 min-h-0">
                 {isAppRoute && (
                     <Sidebar
                         isOpen={isSidebarOpen}

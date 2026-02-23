@@ -15,16 +15,16 @@ export default function HomeTutorsSection() {
                 <div className="flex flex-col gap-4 md:flex-row justify-between items-start mb-12">
                     <div className="">
                         <h2 className="text-3xl md:text-4xl xl:text-6xl font-black text-gray-900 mb-2 tracking-tight">
-                            LEARN FROM THE BEST IN THE BUSINESS
+                            LEARN FROM EXPERTS WHO GET RESULTS
                         </h2>
-                        <p className="text-gray-700 text-xl  max-w-2xl">
-                            Get mentored by industry leaders who've built real companies and earned real results. These aren't just teachers — they're proven professionals.
+                        <p className="text-gray-700 text-xl max-w-2xl leading-relaxed">
+                            Instructors who teach our professional courses, curriculum content, and exam prep. Real expertise — from industry and the classroom.
                         </p>
                     </div>
                     <div className="text-center ">
-                        <Link href="/#" className="text-default font-bold flex items-center gap-2">
-                            <Icon icon="iwwa:add" className='size-6 md:size-7 ' />
-                            <span className="underline text-nowrap">View All Tutors</span>
+                        <Link href="/app/courses" className="text-default font-bold flex items-center gap-2">
+                            <Icon icon="iwwa:add" className='size-6 md:size-7' />
+                            <span className="underline text-nowrap">Browse Courses</span>
                         </Link>
                     </div>
                 </div>
@@ -38,10 +38,10 @@ export default function HomeTutorsSection() {
 
                 {/* Optional View All Button */}
                 <div className="text-center mt-8">
-                    <div className="  text-base md:text-lg text-gray-700">
-                        Ready to share your expertise and earn while teaching? 
-                        <Link href="/#" className="text-primary-600 font-black underline ml-1 text-xl md:text-2xl xl:text-4xl hover:text-primary-800 transition">
-                            Become a Tutor & Start Earning 
+                    <div className="text-base md:text-lg text-gray-700 leading-relaxed">
+                        Want to teach on Z-Learn? 
+                        <Link href="/contact" className="text-primary-600 font-black underline ml-1 text-xl md:text-2xl xl:text-4xl hover:text-primary-800 transition">
+                            Get in touch
                         </Link>
                     </div>
                 </div>

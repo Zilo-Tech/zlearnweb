@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Icon } from '@iconify/react';
 
 // Mock components - replace with your actual imports
@@ -96,17 +97,16 @@ function NavItems({ isMobile = false, onClose = () => {} }) {
         {/* Other Nav Items */}
         <a href="#" className="py-3 px-4 hover:bg-primary-100 text-[14.8px] rounded transition" onClick={onClose}>Book a Tutor</a>
         <a href="#" className="py-3 px-4 hover:bg-primary-100 text-[14.8px] rounded transition" onClick={onClose}>Become a Tutor</a>
-        <a href="#" className="py-3 px-4 hover:bg-primary-100 text-[14.8px] rounded transition" onClick={onClose}>Our Programs</a>
         <a href="#" className="py-3 px-4 hover:bg-primary-100 text-[14.8px] rounded transition" onClick={onClose}>Download</a>
         <a href="#" className="py-3 px-4 hover:bg-primary-100 text-[14.8px] rounded transition" onClick={onClose}>Plan & Pricing</a>
-        <a href="#" className="py-3 px-4 hover:bg-primary-100 text-[14.8px] rounded transition" onClick={onClose}>Contact Us</a>
+        <Link href="/contact" className="py-3 px-4 hover:bg-primary-100 text-[14.8px] rounded transition block" onClick={onClose}>Contact Us</Link>
         
         {/* Mobile Action Buttons */}
         <div className="pt-4 border-t border-gray-200 space-y-3">
-          <a href="/auth/register" className="w-full py-3 px-4 text-default border-2 border-default rounded-lg font-semibold hover:bg-primary-100 text-[14.8px] transition">
+          <a href="/auth/login" className="w-full py-3 px-4 border-2 border-primary-500 text-primary-700 rounded-lg font-semibold hover:bg-primary-50 text-[14.8px] transition block text-center">
             Sign In
           </a>
-          <a href="/auth/login" className="w-full py-3 px-4 bg-default text-white rounded-lg font-semibold hover:bg-[#3A5F5F] transition">
+          <a href="/auth/register" className="w-full py-3 px-4 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 text-[14.8px] transition block text-center">
             Sign Up
           </a>
         </div>
@@ -176,10 +176,9 @@ function NavItems({ isMobile = false, onClose = () => {} }) {
         </li>
         <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Book a Tutor</li>
         <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Become a Tutor</li>
-        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Our Programs</li>
         <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Download</li>
         <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Plan & Pricing</li>
-        <li className='cursor-pointer hover:text-default transition text-[14.8px] font-semibold text-white'>Contact Us</li>
+        <li><Link href="/contact" className='hover:text-default transition text-[14.8px] font-semibold text-white'>Contact Us</Link></li>
       </ul>
     </div>
   );
