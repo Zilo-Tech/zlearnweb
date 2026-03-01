@@ -4,8 +4,23 @@ import { Course, CourseFilters, CourseProgress, PaginatedResponse } from '../typ
 class CoursesService {
     // Get enrolled courses (academic)
     async getEnrolledCourses(): Promise<Course[]> {
-        const response = await apiService.get<any>('/api/content/enrollments/');
-        return response.results || response;
+        const response = await apiService.get<any[]>('/api/content/enrollments/');
+
+        if (!response || !Array.isArray(response)) {
+            return [];
+        }
+
+        // Transform enrollment objects to course objects with enrollment data
+        return response.map((enrollment: any) => ({
+            ...enrollment.course,
+            // Add enrollment-specific fields
+            is_enrolled: true,
+            enrollment_status: enrollment.status,
+            progress_percentage: enrollment.progress_percentage || 0,
+            last_accessed: enrollment.last_accessed,
+            completed_lessons_count: enrollment.completed_lessons_count,
+            total_lessons_count: enrollment.course.total_lessons,
+        }));
     }
 
     // Get available courses (academic)

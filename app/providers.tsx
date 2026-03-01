@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from '@/lib/store';
 import { Toaster } from '@/components/ui/toaster';
+import { Toaster as SonnerToaster } from 'sonner';
 import { Suspense, useEffect, useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -18,6 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <Provider store={store}>
                 {children}
                 <Toaster />
+                <SonnerToaster richColors closeButton position="top-center" />
             </Provider>
         );
     }
@@ -28,6 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <Suspense fallback={null}>
                     {children}
                     <Toaster />
+                    <SonnerToaster richColors closeButton position="top-center" />
                 </Suspense>
             </PersistGate>
         </Provider>

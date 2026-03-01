@@ -8,6 +8,7 @@ const initialState: CoursesState = {
     available: [],
     featured: [],
     currentCourse: null,
+    currentCourseModules: [],
     progress: {},
     isLoading: false,
     error: null,
@@ -29,8 +30,12 @@ export const fetchAvailableCourses = createAsyncThunk(
     'courses/fetchAvailable',
     async (filters: CourseFilters | undefined, { rejectWithValue }) => {
         try {
-            const response = await coursesService.getAvailableCourses(filters);
-            return response.results;
+            const response: any = await coursesService.getAvailableCourses(filters);
+            // Handle both paginated (response.results) and non-paginated (response array) formats
+            if (Array.isArray(response)) {
+                return response;
+            }
+            return response.results || [];
         } catch (error: any) {
             return rejectWithValue(error.message);
         }
@@ -50,9 +55,23 @@ export const fetchFeaturedCourses = createAsyncThunk(
 
 export const fetchCourseDetails = createAsyncThunk(
     'courses/fetchDetails',
+    async (courseId: string, { rejectWithValue, dispatch }) => {
+        try {
+            const course = await coursesService.getCourseDetails(courseId);
+            // Also fetch modules when details are fetched
+            dispatch(fetchCourseModules(courseId));
+            return course;
+        } catch (error: any) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+export const fetchCourseModules = createAsyncThunk(
+    'courses/fetchModules',
     async (courseId: string, { rejectWithValue }) => {
         try {
-            return await coursesService.getCourseDetails(courseId);
+            return await coursesService.getCourseModules(courseId);
         } catch (error: any) {
             return rejectWithValue(error.message);
         }
@@ -175,6 +194,12 @@ const coursesSlice = createSlice({
                 state.error = action.payload as string;
             });
 
+        // Fetch course modules
+        builder
+            .addCase(fetchCourseModules.fulfilled, (state, action) => {
+                state.currentCourseModules = action.payload;
+            });
+
         // Enroll in course
         builder
             .addCase(enrollInCourse.pending, (state) => {
@@ -219,4 +244,14 @@ const coursesSlice = createSlice({
 });
 
 export const { setCurrentCourse, clearCoursesError } = coursesSlice.actions;
+
+// Selectors
+export const selectEnrolledCourses = (state: { courses: CoursesState }) => state.courses.enrolled;
+export const selectCurrentCourse = (state: { courses: CoursesState }) => state.courses.currentCourse;
+export const selectCurrentCourseModules = (state: { courses: CoursesState }) => state.courses.currentCourseModules;
+export const selectIsEnrolled = (courseId: string | undefined) => (state: { courses: CoursesState }) =>
+    courseId ? state.courses.enrolled.some(c => c.id === courseId) : false;
+export const selectCourseProgressData = (courseId: string | undefined) => (state: { courses: CoursesState }) =>
+    courseId ? state.courses.progress[courseId] : null;
+
 export default coursesSlice.reducer;

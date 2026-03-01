@@ -5,18 +5,56 @@ import {
     RegisterData,
     AuthResponse,
     TokenRefreshResponse,
-    OnboardingData
+    OnboardingData,
+    ApiResponse
 } from '../types';
 
 class AuthService {
     // Register new user
     async register(data: RegisterData): Promise<AuthResponse> {
-        return apiService.postUnauthenticated<AuthResponse>('/api/auth/register/', data);
+        const response = await apiService.postUnauthenticated<ApiResponse<any>>('/api/auth/register/', data);
+
+        if (!response.success || !response.data) {
+            throw new Error(response.message || 'Registration failed');
+        }
+
+        // Normalize response to match AuthResponse type if needed
+        // Backend returns { token, user } or similar
+        return {
+            success: true,
+            data: {
+                token: response.data.token,
+                refresh_token: response.data.refresh_token || '',
+                user: response.data.user
+            },
+            message: response.message || 'Registration successful'
+        };
     }
 
     // Login user
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
-        return apiService.postUnauthenticated<AuthResponse>('/api/auth/login/', credentials);
+        const response = await apiService.postUnauthenticated<ApiResponse<any>>('/api/auth/login/', credentials);
+
+        if (!response.success || !response.data) {
+            throw new Error(response.message || 'Login failed');
+        }
+
+        // Backend returns { token, refresh_token, user }
+        const { token, refresh_token, user } = response.data;
+
+        if (!token) {
+            throw new Error('Authentication failed: No access token received');
+        }
+
+        return {
+            success: true,
+            data: {
+                token,
+                refresh_token: refresh_token || '',
+                user
+            },
+            message: response.message || 'Login successful'
+        };
     }
 
     // Logout user
@@ -47,11 +85,50 @@ class AuthService {
     }
 
     // Switch account type (academic <-> professional)
-    async switchAccountType(userType: 'academic' | 'professional', autoClearFields: boolean = true): Promise<any> {
-        return apiService.post('/api/auth/profile/switch-account', {
-            user_type: userType,
-            auto_clear_fields: autoClearFields,
-        });
+    async switchAccountType(userType: 'academic' | 'professional', autoClearFields: boolean = false): Promise<{
+        message: string;
+        user_type: string;
+        previous_type?: string;
+        user?: User;
+        warnings?: string[]
+    }> {
+        const response = await apiService.post<ApiResponse<any>>(
+            '/api/auth/profile/switch-account',
+            { user_type: userType, auto_clear_fields: autoClearFields }
+        );
+
+        if (!response.success) {
+            // Handle error response structure
+            const errorData = response.data || response;
+            const errorMessage = errorData.error || errorData.message || response.message || 'Failed to switch account type';
+
+            // Handle "already set to X" case
+            if (errorMessage.toLowerCase().includes('already set to') ||
+                errorMessage.toLowerCase().includes('account is already')) {
+                const currentUser = await this.getProfile();
+                return {
+                    message: errorMessage,
+                    user_type: currentUser.user_type || userType,
+                    previous_type: currentUser.user_type,
+                    user: currentUser,
+                };
+            }
+
+            const reason = errorData.reason;
+            const suggestion = errorData.suggestion;
+
+            let fullErrorMessage = errorMessage;
+            if (reason) fullErrorMessage += `. ${reason}`;
+            if (suggestion) fullErrorMessage += ` ${suggestion}`;
+
+            throw new Error(fullErrorMessage);
+        }
+
+        if (!response.data) {
+            throw new Error(response.message || 'Failed to switch account type');
+        }
+
+        return response.data;
     }
 
     // Verify email with token

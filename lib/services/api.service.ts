@@ -132,25 +132,28 @@ class ApiService {
                 let errorMessage = ERROR_MESSAGES.serverError;
 
                 if (data) {
+                    // 1. Handle DRF non_field_errors
                     if (data.non_field_errors && Array.isArray(data.non_field_errors)) {
-                        errorMessage = data.non_field_errors[0];
-                    } else if (data.message) {
-                        errorMessage = data.message;
-                    } else if (data.detail) {
-                        errorMessage = data.detail;
-                    } else {
-                        // Handle field-specific errors
+                        const firstError = data.non_field_errors[0];
+                        errorMessage = typeof firstError === 'object' && firstError.string ? firstError.string : String(firstError);
+                    }
+                    // 2. Handle message field
+                    else if (data.message) {
+                        errorMessage = String(data.message);
+                    }
+                    // 3. Handle detail field
+                    else if (data.detail) {
+                        errorMessage = typeof data.detail === 'object' && data.detail.string ? data.detail.string : String(data.detail);
+                    }
+                    // 4. Handle field-specific errors
+                    else {
                         const errorFields = Object.keys(data).filter(
-                            (key) => key !== 'success' && key !== 'message'
+                            (key) => key !== 'success' && key !== 'message' && Array.isArray(data[key]) && data[key].length > 0
                         );
                         if (errorFields.length > 0) {
                             const firstField = errorFields[0];
-                            const firstError = data[firstField];
-                            if (Array.isArray(firstError) && firstError.length > 0) {
-                                errorMessage = firstError[0];
-                            } else if (typeof firstError === 'string') {
-                                errorMessage = firstError;
-                            }
+                            const firstError = data[firstField][0];
+                            errorMessage = typeof firstError === 'object' && firstError.string ? firstError.string : String(firstError);
                         }
                     }
                 }

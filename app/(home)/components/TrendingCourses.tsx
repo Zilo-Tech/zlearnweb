@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function TrendingCourse() {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -99,6 +100,11 @@ export default function TrendingCourse() {
     setCurrentIndex(index)
   }
 
+  const router = useRouter();
+  const goToDashboard = () => {
+    router.push('/app/courses');
+  }
+
   return (
     <div className='container max-w-7xl mx-auto px-4 pb-20'>
       <div className='mt-32'>
@@ -195,7 +201,10 @@ export default function TrendingCourse() {
         </div>
 
         <div className='text-center mt-12'>
-          <button className='px-10 py-5 text-base md:text-lg bg-primary-500 text-white font-black rounded border-2 border-primary-900 hover:bg-primary-800 transition-all duration-300 transform hover:scale-105 shadow-xl'>
+          <button 
+          className='px-10 py-5 text-base md:text-lg bg-primary-500 text-white font-black rounded border-2 border-primary-900 hover:bg-primary-800 transition-all duration-300 transform hover:scale-105 shadow-xl'
+          onClick={goToDashboard}
+          >
             SEE ALL COURSES & START LEARNING 
           </button>
           <p className='text-sm text-gray-600 mt-4 '>Pro Tip: Enroll in 3+ courses and save 40%</p>

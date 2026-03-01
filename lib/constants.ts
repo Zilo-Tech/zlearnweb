@@ -68,9 +68,10 @@ export const QUESTION_TYPES = {
 } as const;
 
 export const EDUCATION_LEVELS = [
-    { id: 'primary', name: 'Primary School', description: 'Grades 1-6' },
-    { id: 'high_school', name: 'Secondary / High School', description: 'Forms 1-Upper 6' },
-    { id: 'university', name: 'University / College', description: 'Undergraduate & Postgraduate' },
+    { id: 'primary', name: 'Primary Education', description: 'Primary education for children' },
+    { id: 'lower-secondary', name: 'Lower Secondary', description: 'Junior secondary / middle school' },
+    { id: 'upper-secondary', name: 'Upper Secondary', description: 'Senior secondary / high school' },
+    { id: 'tertiary', name: 'Tertiary Education', description: 'University and college education' },
     { id: 'professional', name: 'Professional', description: 'Career development & Skills' },
 ];
 

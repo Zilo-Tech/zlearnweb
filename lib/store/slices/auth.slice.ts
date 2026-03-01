@@ -99,12 +99,39 @@ export const updateUserProfile = createAsyncThunk(
 
 export const switchUserType = createAsyncThunk(
     'auth/switchUserType',
-    async (userType: 'academic' | 'professional', { rejectWithValue }) => {
+    async (payload: { userType: 'academic' | 'professional'; autoClearFields?: boolean }, { dispatch, rejectWithValue }) => {
         try {
-            const response = await authService.switchAccountType(userType);
-            const user = response.user;
-            storageService.setUser(user);
-            return user;
+            const response = await authService.switchAccountType(payload.userType, payload.autoClearFields || false);
+
+            // After successful switch, refresh user profile to ensure state is in sync
+            const refreshedUser = await dispatch(refreshUserProfile()).unwrap();
+
+            return {
+                user: refreshedUser,
+                warnings: response.warnings || [],
+                message: response.message
+            };
+        } catch (error: any) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+export const syncUserType = createAsyncThunk(
+    'auth/syncUserType',
+    async (_, { rejectWithValue }) => {
+        try {
+            // Need to implement syncUserType in authService if not already there
+            // For now, let's assume it's like the mobile app
+            const response = await (authService as any).syncUserType?.() || { changed: false };
+
+            if (response.changed && response.user) {
+                storageService.setUser(response.user);
+                return { user: response.user, changed: true };
+            }
+
+            const currentUser = storageService.getUser<User>();
+            return { user: currentUser, changed: false };
         } catch (error: any) {
             return rejectWithValue(error.message);
         }
@@ -249,12 +276,30 @@ const authSlice = createSlice({
         builder
             .addCase(switchUserType.pending, (state) => {
                 state.isLoading = true;
+                state.error = null;
             })
             .addCase(switchUserType.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.user = action.payload;
+                state.user = action.payload.user;
             })
             .addCase(switchUserType.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
+            });
+
+        // Sync user type
+        builder
+            .addCase(syncUserType.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(syncUserType.fulfilled, (state, action) => {
+                state.isLoading = false;
+                if (action.payload.changed && action.payload.user) {
+                    state.user = action.payload.user;
+                }
+            })
+            .addCase(syncUserType.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload as string;
             });

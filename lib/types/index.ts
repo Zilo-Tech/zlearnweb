@@ -33,7 +33,8 @@ export interface RegisterData {
     name: string;
     email: string;
     password: string;
-    password_confirm: string;
+    confirmPassword: string;
+    agreeToTerms: boolean;
 }
 
 export interface AuthResponse {
@@ -66,19 +67,35 @@ export interface Course {
         code: string;
         color?: string;
     };
+    category?: {
+        id: string;
+        name: string;
+        slug: string;
+    } | any;
     curriculum?: string;
     difficulty?: 'beginner' | 'intermediate' | 'advanced' | string;
+    level?: string;
     estimated_hours?: number;
     duration_hours?: number;
+    price?: string | number;
+    is_free?: boolean;
     is_featured: boolean;
     is_published: boolean;
     instructor?: string | { id: number; name: string; bio?: string };
     rating?: number;
     enrolled_count?: number;
     lesson_count?: number;
+    total_lessons?: number;
     module_count?: number;
     created_at: string;
     updated_at: string;
+    // Enrollment & Progress fields
+    is_enrolled?: boolean;
+    progress_percentage?: number; // 0-100
+    enrollment_status?: 'active' | 'completed' | 'dropped';
+    last_accessed?: string;
+    completed_lessons_count?: number;
+    total_lessons_count?: number;
 }
 
 export interface ProfessionalCourse extends Course {
@@ -418,6 +435,7 @@ export interface CoursesState extends LoadingState {
     available: Course[];
     featured: Course[];
     currentCourse: Course | null;
+    currentCourseModules: any[];
     progress: Record<string, CourseProgress>;
 }
 

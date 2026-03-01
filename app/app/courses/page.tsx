@@ -26,7 +26,7 @@ export default function CoursesPage() {
 
     useEffect(() => {
         loadFeatured();
-        loadAvailable();
+        loadAvailable({ page_size: 100 });
         loadEnrolled();
     }, [loadFeatured, loadAvailable, loadEnrolled]);
 

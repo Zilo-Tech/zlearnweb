@@ -2,74 +2,79 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TrendingUp, Award, Users, Zap, Loader2 } from 'lucide-react';
+import { Target, TrendingUp, Award, Briefcase, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SelectionCard } from '@/components/onboarding/selection-card';
-import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
+import { useAppDispatch } from '@/lib/store/hooks';
 import { updateOnboardingData } from '@/lib/store/slices/onboarding.slice';
-import { completeOnboarding } from '@/lib/store/slices/auth.slice';
-import { useToast } from '@/lib/hooks/useToast';
+import { cn } from '@/lib/utils';
 
 const GOALS = [
-    { id: 'upskill', name: 'Upskill for current job', icon: <TrendingUp className="h-6 w-6" /> },
-    { id: 'certification', name: 'Get certified', icon: <Award className="h-6 w-6" /> },
-    { id: 'career_change', name: 'Change career', icon: <Zap className="h-6 w-6" /> },
-    { id: 'networking', name: 'Network with peers', icon: <Users className="h-6 w-6" /> },
+    { id: 'skill_up', label: 'Upgrade specific skills', icon: <TrendingUp className="h-5 w-5" /> },
+    { id: 'cert', label: 'Get certified for current job', icon: <Award className="h-5 w-5" /> },
+    { id: 'switch', label: 'Switch to a new career', icon: <Briefcase className="h-5 w-5" /> },
+    { id: 'promotion', label: 'Qualify for a promotion', icon: <Target className="h-5 w-5" /> },
+    { id: 'own_business', label: 'Start my own business', icon: <TrendingUp className="h-5 w-5" /> },
 ];
 
 export default function ProfessionalGoalsPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const { isSubmitting } = useAppSelector((state) => state.onboarding);
-    const { toast } = useToast();
-    const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
+    const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
 
-    const { data } = useAppSelector((state) => state.onboarding);
+    const toggleGoal = (id: string) => {
+        setSelectedGoals(prev =>
+            prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
+        );
+    };
 
-    // ...
-
-    const handleComplete = async () => {
-        if (selectedGoal) {
-            try {
-                const updatedData = { ...data, goal: selectedGoal };
-                dispatch(updateOnboardingData({ goal: selectedGoal }));
-                await dispatch(completeOnboarding(updatedData)).unwrap();
-
-                toast({
-                    title: 'Onboarding complete!',
-                    description: 'Welcome to Z-Learn Professional. Your dashboard is ready.',
-                    variant: 'success',
-                });
-
-                router.push('/app/dashboard');
-            } catch (error: any) {
-                toast({
-                    title: 'Something went wrong',
-                    description: error.message || 'Could not complete onboarding. Please try again.',
-                    variant: 'destructive',
-                });
-            }
+    const handleContinue = () => {
+        if (selectedGoals.length > 0) {
+            dispatch(updateOnboardingData({ professional_goals: selectedGoals }));
+            router.push('/onboarding/professional-preferences');
         }
     };
 
     return (
         <div className="space-y-6">
             <div className="space-y-2">
-                <h1 className="text-2xl font-bold text-gray-900">What is your main goal?</h1>
+                <h1 className="text-2xl font-bold text-gray-900">What are your professional goals?</h1>
                 <p className="text-gray-500">
-                    This helps us recommend the right courses and path for you.
+                    Select all that apply to you. This helps us suggest the best learning paths.
                 </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-3">
                 {GOALS.map((goal) => (
-                    <SelectionCard
+                    <button
                         key={goal.id}
-                        title={goal.name}
-                        icon={goal.icon}
-                        selected={selectedGoal === goal.id}
-                        onClick={() => setSelectedGoal(goal.id)}
-                    />
+                        onClick={() => toggleGoal(goal.id)}
+                        className={cn(
+                            "w-full flex items-center justify-between p-5 rounded-xl border-2 transition-all text-left",
+                            selectedGoals.includes(goal.id)
+                                ? "border-[#446D6D] bg-[#446D6D]/5 ring-1 ring-[#446D6D]"
+                                : "border-gray-100 bg-white hover:border-gray-200"
+                        )}
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className={cn(
+                                "h-10 w-10 rounded-lg flex items-center justify-center transition-colors",
+                                selectedGoals.includes(goal.id) ? "bg-[#446D6D] text-white" : "bg-gray-100 text-gray-500"
+                            )}>
+                                {goal.icon}
+                            </div>
+                            <span className={cn(
+                                "font-medium text-lg",
+                                selectedGoals.includes(goal.id) ? "text-[#446D6D]" : "text-gray-700"
+                            )}>
+                                {goal.label}
+                            </span>
+                        </div>
+                        {selectedGoals.includes(goal.id) && (
+                            <div className="h-6 w-6 rounded-full bg-[#446D6D] flex items-center justify-center text-white">
+                                <Check className="h-4 w-4" />
+                            </div>
+                        )}
+                    </button>
                 ))}
             </div>
 
@@ -77,17 +82,16 @@ export default function ProfessionalGoalsPage() {
                 <Button
                     variant="ghost"
                     onClick={() => router.back()}
-                    disabled={isSubmitting}
                 >
                     Back
                 </Button>
                 <Button
-                    onClick={handleComplete}
-                    disabled={!selectedGoal || isSubmitting}
+                    onClick={handleContinue}
+                    disabled={selectedGoals.length === 0}
                     size="lg"
+                    className="bg-[#446D6D] hover:bg-[#3A5F5F] px-8"
                 >
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Finish Setup
+                    Continue
                 </Button>
             </div>
         </div>

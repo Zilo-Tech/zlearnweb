@@ -20,11 +20,11 @@ export default function EducationLevelPage() {
 
             // Route based on selection
             if (selectedLevel === 'professional') {
-                router.push('/onboarding/professional-background');
-            } else if (selectedLevel === 'university') {
-                router.push('/onboarding/school'); // University students select school then faculty
+                router.push('/onboarding/career-orientation');
+            } else if (selectedLevel === 'tertiary') {
+                router.push('/onboarding/program-selection');
             } else {
-                router.push('/onboarding/school'); // High/Primary school students select school then class
+                router.push('/onboarding/school');
             }
         }
     };
