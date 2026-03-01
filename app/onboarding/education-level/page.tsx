@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GraduationCap, Briefcase, BookOpen, School } from 'lucide-react';
+import { GraduationCap, BookOpen, School } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SelectionCard } from '@/components/onboarding/selection-card';
 import { useAppDispatch } from '@/lib/store/hooks';
@@ -17,21 +17,19 @@ export default function EducationLevelPage() {
     const handleContinue = () => {
         if (selectedLevel) {
             dispatch(updateOnboardingData({ education_level: selectedLevel }));
-
-            // Route based on selection
-            if (selectedLevel === 'professional') {
-                router.push('/onboarding/career-orientation');
-            } else if (selectedLevel === 'tertiary') {
-                router.push('/onboarding/program-selection');
+            if (selectedLevel === 'university') {
+                router.push('/onboarding/school');
             } else {
                 router.push('/onboarding/school');
             }
         }
     };
 
+    // Academic path only: exclude 'professional' (chosen at user-type)
+    const academicLevels = EDUCATION_LEVELS.filter((l) => l.id !== 'professional');
+
     const getIcon = (id: string) => {
         switch (id) {
-            case 'professional': return <Briefcase className="h-6 w-6" />;
             case 'university': return <GraduationCap className="h-6 w-6" />;
             case 'high_school': return <School className="h-6 w-6" />;
             case 'primary': return <BookOpen className="h-6 w-6" />;
@@ -49,7 +47,7 @@ export default function EducationLevelPage() {
             </div>
 
             <div className="grid gap-4">
-                {EDUCATION_LEVELS.map((level) => (
+                {academicLevels.map((level) => (
                     <SelectionCard
                         key={level.id}
                         title={level.name}

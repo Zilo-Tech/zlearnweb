@@ -8,10 +8,17 @@ import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isUuid(id: string): boolean {
+    return UUID_REGEX.test(id || '');
+}
+
 interface CourseCardProps {
     course: Course;
     variant?: 'default' | 'compact' | 'featured';
     showEnrollButton?: boolean;
+    /** When 'academic' or 'exams', use course.id (like mobile) so detail page calls content API and gets modules with lessons. */
+    userType?: 'academic' | 'professional' | 'exams';
     className?: string;
 }
 
@@ -19,6 +26,7 @@ export function CourseCard({
     course,
     variant = 'default',
     showEnrollButton = false,
+    userType,
     className
 }: CourseCardProps) {
     const formatDuration = (hours: number): string => {
@@ -28,25 +36,33 @@ export function CourseCard({
         return `${Math.round(hours)}h`;
     };
 
-    const fallbackImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(course.title)}&background=446D6D&color=ffffff&size=200`;
+    const fallbackImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(course.title || 'Course')}&background=446D6D&color=ffffff&size=400`;
+    const imageSrc = course.thumbnail || fallbackImage;
+    const isSvgFallback = imageSrc.startsWith('https://ui-avatars.com');
+    const subjectLabel = course.subject?.name || 'Course';
+
+    // Match mobile: use course.id for detail so content API returns modules with lessons. Professional uses slug.
+    const courseIdentifier = userType === 'professional' ? ((course as any).slug || course.id) : course.id;
+    const courseHref = `/app/courses/${courseIdentifier}`;
 
     if (variant === 'compact') {
         return (
-            <Link href={`/app/courses/${course.id}`}>
-                <Card className={cn("overflow-hidden transition-all hover:shadow-md", className)}>
+            <Link href={courseHref}>
+                <Card className={cn("overflow-hidden transition-all hover:shadow-md border-2 border-primary-200", className)}>
                     <div className="flex items-center p-3">
                         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
                             <Image
-                                src={course.thumbnail || fallbackImage}
+                                src={imageSrc}
                                 alt={course.title}
                                 fill
                                 className="object-cover"
+                                unoptimized={isSvgFallback}
                             />
                         </div>
                         <div className="ml-3 flex-1 overflow-hidden">
                             <h3 className="truncate text-sm font-semibold text-gray-900">{course.title}</h3>
                             <div className="mt-1 flex items-center gap-2">
-                                <span className="text-xs font-medium text-[#446D6D]">{course.subject?.name}</span>
+                                <span className="text-xs font-medium text-primary-600">{subjectLabel}</span>
                                 {course.estimated_hours && (
                                     <>
                                         <span className="text-[10px] text-gray-400">•</span>
@@ -63,55 +79,56 @@ export function CourseCard({
 
     if (variant === 'featured') {
         return (
-            <Link href={`/app/courses/${course.id}`}>
-                <Card className={cn("group relative overflow-hidden transition-all hover:shadow-lg", className)}>
-                    <div className="relative h-40 w-full">
+            <Link href={courseHref} className="block h-full">
+                <Card className={cn("group relative overflow-hidden transition-all hover:shadow-lg border-2 border-primary-200 hover:border-primary-400 bg-white h-full flex flex-col", className)}>
+                    <div className="relative h-36 sm:h-40 w-full shrink-0 bg-primary-100">
                         <Image
-                            src={course.thumbnail || fallbackImage}
-                            alt={course.title}
+                            src={imageSrc}
+                            alt={course.title || 'Course'}
                             fill
+                            sizes="(max-width: 768px) 280px, 320px"
                             className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            unoptimized={isSvgFallback}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-                        <div className="absolute bottom-3 left-3">
-                            <span className="rounded-full bg-[#446D6D]/90 px-3 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
-                                {course.subject?.name}
+                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
+                            <span className="rounded-full bg-primary-700 px-3 py-1.5 text-[10px] font-bold text-white uppercase tracking-wider shrink-0">
+                                {subjectLabel}
                             </span>
+                            {course.difficulty && (
+                                <span className="rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-bold text-primary-700 shrink-0">
+                                    {course.difficulty.charAt(0).toUpperCase()}
+                                </span>
+                            )}
                         </div>
-
-                        {course.difficulty && (
-                            <div className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-[#446D6D] shadow-sm">
-                                {course.difficulty.charAt(0).toUpperCase()}
-                            </div>
-                        )}
                     </div>
 
-                    <div className="p-4">
-                        <h3 className="line-clamp-2 h-10 text-sm font-bold text-gray-900 leading-tight mb-2">
-                            {course.title}
+                    <div className="p-4 flex-1 flex flex-col min-h-0">
+                        <h3 className="line-clamp-2 text-sm font-bold text-gray-900 leading-snug mb-2 min-h-[2.5rem]">
+                            {course.title || 'Untitled Course'}
                         </h3>
 
-                        <div className="flex items-center justify-between mt-4">
-                            <div className="flex items-center gap-3">
-                                {course.estimated_hours && (
-                                    <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
-                                        <Clock className="h-3 w-3" />
+                        <div className="flex items-center justify-between mt-auto pt-2 flex-wrap gap-x-3 gap-y-1">
+                            <div className="flex items-center gap-3 text-gray-600">
+                                {course.estimated_hours != null && (
+                                    <span className="flex items-center gap-1 text-[11px] font-medium">
+                                        <Clock className="h-3.5 w-3.5 shrink-0" />
                                         {formatDuration(course.estimated_hours)}
-                                    </div>
+                                    </span>
                                 )}
-                                {course.lesson_count && (
-                                    <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
-                                        <BookOpen className="h-3 w-3" />
-                                        {course.lesson_count}
-                                    </div>
+                                {course.lesson_count != null && (
+                                    <span className="flex items-center gap-1 text-[11px] font-medium">
+                                        <BookOpen className="h-3.5 w-3.5 shrink-0" />
+                                        {course.lesson_count} lessons
+                                    </span>
                                 )}
                             </div>
 
                             {showEnrollButton && (
-                                <div className="rounded-full bg-[#446D6D] px-3 py-1 text-[10px] font-bold text-white">
+                                <span className="rounded-full bg-primary-500 px-3 py-1 text-[10px] font-bold text-white">
                                     Enroll
-                                </div>
+                                </span>
                             )}
                         </div>
                     </div>
@@ -121,30 +138,31 @@ export function CourseCard({
     }
 
     return (
-        <Link href={`/app/courses/${course.id}`}>
-            <Card className={cn("group overflow-hidden transition-all hover:shadow-md", className)}>
+        <Link href={courseHref}>
+            <Card className={cn("group overflow-hidden transition-all hover:shadow-md border-2 border-primary-200 hover:border-primary-300", className)}>
                 <div className="relative h-48 w-full">
                     <Image
-                        src={course.thumbnail || fallbackImage}
+                        src={imageSrc}
                         alt={course.title}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        unoptimized={isSvgFallback}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
 
                     <div className="absolute bottom-3 left-3">
-                        <span className="rounded-full bg-[#446D6D]/90 px-3 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
-                            {course.subject?.name}
+                        <span className="rounded-full bg-primary-700 px-3 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
+                            {subjectLabel}
                         </span>
                     </div>
                 </div>
 
-                <div className="p-4">
-                    <h3 className="line-clamp-2 h-12 text-base font-bold text-gray-900 leading-tight mb-2">
-                        {course.title}
+                <div className="p-4 bg-white">
+                    <h3 className="line-clamp-2 text-base font-bold text-gray-900 leading-tight mb-2 min-h-[2.75rem]">
+                        {course.title || 'Untitled Course'}
                     </h3>
                     <p className="line-clamp-2 text-xs text-gray-500 leading-relaxed mb-4">
-                        {course.description}
+                        {course.description || 'Start learning today.'}
                     </p>
 
                     <div className="flex items-center justify-between">
@@ -164,7 +182,7 @@ export function CourseCard({
                         </div>
 
                         {showEnrollButton && (
-                            <Button size="sm" className="h-8 rounded-full bg-[#446D6D] hover:bg-[#365757]">
+                            <Button size="sm" className="h-8 rounded-full font-semibold">
                                 Enroll
                             </Button>
                         )}

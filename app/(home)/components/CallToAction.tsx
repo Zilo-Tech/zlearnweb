@@ -7,9 +7,9 @@ export default function CallToACtion() {
             {/* Call to Action Section */}
             <div className='bg-gray-50 rounded-3xl overflow-hidden'>
                 <div className='mb-6'>
-                    <p className='text-sm text-primary-600 uppercase tracking-widest my-4 font-bold'>DON'T GET LEFT BEHIND</p>
+                    <p className='text-sm text-primary-600 uppercase tracking-widest my-4 font-bold'>READY TO START?</p>
                     <h2 className='text-4xl lg:text-6xl font-black text-gray-900 leading-tight mb-8 tracking-tight'>
-                        THE FASTEST PATH TO A HIGHER SALARY STARTS HERE
+                        YOUR LEARNING JOURNEY STARTS HERE
                     </h2>
                 </div>
                 <div className='grid grid-cols-1 lg:grid-cols-2 gap-20 items-center'>
@@ -21,22 +21,22 @@ export default function CallToACtion() {
                         <div className='space-y-6 mb-10'>
                             <div className='flex items-start gap-3 border-b-2 border-primary-950 pb-4'>
                                 <div>
-                                    <p className='text-gray-900 text-xl font-bold mb-1'>Earn Industry-Recognized Certifications</p>
-                                    <p className='text-gray-700 text-base'>Get certified by top professionals — credentials that employers actually value. 94% of our graduates land better jobs within 6 months.</p>
+                                    <p className='text-gray-900 text-xl font-bold mb-1'>Professional Courses & Certifications</p>
+                                    <p className='text-gray-700 text-base leading-relaxed'>Expert-led courses to level up your career. Track progress, earn XP, and get recognized for what you learn.</p>
                                 </div>
                             </div>
 
                             <div className='flex items-start gap-3 border-b-2 border-primary-950 pb-4'>
                                 <div>
-                                    <p className='text-gray-900 text-xl font-bold mb-1'>Ace Every Major Exam</p>
-                                    <p className='text-gray-700 text-base'>Master exam prep with proven strategies. Our students score 30% higher on average — guaranteed results or your money back.</p>
+                                    <p className='text-gray-900 text-xl font-bold mb-1'>Entrance Exam Prep & Mock Exams</p>
+                                    <p className='text-gray-700 text-base leading-relaxed'>Practice with past papers and timed mock exams. Analytics and leaderboards help you see where you stand and improve.</p>
                                 </div>
                             </div>
 
                             <div className='flex items-start gap-3 border-b-2 border-primary-950 pb-4'>
                                 <div>
-                                    <p className='text-gray-900 text-xl font-bold mb-1'>AI-Powered Career Acceleration</p>
-                                    <p className='text-gray-700 text-base'>Get personalized career guidance powered by AI. Know exactly what skills to learn next to maximize your earning potential.</p>
+                                    <p className='text-gray-900 text-xl font-bold mb-1'>AI Tutor & Personalized Recommendations</p>
+                                    <p className='text-gray-700 text-base leading-relaxed'>Get help when you’re stuck and see what to learn next. Our AI supports your goals — whether career, exams, or school.</p>
                                 </div>
                             </div>
 
@@ -48,7 +48,7 @@ export default function CallToACtion() {
                                     CLAIM YOUR SPOT NOW
                                 </button>
                             </Link>
-                            <p className='text-sm text-gray-600 mt-3 '>30-Day Money-Back Guarantee • No Questions Asked</p>
+                            <p className='text-sm text-gray-600 mt-3'>Free to start • No credit card required</p>
                         </div>
                     </div>
 

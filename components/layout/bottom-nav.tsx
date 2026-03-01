@@ -37,7 +37,7 @@ export function BottomNav() {
     const pathname = usePathname();
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-40 block border-t border-gray-200 bg-white md:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 block border-t-2 border-primary-200 bg-white md:hidden" aria-label="App navigation">
             <div className="flex h-16 items-center justify-around px-2">
                 {navItems.map((item) => {
                     const Icon = item.icon;
@@ -48,18 +48,17 @@ export function BottomNav() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center gap-1 transition-colors",
-                                isActive ? "text-[#446D6D]" : "text-gray-500 hover:text-gray-700"
+                                'flex flex-col items-center justify-center gap-1 transition-colors',
+                                isActive ? 'text-primary-700' : 'text-gray-500 hover:text-primary-700'
                             )}
                         >
-                            <Icon className={cn("h-6 w-6", isActive && "fill-current")} />
+                            <Icon className={cn('h-6 w-6', isActive && 'fill-current')} />
                             <span className="text-[10px] font-medium">{item.label}</span>
                         </Link>
                     );
                 })}
             </div>
-            {/* Safe area padding for mobile browsers */}
-            <div className="h-[env(safe-area-inset-bottom)] bg-white" />
+            <div className="h-[env(safe-area-inset-bottom)] bg-white" aria-hidden />
         </nav>
     );
 }

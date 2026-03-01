@@ -6,16 +6,19 @@ import { Button } from '@/components/ui/button';
 import { ProgressIndicator } from '@/components/onboarding/progress-indicator';
 
 // Map routes to step numbers
-const steps = {
-    '/onboarding/country': 1,
-    '/onboarding/education-level': 2,
-    '/onboarding/school': 3,
-    '/onboarding/faculty': 3, // Alternative step 3
-    '/onboarding/class': 4,
-    '/onboarding/curriculum': 5,
-    '/onboarding/preferences': 6,
-    '/onboarding/professional-background': 3, // Professional path
-    '/onboarding/professional-goals': 4, // Professional path
+const steps: Record<string, number> = {
+    '/onboarding/user-type': 1,
+    '/onboarding/profile': 2,
+    '/onboarding/country': 2,
+    '/onboarding/education-level': 3,
+    '/onboarding/school': 4,
+    '/onboarding/faculty': 4,
+    '/onboarding/class': 5,
+    '/onboarding/curriculum': 6,
+    '/onboarding/preferences': 7,
+    '/onboarding/professional-background': 2,
+    '/onboarding/professional-goals': 3,
+    '/onboarding/exams': 2,
 };
 
 export default function OnboardingLayout({
@@ -24,8 +27,12 @@ export default function OnboardingLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
-    const currentStep = steps[pathname as keyof typeof steps] || 1;
-    const totalSteps = pathname?.includes('professional') ? 4 : 6;
+    const currentStep = steps[pathname ?? ''] ?? 1;
+    const totalSteps =
+        pathname === '/onboarding/user-type' ? 1
+        : pathname?.includes('exams') ? 2
+        : pathname?.includes('professional') ? 4
+        : 7;
 
     return (
         <div className="min-h-screen bg-gray-50">

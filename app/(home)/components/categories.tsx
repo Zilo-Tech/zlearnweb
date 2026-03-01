@@ -4,34 +4,34 @@ import { Icon } from '@iconify/react';
 const TopCategories: React.FC = () => {
     const categories = [
         {
-            icon: 'ion:code-slash',
-            title: 'Development',
-            courses: '1,200+ courses',
+            icon: 'ion:school',
+            title: 'Academic Curriculum',
+            courses: 'School-aligned learning',
         },
         {
             icon: 'hugeicons:briefcase-08',
-            title: 'Business',
-            courses: '850+ courses',
+            title: 'Professional Courses',
+            courses: 'Career-focused skills',
         },
         {
-            icon: 'streamline-freehand:design-tool-pen-brush-cup',
-            title: 'Design',
-            courses: '650+ courses',
+            icon: 'ion:document-text',
+            title: 'Exam Preparation',
+            courses: 'Mock exams & past papers',
         },
         {
-            icon: 'mdi:marketplace-outline',
-            title: 'Marketing',
-            courses: '720+ courses',
+            icon: 'ion:code-slash',
+            title: 'Development & Tech',
+            courses: 'Coding & software',
         },
         {
-            icon: 'solar:server-minimalistic-line-duotone',
-            title: 'IT & Software',
-            courses: '950+ courses',
+            icon: 'mdi:account-group',
+            title: 'Community & Study Groups',
+            courses: 'Learn together',
         },
         {
-            icon: 'solar:camera-square-broken',
-            title: 'Photography',
-            courses: '420+ courses',
+            icon: 'ion:sparkles',
+            title: 'AI Tutor & Personalization',
+            courses: 'Smart recommendations',
         },
         // {
         //     icon: 'clarity:music-note-line',
@@ -54,10 +54,10 @@ const TopCategories: React.FC = () => {
                         <div className="">
                             <p className='text-sm text-primary-600 uppercase tracking-widest mb-2 font-bold'>START HERE</p>
                             <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 tracking-tight">
-                                CHOOSE YOUR PATH TO SUCCESS
+                                CHOOSE YOUR PATH
                             </h2>
-                            <p className="text-lg text-gray-700  max-w-2xl">
-                                Over 5,000+ courses across 6 high-demand categories. Pick the skills that will boost your income fastest.
+                            <p className="text-lg text-gray-700 max-w-2xl leading-relaxed">
+                                Academic curriculum, professional courses, exam prep, and more. One platform for every learning goal.
                             </p>
                         </div>
                         <div className=" mt-10 hidden md:block">
@@ -81,7 +81,7 @@ const TopCategories: React.FC = () => {
                                         <h3 className="text-xl md:text-4xl font-black text-gray-900 tracking-tight">
                                             {category.title}
                                         </h3>
-                                        <p className="text-sm text-gray-700  font-semibold">{category.courses}available</p>
+                                        <p className="text-sm text-gray-700 font-semibold">{category.courses}</p>
                                         <p className="text-xs text-primary-600  mt-1 font-bold">Start Learning</p>
                                     </div>
                                 </div>

@@ -1,30 +1,16 @@
-import { useAppDispatch } from '../store/hooks';
-import { addToast, Toast } from '../store/slices/toast.slice';
+'use client';
+
 import { useCallback } from 'react';
+import { useAppDispatch } from '@/lib/store/hooks';
+import { addToast } from '@/lib/store/slices/toast.slice';
 
 export function useToast() {
-    const dispatch = useAppDispatch();
-
-    const toast = useCallback(
-        (options: Omit<Toast, 'id'>) => {
-            dispatch(addToast(options));
-        },
-        [dispatch]
-    );
-
-    const success = useCallback(
-        (title: string, description?: string) => {
-            toast({ title, description, variant: 'success' });
-        },
-        [toast]
-    );
-
-    const error = useCallback(
-        (title: string, description?: string) => {
-            toast({ title, description, variant: 'destructive' });
-        },
-        [toast]
-    );
-
-    return { toast, success, error };
+  const dispatch = useAppDispatch();
+  const toast = useCallback(
+    (opts: { title: string; description?: string; variant?: 'default' | 'destructive' | 'success' }) => {
+      dispatch(addToast(opts));
+    },
+    [dispatch]
+  );
+  return { toast };
 }

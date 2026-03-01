@@ -19,18 +19,35 @@ const GOALS = [
 export default function ProfessionalGoalsPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+    const { toast } = useToast();
+    const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const data = useAppSelector((state) => state.onboarding) as Record<string, unknown>;
 
-    const toggleGoal = (id: string) => {
-        setSelectedGoals(prev =>
-            prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
-        );
-    };
+    const handleComplete = async () => {
+        if (selectedGoal) {
+            try {
+                setIsSubmitting(true);
+                const updatedData = { ...data, goal: selectedGoal };
+                dispatch(updateOnboardingData({ goal: selectedGoal }));
+                await dispatch(completeOnboarding(updatedData)).unwrap();
 
-    const handleContinue = () => {
-        if (selectedGoals.length > 0) {
-            dispatch(updateOnboardingData({ professional_goals: selectedGoals }));
-            router.push('/onboarding/professional-preferences');
+                toast({
+                    title: 'Onboarding complete!',
+                    description: 'Welcome to Z-Learn Professional. Your dashboard is ready.',
+                    variant: 'success',
+                });
+
+                router.push('/app/dashboard');
+            } catch (error: unknown) {
+                toast({
+                    title: 'Something went wrong',
+                    description: (error as Error)?.message || 'Could not complete onboarding. Please try again.',
+                    variant: 'destructive',
+                });
+            } finally {
+                setIsSubmitting(false);
+            }
         }
     };
 

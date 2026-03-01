@@ -1,55 +1,37 @@
-import { useAppSelector, useAppDispatch } from '../store/hooks';
-import {
-    fetchPersonalizedDashboard,
-    fetchRecommendations,
-    fetchEntranceExam,
-    fetchStudyPlan,
-    clearPersonalizationError
-} from '@/lib/store/slices/personalization.slice';
-import { useCallback } from 'react';
+'use client';
+
+import { useCallback, useState } from 'react';
+
+export interface RecommendationsData {
+  recommendations?: unknown[];
+  academic_recommendations?: { course?: unknown; reason?: string }[];
+  skill_gap_courses?: { course?: unknown; reason?: string }[];
+  career_aligned_courses?: { course?: unknown; reason?: string }[];
+  [key: string]: unknown;
+}
 
 export function usePersonalization() {
-    const dispatch = useAppDispatch();
-    const {
-        dashboard,
-        recommendations,
-        entranceExam,
-        studyPlan,
-        isLoading,
-        error
-    } = useAppSelector((state) => state.personalization);
+  const [dashboard, setDashboard] = useState<Record<string, unknown> | null>(null);
+  const [recommendations, setRecommendations] = useState<RecommendationsData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-    const loadDashboard = useCallback(async () => {
-        return dispatch(fetchPersonalizedDashboard()).unwrap();
-    }, [dispatch]);
+  const loadDashboard = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      setDashboard({ welcome_message: {} });
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-    const loadRecommendations = useCallback(async () => {
-        return dispatch(fetchRecommendations()).unwrap();
-    }, [dispatch]);
+  const loadRecommendations = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      setRecommendations(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-    const loadEntranceExam = useCallback(async () => {
-        return dispatch(fetchEntranceExam()).unwrap();
-    }, [dispatch]);
-
-    const loadStudyPlan = useCallback(async () => {
-        return dispatch(fetchStudyPlan()).unwrap();
-    }, [dispatch]);
-
-    const clearError = useCallback(() => {
-        dispatch(clearPersonalizationError());
-    }, [dispatch]);
-
-    return {
-        dashboard,
-        recommendations,
-        entranceExam,
-        studyPlan,
-        isLoading,
-        error,
-        loadDashboard,
-        loadRecommendations,
-        loadEntranceExam,
-        loadStudyPlan,
-        clearError,
-    };
+  return { dashboard, recommendations, isLoading, loadDashboard, loadRecommendations };
 }

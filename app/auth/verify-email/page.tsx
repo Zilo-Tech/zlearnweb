@@ -58,7 +58,7 @@ function VerifyEmailContent() {
                 variant: 'success',
             });
 
-            router.push('/onboarding/country');
+            router.push('/onboarding/user-type');
         } catch (error: any) {
             toast({
                 title: 'Verification failed',
@@ -91,13 +91,15 @@ function VerifyEmailContent() {
         <div className="space-y-6">
             <div className="space-y-2 text-center">
                 <div className="flex justify-center mb-4">
-                    <div className="h-12 w-12 rounded-full bg-[#446D6D]/10 flex items-center justify-center text-[#446D6D]">
-                        <Mail className="h-6 w-6" />
+                    <div className="h-14 w-14 rounded-xl bg-primary-100 flex items-center justify-center text-primary-600">
+                        <Mail className="h-7 w-7" />
                     </div>
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">Check your email</h1>
-                <p className="text-sm text-gray-500">
-                    We sent a verification code to <span className="font-medium text-gray-900">{email || 'your email'}</span>.
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-gray-900">
+                    Check your email
+                </h1>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                    We sent a verification code to <span className="font-bold text-gray-900">{email || 'your email'}</span>.
                     Enter the code below to verify your account.
                 </p>
             </div>
@@ -117,25 +119,25 @@ function VerifyEmailContent() {
                     />
                 </div>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full py-3 rounded-lg font-bold" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Verify email
                 </Button>
             </form>
 
-            <div className="text-center text-sm text-gray-500">
+            <div className="text-center text-sm text-gray-600">
                 Didn&apos;t receive the code?{' '}
                 <button
                     onClick={handleResendCode}
                     disabled={resendCooldown > 0 || isLoading}
-                    className="font-medium text-[#446D6D] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="font-bold text-primary-600 hover:text-primary-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                     {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Click to resend'}
                 </button>
             </div>
 
             <div className="text-center">
-                <Link href="/auth/login" className="text-sm text-gray-500 hover:text-gray-900">
+                <Link href="/auth/login" className="text-sm font-bold text-primary-600 hover:text-primary-800 hover:underline transition">
                     &larr; Back to login
                 </Link>
             </div>
@@ -147,7 +149,7 @@ export default function VerifyEmailPage() {
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center p-8">
-                <Loader2 className="h-8 w-8 animate-spin text-[#446D6D]" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
             </div>
         }>
             <VerifyEmailContent />

@@ -27,7 +27,7 @@ export default function DashboardPage() {
     }, [loadDashboard, dispatch]);
 
     return (
-        <div className="space-y-8 pb-8 max-w-full break-words">
+        <div className="space-y-8 pb-8 max-w-full break-words text-base antialiased">
             <WelcomeHeader />
 
             <div className="grid gap-8 lg:grid-cols-3">

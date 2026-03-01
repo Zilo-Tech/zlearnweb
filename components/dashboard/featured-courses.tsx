@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
 export function FeaturedCoursesSection() {
-    const { featured, loadFeatured, isLoading } = useCourses();
+    const { featured, loadFeatured, isLoading, userType } = useCourses();
 
     useEffect(() => {
         loadFeatured();
@@ -18,12 +18,12 @@ export function FeaturedCoursesSection() {
         return (
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <div className="h-6 w-40 bg-gray-200 rounded animate-pulse" />
-                    <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-6 w-40 bg-primary-100 rounded animate-pulse" />
+                    <div className="h-4 w-20 bg-primary-100 rounded animate-pulse" />
                 </div>
                 <div className="flex gap-4 overflow-hidden">
                     {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-64 w-[280px] bg-gray-100 rounded-2xl animate-pulse shrink-0" />
+                        <div key={i} className="h-64 w-[280px] bg-primary-50 rounded-2xl animate-pulse shrink-0" />
                     ))}
                 </div>
             </div>
@@ -35,8 +35,8 @@ export function FeaturedCoursesSection() {
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-900">Featured Courses</h2>
-                <Link href="/app/courses" className="flex items-center text-sm font-semibold text-[#446D6D] hover:underline">
+                <h2 className="text-lg font-bold text-primary-900 tracking-tight">Featured Courses</h2>
+                <Link href="/app/courses" className="flex items-center text-sm font-bold text-primary-600 hover:text-primary-800 hover:underline">
                     Explore All
                     <ChevronRight className="h-4 w-4 ml-1" />
                 </Link>
@@ -50,6 +50,7 @@ export function FeaturedCoursesSection() {
                             course={course}
                             variant="featured"
                             className="shrink-0 w-[280px] md:w-full"
+                            userType={userType ?? undefined}
                         />
                     ))}
                 </div>

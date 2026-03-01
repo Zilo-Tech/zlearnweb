@@ -1,82 +1,49 @@
-import { useAppSelector, useAppDispatch } from '../store/hooks';
+'use client';
+
+import { useEffect, useCallback } from 'react';
+import { useAppSelector, useAppDispatch } from '@/lib/store/hooks';
 import {
-    fetchEnrolledCourses,
-    fetchAvailableCourses,
-    fetchFeaturedCourses,
-    fetchCourseDetails,
-    enrollInCourse,
-    fetchCourseProgress,
-    markLessonComplete,
-    setCurrentCourse,
-    clearCoursesError
+  fetchEnrolledCourses,
+  fetchAvailableCourses,
+  fetchFeaturedCourses,
+  fetchCourseDetails,
+  enrollInCourse,
 } from '@/lib/store/slices/courses.slice';
-import { useCallback } from 'react';
-import { CourseFilters } from '@/lib/types';
 
 export function useCourses() {
-    const dispatch = useAppDispatch();
-    const {
-        enrolled,
-        available,
-        featured,
-        currentCourse,
-        progress,
-        isLoading,
-        error
-    } = useAppSelector((state) => state.courses);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((s) => s.courses);
 
-    const loadEnrolled = useCallback(async () => {
-        return dispatch(fetchEnrolledCourses()).unwrap();
-    }, [dispatch]);
+  const loadEnrolled = useCallback(() => dispatch(fetchEnrolledCourses()), [dispatch]);
+  const loadAvailable = useCallback(() => dispatch(fetchAvailableCourses()), [dispatch]);
+  const loadFeatured = useCallback(() => dispatch(fetchFeaturedCourses()), [dispatch]);
+  const loadDetails = useCallback(
+    (idOrSlug: string) => dispatch(fetchCourseDetails(idOrSlug)).unwrap(),
+    [dispatch]
+  );
+  const enroll = useCallback((courseId: string) => dispatch(enrollInCourse(courseId)).unwrap(), [dispatch]);
 
-    const loadAvailable = useCallback(async (filters?: CourseFilters) => {
-        return dispatch(fetchAvailableCourses(filters)).unwrap();
-    }, [dispatch]);
+  const isEnrolled = useCallback(
+    (courseId: string) => (state.enrolledCourseIds || []).includes(courseId),
+    [state.enrolledCourseIds]
+  );
 
-    const loadFeatured = useCallback(async () => {
-        return dispatch(fetchFeaturedCourses()).unwrap();
-    }, [dispatch]);
-
-    const loadDetails = useCallback(async (courseId: string) => {
-        return dispatch(fetchCourseDetails(courseId)).unwrap();
-    }, [dispatch]);
-
-    const enroll = useCallback(async (courseId: string) => {
-        return dispatch(enrollInCourse(courseId)).unwrap();
-    }, [dispatch]);
-
-    const loadProgress = useCallback(async (courseId: string) => {
-        return dispatch(fetchCourseProgress(courseId)).unwrap();
-    }, [dispatch]);
-
-    const completeLesson = useCallback(async (lessonId: string, courseId: string, data?: any) => {
-        return dispatch(markLessonComplete({ lessonId, courseId, data })).unwrap();
-    }, [dispatch]);
-
-    const setCourse = useCallback((course: any) => {
-        dispatch(setCurrentCourse(course));
-    }, [dispatch]);
-
-    const clearError = useCallback(() => {
-        dispatch(clearCoursesError());
-    }, [dispatch]);
-
-    return {
-        enrolled,
-        available,
-        featured,
-        currentCourse,
-        progress,
-        isLoading,
-        error,
-        loadEnrolled,
-        loadAvailable,
-        loadFeatured,
-        loadDetails,
-        enroll,
-        loadProgress,
-        completeLesson,
-        setCourse,
-        clearError,
-    };
+  return {
+    enrolled: state.enrolled ?? [],
+    available: state.available ?? [],
+    featured: state.featured ?? [],
+    currentCourse: state.currentCourse ?? null,
+    progress: state.progress ?? null,
+    enrolledCourseIds: state.enrolledCourseIds ?? [],
+    userType: state.userType ?? null,
+    isLoading: state.isLoading ?? false,
+    error: state.error ?? null,
+    loadEnrolled,
+    loadAvailable,
+    loadFeatured,
+    loadDetails,
+    enroll,
+    isEnrolled,
+    completeLesson: async (_lessonId: string, _courseId: string, _body?: object) => {},
+  };
 }

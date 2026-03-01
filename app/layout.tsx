@@ -6,6 +6,10 @@ import { AppLayout } from "@/components/layout/app-layout";
 export const metadata: Metadata = {
   title: "Z-Learn",
   description: "Global Digital School Platform",
+  icons: {
+    icon: "/zlearntrans.png",
+    apple: "/zlearntrans.png",
+  },
 };
 
 export default function RootLayout({

@@ -27,7 +27,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [backendError, setBackendError] = useState<string | null>(null);
-    const { login, isLoading, error } = useAuth();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { login, error } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
 
@@ -46,6 +47,7 @@ export function LoginForm() {
 
     const onSubmit = async (data: LoginFormData) => {
         setBackendError(null);
+        setIsSubmitting(true);
         try {
             await login({
                 email: data.email,
@@ -59,14 +61,16 @@ export function LoginForm() {
             });
 
             router.push('/app/dashboard');
-        } catch (error: any) {
-            const errorMessage = error.message || error || 'Please check your credentials and try again.';
+        } catch (err: any) {
+            const errorMessage = err?.message || err || 'Please check your credentials and try again.';
             setBackendError(errorMessage);
             toast({
                 title: 'Login failed',
                 description: errorMessage,
                 variant: 'destructive',
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -78,16 +82,18 @@ export function LoginForm() {
     }, []);
 
     return (
-        <Card className="border-none shadow-none lg:border lg:shadow-sm">
+        <Card className="border-2 border-primary-200 bg-white shadow-none lg:shadow-md rounded-lg">
             <CardHeader className="space-y-1 px-0 lg:px-6">
-                <CardTitle className="text-3xl font-bold tracking-tight text-gray-900">Welcome back</CardTitle>
-                <CardDescription className="text-sm text-gray-500">
+                <CardTitle className="text-2xl md:text-3xl font-black tracking-tight text-gray-900">
+                    Welcome back
+                </CardTitle>
+                <CardDescription className="text-sm text-gray-600 leading-relaxed">
                     Enter your credentials to access your account
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 px-0 lg:px-6">
                 {backendError && (
-                    <div className="rounded-lg bg-red-50 border border-red-200 p-4 flex items-start gap-3">
+                    <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4 flex items-start gap-3">
                         <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
                         <div className="flex-1">
                             <h3 className="text-sm font-semibold text-red-800">Login Failed</h3>
@@ -95,14 +101,14 @@ export function LoginForm() {
                         </div>
                     </div>
                 )}
-                <SocialAuth isLoading={isLoading} />
+                <SocialAuth isLoading={isSubmitting} />
 
                 <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-gray-200" />
+                        <span className="w-full border-t-2 border-primary-200" />
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                    <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                        <span className="bg-white px-2 text-gray-500 font-semibold">Or continue with</span>
                     </div>
                 </div>
 
@@ -114,7 +120,7 @@ export function LoginForm() {
                             placeholder="name@example.com"
                             label="Email"
                             error={errors.email?.message}
-                            disabled={isLoading}
+                            disabled={isSubmitting}
                             {...register('email')}
                         />
                     </div>
@@ -127,14 +133,14 @@ export function LoginForm() {
                                 placeholder="••••••••"
                                 label="Password"
                                 error={errors.password?.message}
-                                disabled={isLoading}
+                                disabled={isSubmitting}
                                 {...register('password')}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
                                 className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
-                                disabled={isLoading}
+                                disabled={isSubmitting}
                             >
                                 {showPassword ? (
                                     <EyeOff className="h-4 w-4" />
@@ -153,7 +159,7 @@ export function LoginForm() {
                             <Checkbox
                                 id="rememberMe"
                                 {...register('rememberMe')}
-                                disabled={isLoading}
+                                disabled={isSubmitting}
                             />
                             <label
                                 htmlFor="rememberMe"
@@ -164,21 +170,21 @@ export function LoginForm() {
                         </div>
                         <Link
                             href="/auth/forgot-password"
-                            className="text-sm font-medium text-[#446D6D] hover:underline"
+                            className="text-sm font-bold text-primary-600 hover:text-primary-800 hover:underline transition"
                         >
                             Forgot password?
                         </Link>
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button type="submit" className="w-full py-3 rounded-lg font-bold" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Sign in
                     </Button>
                 </form>
             </CardContent>
-            <CardFooter className="flex flex-wrap items-center justify-center gap-1 px-0 lg:px-6">
-                <span className="text-sm text-gray-500">Don&apos;t have an account?</span>
-                <Link href="/auth/register" className="text-sm font-medium text-[#446D6D] hover:underline">
+            <CardFooter className="flex flex-wrap items-center justify-center gap-1 px-0 lg:px-6 pt-4">
+                <span className="text-sm text-gray-600">Don&apos;t have an account?</span>
+                <Link href="/auth/register" className="text-sm font-bold text-primary-600 hover:text-primary-800 hover:underline transition">
                     Sign up
                 </Link>
             </CardFooter>

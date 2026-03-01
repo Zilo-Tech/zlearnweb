@@ -101,7 +101,7 @@ export default function ProfilePage() {
 
                     <div className="flex gap-2">
                         <Button variant="outline" size="icon" className="rounded-xl" asChild>
-                            <Link href="/app/settings">
+                            <Link href="/app/profile/settings">
                                 <Settings className="h-5 w-5 text-gray-600" />
                             </Link>
                         </Button>
@@ -251,10 +251,10 @@ export default function ProfilePage() {
                 <h3 className="text-xl font-bold text-gray-900 mb-4">Account Settings</h3>
                 <div className="divide-y divide-gray-100">
                     {[
-                        { label: 'Edit Profile', icon: User, href: '/app/settings/profile' },
-                        { label: 'Change Password', icon: Lock, href: '/app/settings/password' },
-                        { label: 'Notifications', icon: Bell, href: '/app/settings/notifications' },
-                        { label: 'Help & Support', icon: HelpCircle, href: '/app/help' },
+                        { label: 'Edit Profile', icon: User, href: '/app/profile/settings' },
+                        { label: 'Change Password', icon: Lock, href: '/app/profile/settings?tab=account' },
+                        { label: 'Notifications', icon: Bell, href: '/app/profile/settings?tab=notifications' },
+                        { label: 'Help & Support', icon: HelpCircle, href: '/app/support' },
                     ].map((item) => {
                         const Icon = item.icon;
                         return (

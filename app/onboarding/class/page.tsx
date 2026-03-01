@@ -27,7 +27,7 @@ const CLASSES = [
 export default function ClassSelectionPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const { data } = useAppSelector((state) => state.onboarding);
+    const data = useAppSelector((state) => state.onboarding) as { education_level?: string };
     const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
     // Filter classes based on education level

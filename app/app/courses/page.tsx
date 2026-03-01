@@ -7,22 +7,30 @@ import { Input } from '@/components/ui/input';
 import { CourseCard } from '@/components/courses/course-card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCourses } from '@/lib/hooks/useCourses';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 export default function CoursesPage() {
+    const { user } = useAuth();
+    const [mounted, setMounted] = useState(false);
     const {
-        enrolled,
         available,
         featured,
         isLoading,
         error,
+        isEnrolled,
         loadAvailable,
         loadFeatured,
         loadEnrolled
     } = useCourses();
+    const userType = (user?.user_type as 'academic' | 'professional' | 'exams') ?? undefined;
 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilter, setSelectedFilter] = useState<'all' | 'featured' | 'available'>('all');
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         loadFeatured();
@@ -68,7 +76,13 @@ export default function CoursesPage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Courses</h1>
-                    <p className="text-gray-500">Explore our wide range of academic and professional courses.</p>
+                    <p className="text-gray-500" suppressHydrationWarning>
+                        {mounted && userType === 'professional'
+                            ? 'Skill-based courses to advance your career.'
+                            : mounted && userType === 'exams'
+                                ? 'Courses and resources for your exam preparation.'
+                                : 'Explore curriculum-aligned and exam-prep courses.'}
+                    </p>
                 </div>
 
                 <Button
@@ -158,7 +172,8 @@ export default function CoursesPage() {
                         <CourseCard
                             key={course.id}
                             course={course}
-                            showEnrollButton={!enrolled?.some(c => c.id === course.id)}
+                            showEnrollButton={!isEnrolled(course.id)}
+                            userType={userType}
                         />
                     ))}
                 </div>

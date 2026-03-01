@@ -11,28 +11,28 @@ const HeroSection: React.FC = () => {
             <div className="mb-2 md:mb-3">
               <div className="inline-block mb-2">
                 <p className="text-lg md:text-2xl font-black text-yellow-500">
-                  FREE
+                  ONE PLATFORM, EVERY GOAL
                 </p>
                 <p className="text-xs md:text-sm text-primary-100 font-bold uppercase tracking-wider">
-                  Limited Time Offer
+                  Courses · Exam Prep · School Curriculum
                 </p>
               </div>
             </div>
             <h1 className="text-[28px] md:text-[52px] font-black text-primary-100 mb-3 md:mb-4 leading-tight max-w-md tracking-tight">
-              TRANSFORM YOUR CAREER TODAY
+              LEARN YOUR WAY, CAREER, EXAMS, OR SCHOOL
             </h1>
-            <p className="text-sm md:text-xl text-white mb-4 md:mb-6 pr-6 hidden md:block max-w-xl  leading-relaxed">
-              Join 50,000+ professionals earning more with expert-led courses and recognized certifications.
+            <p className="text-sm md:text-xl text-white mb-4 md:mb-6 pr-6 hidden md:block max-w-xl leading-relaxed">
+              Expert-led courses, entrance exam preparation, and curriculum-aligned learning. Study on your schedule, track progress, and level up with XP and achievements.
             </p>
             <div className="flex gap-4 max-w-sm mb-2">
               <Link href="/auth/register" className="w-full">
                 <button className="px-8 w-full py-3 md:py-4 bg-primary-500 text-white md:text-lg font-bold rounded hover:bg-[#253F3F] transition">
-                  START YOUR SUCCESS NOW
+                  START LEARNING FREE
                 </button>
               </Link>
             </div>
             <p className="text-xs md:text-sm text-primary-200 font-bold">
-              First 10 students only — Act fast!
+              Free to start · No credit card required
             </p>
           </div>
 

@@ -1,72 +1,34 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { progressService } from '@/lib/services';
-import { ProgressState } from '@/lib/types';
+import { apiService } from '@/lib/services/api.service';
 
-const initialState: ProgressState = {
-    userProgress: null,
-    learningAnalytics: null,
-    isLoading: false,
-    error: null,
-};
+interface ProgressState {
+  learningAnalytics: unknown | null;
+  isLoading: boolean;
+  error: string | null;
+}
 
-export const fetchUserProgress = createAsyncThunk(
-    'progress/fetchUserProgress',
-    async (_, { rejectWithValue }) => {
-        try {
-            return await progressService.getUserProgress();
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
+const initialState: ProgressState = { learningAnalytics: null, isLoading: false, error: null };
 
-export const fetchLearningAnalytics = createAsyncThunk(
-    'progress/fetchLearningAnalytics',
-    async (_, { rejectWithValue }) => {
-        try {
-            return await progressService.getLearningAnalytics();
-        } catch (error: any) {
-            return rejectWithValue(error.message);
-        }
-    }
-);
-
-const progressSlice = createSlice({
-    name: 'progress',
-    initialState,
-    reducers: {
-        clearProgressError: (state) => {
-            state.error = null;
-        },
-    },
-    extraReducers: (builder) => {
-        builder
-            .addCase(fetchUserProgress.pending, (state) => {
-                state.isLoading = true;
-                state.error = null;
-            })
-            .addCase(fetchUserProgress.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.userProgress = action.payload;
-            })
-            .addCase(fetchUserProgress.rejected, (state, action) => {
-                state.isLoading = false;
-                state.error = action.payload as string;
-            })
-            .addCase(fetchLearningAnalytics.pending, (state) => {
-                state.isLoading = true;
-                state.error = null;
-            })
-            .addCase(fetchLearningAnalytics.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.learningAnalytics = action.payload;
-            })
-            .addCase(fetchLearningAnalytics.rejected, (state, action) => {
-                state.isLoading = false;
-                state.error = action.payload as string;
-            });
-    },
+export const fetchLearningAnalytics = createAsyncThunk('progress/fetchAnalytics', async () => {
+  return apiService.get<unknown>('/api/progress/learning-analytics/');
 });
 
-export const { clearProgressError } = progressSlice.actions;
+const progressSlice = createSlice({
+  name: 'progress',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchLearningAnalytics.pending, (state) => { state.isLoading = true; state.error = null; })
+      .addCase(fetchLearningAnalytics.fulfilled, (state, action) => {
+        state.learningAnalytics = action.payload ?? null;
+        state.isLoading = false;
+      })
+      .addCase(fetchLearningAnalytics.rejected, (state, action) => {
+        state.error = action.error.message ?? 'Failed';
+        state.isLoading = false;
+      });
+  },
+});
+
 export default progressSlice.reducer;
