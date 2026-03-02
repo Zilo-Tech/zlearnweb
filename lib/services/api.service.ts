@@ -11,6 +11,7 @@ function getToken(): string | null {
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_CONFIG.baseUrl}${endpoint}`;
+  console.log('🌐 API Request:', url);
   const headers: HeadersInit = { 'Content-Type': 'application/json', ...(options.headers as object) };
   const token = getToken();
   
@@ -51,8 +52,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       throw new Error('Unauthorized. Please log in again.');
     }
     
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { detail?: string }).detail || res.statusText);
+    const err = await res.json().catch(() => ({})) as { detail?: string; error?: { message?: string; details?: string } };
+    const details = err?.error?.details ?? err?.detail ?? '';
+    const msg = String(details || err?.error?.message || err?.detail || res.statusText);
+    throw new Error(msg);
   }
   return res.json();
 }

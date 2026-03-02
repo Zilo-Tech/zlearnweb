@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ModuleList } from '@/components/courses/module-list';
@@ -12,44 +12,69 @@ import {
     fetchCourseDetails,
     enrollInCourse,
     fetchEnrolledCourses,
+    fetchModuleLessons,
     selectCurrentCourse,
     selectCurrentCourseModules,
     selectIsEnrolled
 } from '@/lib/store/slices/courses.slice';
 import { toast } from 'sonner';
+import { markdownToHtml } from '@/lib/utils/markdownToHtml';
 
 export default function CourseDetailsPage() {
     const params = useParams();
-    const courseId = params?.courseId as string;
+    const courseId = params?.courseId as string; // slug for professional, id for academic
     const router = useRouter();
     const dispatch = useAppDispatch();
     const course = useAppSelector(selectCurrentCourse);
     const modules = useAppSelector(selectCurrentCourseModules);
-    const isEnrolled = useAppSelector((state) => selectIsEnrolled(courseId)(state));
+    const userType = useAppSelector((s) => s.auth.user?.user_type as 'academic' | 'professional' | 'exams' | undefined);
+    const enrollmentsCheck = useAppSelector((state) => selectIsEnrolled(course?.id ?? courseId)(state));
+    // Use is_enrolled from course detail API when available; fallback to enrollments list
+    const isEnrolled = course?.is_enrolled ?? enrollmentsCheck;
     const isLoading = useAppSelector((state) => state.courses.isLoading);
 
     // Local loading state for enrollment action
     const [isEnrolling, setIsEnrolling] = useState(false);
 
+    const isProfessionalCourse = !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(courseId ?? '');
+
     useEffect(() => {
         if (courseId) {
             dispatch(fetchCourseDetails(courseId));
-            // Also ensure enrolled courses are loaded to check status
-            dispatch(fetchEnrolledCourses());
+            dispatch(fetchEnrolledCourses({ forceProfessional: isProfessionalCourse }));
         }
-    }, [dispatch, courseId]);
+    }, [dispatch, courseId, isProfessionalCourse]);
+
+    useEffect(() => {
+        const c = course as { modules?: { id: string; lessons?: unknown[]; lesson_count?: number }[] } | null;
+        const mods = c?.modules;
+        if (!mods?.length) return;
+        const needLessons = mods.filter((m) => (m.lesson_count ?? 0) > 0 && !(m.lessons?.length));
+        if (needLessons.length) {
+            dispatch(fetchModuleLessons(needLessons.map((m) => m.id)));
+        }
+    }, [course?.id, course?.modules, dispatch]);
 
     const handleEnroll = async () => {
         if (!course) return;
 
         setIsEnrolling(true);
         try {
-            await dispatch(enrollInCourse(course.id)).unwrap();
+            const payload =
+                userType === 'professional'
+                    ? { identifier: course.slug ?? course.id, courseId: course.id }
+                    : { identifier: course.id, courseId: course.id };
+            await dispatch(enrollInCourse(payload)).unwrap();
             toast.success('Successfully enrolled in course!');
-            // Refresh details to ensure UI updates
-            dispatch(fetchCourseDetails(course.id));
+            await dispatch(fetchCourseDetails(courseId)).unwrap();
         } catch (error: any) {
-            toast.error(error || 'Failed to enroll in course');
+            const msg = error?.message || String(error);
+            if (msg.toLowerCase().includes('already enrolled')) {
+                toast.info('You are already enrolled in this course.');
+                dispatch(fetchCourseDetails(courseId));
+            } else {
+                toast.error(msg || 'Failed to enroll in course');
+            }
         } finally {
             setIsEnrolling(false);
         }
@@ -101,11 +126,16 @@ export default function CourseDetailsPage() {
                 {/* Header */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-2">
-                        {course.category != null && (
-                            <Badge variant="secondary" className="bg-[#446D6D]/10 text-[#446D6D]">
-                                {typeof course.category === 'object' ? (course.category as any).name : String(course.category)}
-                            </Badge>
-                        )}
+                        {(() => {
+                            const cat = course as { category_name?: string; category?: { name?: string } | string };
+                            const label = cat.category_name ?? (typeof cat.category === 'object' ? cat.category?.name : null);
+                            if (!label) return null;
+                            return (
+                                <Badge variant="secondary" className="bg-[#446D6D]/10 text-[#446D6D]">
+                                    {label}
+                                </Badge>
+                            );
+                        })()}
                         <span className="text-sm text-gray-500">•</span>
                         <span className="text-sm text-gray-500">{course.level ? String(course.level) : 'Beginner'}</span>
                     </div>
@@ -114,18 +144,23 @@ export default function CourseDetailsPage() {
                         {course.title}
                     </h1>
 
-                    <p className="text-lg text-gray-600 leading-relaxed">
-                        {course.description}
-                    </p>
+                    <div
+                        className="prose prose-gray max-w-none text-gray-600 [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_strong]:text-gray-900"
+                        dangerouslySetInnerHTML={{
+                            __html: markdownToHtml(course.description ?? ''),
+                        }}
+                    />
 
                     <div className="flex items-center gap-6 text-sm text-gray-500">
                         <div className="flex items-center gap-2">
                             {/* <div className="h-8 w-8 rounded-full bg-gray-200" /> */}
-                            {course.instructor != null && (
+                            {(course as { instructor_name?: string }).instructor_name || course.instructor != null ? (
                                 <span className="font-medium text-gray-900">
-                                    {typeof course.instructor === 'object' ? (course.instructor as any).name : 'Instructor'}
+                                    {(course as { instructor_name?: string }).instructor_name ??
+                                        (typeof course.instructor === 'object' ? (course.instructor as { name?: string })?.name : null) ??
+                                        'Instructor'}
                                 </span>
-                            )}
+                            ) : null}
                         </div>
                         <div className="flex items-center gap-1 text-yellow-500">
                             <Star className="h-4 w-4 fill-current" />
@@ -138,7 +173,7 @@ export default function CourseDetailsPage() {
                 {/* Course Content */}
                 <div className="space-y-4">
                     <h2 className="text-xl font-bold text-gray-900">Course Content</h2>
-                    <ModuleList courseId={course.id} modules={modules} />
+                    <ModuleList courseId={courseId} modules={modules} />
                 </div>
             </div>
 

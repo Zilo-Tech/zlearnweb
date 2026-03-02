@@ -18,6 +18,8 @@ export interface Course {
   estimated_hours?: number;
   difficulty?: string;
   lesson_count?: number;
+  /** From course detail API when authenticated */
+  is_enrolled?: boolean;
   [key: string]: unknown;
 }
 

@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { ChevronLeft, CheckCircle, FileText, Loader2, AlertCircle } from 'lucide-react';
+import { ChevronLeft, CheckCircle, FileText, Loader2, AlertCircle, Target, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LessonPlayer } from '@/components/courses/lesson-player';
+import { LessonSectionBlock, type LessonSection } from '@/components/courses/lesson-section-block';
+import { markdownToHtml } from '@/lib/utils/markdownToHtml';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
 import {
@@ -26,11 +28,14 @@ export default function LessonViewerPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
 
-    // Selectors
+    const isProfessionalCourse = !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(courseId ?? '');
+
     const course = useAppSelector(selectCurrentCourse);
     const modules = useAppSelector(selectCurrentCourseModules);
-    // Since we have the course ID from useParams, we can check enrollment directly
-    const isEnrolled = useAppSelector((state) => selectIsEnrolled(courseId)(state));
+    const enrollmentsCheck = useAppSelector((state) =>
+        selectIsEnrolled(course?.id ?? courseId)(state)
+    );
+    const isEnrolled = course?.is_enrolled ?? enrollmentsCheck;
 
     // Local state
     const [lesson, setLesson] = useState<any>(null);
@@ -48,8 +53,7 @@ export default function LessonViewerPage() {
                     await dispatch(fetchCourseDetails(courseId)).unwrap();
                 }
 
-                // Fetch enrolled courses to know (or confirm) enrollment status
-                await dispatch(fetchEnrolledCourses()).unwrap();
+                await dispatch(fetchEnrolledCourses({ forceProfessional: isProfessionalCourse })).unwrap();
 
             } catch (error) {
                 console.error("Failed to load course context:", error);
@@ -83,7 +87,7 @@ export default function LessonViewerPage() {
 
             setIsLoading(true);
             try {
-                const data = await coursesService.getLessonDetails(lessonId);
+                const data = await coursesService.getLessonDetails(lessonId, undefined, isProfessionalCourse);
                 setLesson(data);
             } catch (error) {
                 console.error("Failed to load lesson:", error);
@@ -96,7 +100,7 @@ export default function LessonViewerPage() {
         if (lessonId && !isCheckingEnrollment && isEnrolled) {
             fetchLesson();
         }
-    }, [lessonId, isEnrolled, isCheckingEnrollment]);
+    }, [lessonId, isEnrolled, isCheckingEnrollment, isProfessionalCourse]);
 
 
     const handleComplete = async () => {
@@ -119,12 +123,12 @@ export default function LessonViewerPage() {
             if (nextLessonId) {
                 toast.success("Moving to next lesson...");
                 setTimeout(() => {
-                    router.push(`/app/courses/${course.id}/lessons/${nextLessonId}`);
+                    router.push(`/app/courses/${courseId}/lessons/${nextLessonId}`);
                 }, 1500);
             } else {
                 toast.success("Course Completed!");
                 setTimeout(() => {
-                    router.push(`/app/courses/${course.id}`);
+                    router.push(`/app/courses/${courseId}`);
                 }, 1500);
             }
         } catch (error: any) {
@@ -193,7 +197,13 @@ export default function LessonViewerPage() {
                     </Link>
                 </div>
 
-                <LessonPlayer src={lesson.video_url || lesson.videoUrl || ''} />
+                {(lesson.video_url || lesson.videoUrl) && (
+                    <LessonPlayer
+                        src={lesson.video_url || lesson.videoUrl || ''}
+                        poster={lesson.video_thumbnail}
+                        title={lesson.title}
+                    />
+                )}
 
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-900">{lesson.title}</h1>
@@ -215,6 +225,17 @@ export default function LessonViewerPage() {
                     </Button>
                 </div>
 
+                {/* Lesson sections (text, video, quiz, etc.) */}
+                {lesson.sections && lesson.sections.length > 0 && (
+                    <div className="space-y-6">
+                        {([...lesson.sections] as LessonSection[])
+                            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                            .map((section) => (
+                                <LessonSectionBlock key={section.id} section={section} />
+                            ))}
+                    </div>
+                )}
+
                 <Tabs defaultValue="description" className="w-full">
                     <TabsList>
                         <TabsTrigger value="description">Description</TabsTrigger>
@@ -222,22 +243,63 @@ export default function LessonViewerPage() {
                         <TabsTrigger value="discussion">Discussion</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="description" className="mt-4 text-gray-600 leading-relaxed">
-                        {lesson.description || 'No description available.'}
+                    <TabsContent value="description" className="mt-4 space-y-4">
+                        {(lesson.content || lesson.description) && (
+                            <div
+                                className="prose prose-gray max-w-none text-gray-600 leading-relaxed prose-p:my-2 prose-ul:my-2 prose-ol:my-2"
+                                dangerouslySetInnerHTML={{ __html: markdownToHtml(lesson.content || lesson.description || '') }}
+                            />
+                        )}
+                        {lesson.learning_objectives && lesson.learning_objectives.length > 0 && (
+                            <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-4">
+                                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
+                                    <Target className="h-4 w-4" />
+                                    Learning objectives
+                                </h4>
+                                <ul className="space-y-2 text-sm text-gray-600">
+                                    {lesson.learning_objectives.map((obj: string, i: number) => (
+                                        <li key={i} className="flex items-start gap-2">
+                                            <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                                            {obj}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                        {!lesson.content && !lesson.description && (!lesson.learning_objectives || lesson.learning_objectives.length === 0) && (
+                            <p className="text-gray-500">No description available.</p>
+                        )}
                     </TabsContent>
 
                     <TabsContent value="resources" className="mt-4 space-y-3">
                         {lesson.resources && lesson.resources.length > 0 ? (
-                            lesson.resources.map((resource: any, i: number) => (
-                                <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50">
-                                    <div className="flex items-center gap-3">
-                                        <FileText className="h-5 w-5 text-gray-400" />
-                                        <div>
+                            lesson.resources.map((resource: { id?: string; title: string; description?: string; url?: string; resource_type?: string; file?: unknown }, i: number) => (
+                                <div key={resource.id ?? i} className="flex items-center justify-between gap-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                                        <FileText className="h-5 w-5 shrink-0 text-gray-400" />
+                                        <div className="min-w-0">
                                             <p className="text-sm font-medium text-gray-900">{resource.title}</p>
-                                            <p className="text-xs text-gray-500">{resource.size || 'Unknown size'}</p>
+                                            {resource.description && (
+                                                <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{resource.description}</p>
+                                            )}
                                         </div>
                                     </div>
-                                    <Button variant="ghost" size="sm">Download</Button>
+                                    {resource.resource_type === 'link' && resource.url && (
+                                        <a
+                                            href={resource.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="shrink-0"
+                                        >
+                                            <Button variant="ghost" size="sm">
+                                                <ExternalLink className="mr-1.5 h-4 w-4" />
+                                                Open
+                                            </Button>
+                                        </a>
+                                    )}
+                                    {resource.file ? (
+                                        <Button variant="ghost" size="sm">Download</Button>
+                                    ) : null}
                                 </div>
                             ))
                         ) : (

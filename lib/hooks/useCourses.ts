@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '@/lib/store/hooks';
 import {
   fetchEnrolledCourses,
@@ -9,10 +9,12 @@ import {
   fetchCourseDetails,
   enrollInCourse,
 } from '@/lib/store/slices/courses.slice';
+import type { Course } from '@/lib/types';
 
 export function useCourses() {
   const dispatch = useAppDispatch();
   const state = useAppSelector((s) => s.courses);
+  const userType = useAppSelector((s) => s.auth.user?.user_type as 'academic' | 'professional' | 'exams' | null);
 
   const loadEnrolled = useCallback(() => dispatch(fetchEnrolledCourses()), [dispatch]);
   const loadAvailable = useCallback(() => dispatch(fetchAvailableCourses()), [dispatch]);
@@ -21,7 +23,16 @@ export function useCourses() {
     (idOrSlug: string) => dispatch(fetchCourseDetails(idOrSlug)).unwrap(),
     [dispatch]
   );
-  const enroll = useCallback((courseId: string) => dispatch(enrollInCourse(courseId)).unwrap(), [dispatch]);
+  const enroll = useCallback(
+    (course: Course) => {
+      const payload =
+        userType === 'professional'
+          ? { identifier: course.slug ?? course.id, courseId: course.id }
+          : { identifier: course.id, courseId: course.id };
+      return dispatch(enrollInCourse(payload)).unwrap();
+    },
+    [dispatch, userType]
+  );
 
   const isEnrolled = useCallback(
     (courseId: string) => (state.enrolledCourseIds || []).includes(courseId),

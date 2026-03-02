@@ -6,42 +6,42 @@ export interface ListResponse<T = unknown> {
 
 export const communityService = {
   getForums: (_params?: Record<string, unknown>) =>
-    apiService.get<ListResponse>('/api/community/forums/'),
-  getForum: (id: string) => apiService.get<unknown>(`/api/community/forums/${id}/`),
-  getForumDetails: (id: string) => apiService.get<unknown>(`/api/community/forums/${id}/`),
+    apiService.get<ListResponse>('/community/forums/'),
+  getForum: (id: string) => apiService.get<unknown>(`/community/forums/${id}/`),
+  getForumDetails: (id: string) => apiService.get<unknown>(`/community/forums/${id}/`),
   getForumDiscussions: (forumId: string) =>
-    apiService.get<unknown>(`/api/community/forums/${forumId}/discussions/`),
+    apiService.get<unknown>(`/community/forums/${forumId}/discussions/`),
   getDiscussions: (forumId: string) =>
-    apiService.get<ListResponse>(`/api/community/forums/${forumId}/discussions/`),
-  getDiscussion: (id: string) => apiService.get<unknown>(`/api/community/discussions/${id}/`),
-  getDiscussionDetails: (id: string) => apiService.get<unknown>(`/api/community/discussions/${id}/`),
+    apiService.get<ListResponse>(`/community/forums/${forumId}/discussions/`),
+  getDiscussion: (id: string) => apiService.get<unknown>(`/community/discussions/${id}/`),
+  getDiscussionDetails: (id: string) => apiService.get<unknown>(`/community/discussions/${id}/`),
   getReplies: (discussionId: string) =>
-    apiService.get<ListResponse>(`/api/community/discussions/${discussionId}/replies/`),
+    apiService.get<ListResponse>(`/community/discussions/${discussionId}/replies/`),
   likeDiscussion: (discussionId: string) =>
     apiService.post<{ like_count: number; liked?: boolean }>(
-      `/api/community/discussions/${discussionId}/like/`,
+      `/community/discussions/${discussionId}/like/`,
       {}
     ),
   createReply: (body: { discussion: string; content: string }) =>
-    apiService.post<unknown>('/api/community/replies/', body),
+    apiService.post<unknown>('/community/replies/', body),
   createDiscussion: (body: { forum: string; title: string; content: string }) =>
-    apiService.post<{ id: string }>('/api/community/discussions/', body),
-  getGroups: () => apiService.get<unknown>('/api/community/groups/'),
-  getGroup: (id: string) => apiService.get<unknown>(`/api/community/groups/${id}/`),
-  getStudyGroupDetails: (id: string) => apiService.get<unknown>(`/api/community/groups/${id}/`),
+    apiService.post<{ id: string }>('/community/discussions/', body),
+  getGroups: () => apiService.get<unknown>('/community/groups/'),
+  getGroup: (id: string) => apiService.get<unknown>(`/community/groups/${id}/`),
+  getStudyGroupDetails: (id: string) => apiService.get<unknown>(`/community/groups/${id}/`),
   joinStudyGroup: (groupId: string) =>
-    apiService.post<unknown>(`/api/community/groups/${groupId}/join/`, {}),
+    apiService.post<unknown>(`/community/groups/${groupId}/join/`, {}),
   getStudyGroups: (_params?: Record<string, unknown>) =>
-    apiService.get<ListResponse>('/api/community/groups/'),
-  getMyStudyGroups: () => apiService.get<unknown>('/api/community/groups/my/'),
-  getFeed: () => apiService.get<unknown>('/api/community/feed/'),
+    apiService.get<ListResponse>('/community/groups/'),
+  getMyStudyGroups: () => apiService.get<unknown>('/community/groups/my/'),
+  getFeed: () => apiService.get<unknown>('/community/feed/'),
   getDiscussionsFeed: (_params?: Record<string, unknown>) =>
-    apiService.get<ListResponse>('/api/community/feed/'),
-  getCommunityStats: () => apiService.get<unknown>('/api/community/stats/'),
+    apiService.get<ListResponse>('/community/feed/'),
+  getCommunityStats: () => apiService.get<unknown>('/community/stats/'),
   getNotifications: (_params?: Record<string, unknown>) =>
-    apiService.get<ListResponse>('/api/community/notifications/'),
+    apiService.get<ListResponse>('/community/notifications/'),
   markAllNotificationsAsRead: () =>
-    apiService.post<unknown>('/api/community/notifications/read-all/', {}),
+    apiService.post<unknown>('/community/notifications/read-all/', {}),
   search: (query: string, _type?: string, _limit?: number) =>
     apiService.get<{
       results?: { forums?: unknown[]; discussions?: unknown[]; groups?: unknown[]; users?: unknown[] };
@@ -49,5 +49,5 @@ export const communityService = {
       discussions?: unknown[];
       groups?: unknown[];
       users?: unknown[];
-    }>(`/api/community/search/?q=${encodeURIComponent(query)}`),
+    }>(`/community/search/?q=${encodeURIComponent(query)}`),
 };

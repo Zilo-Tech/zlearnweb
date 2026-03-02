@@ -8,11 +8,29 @@ export const APP_CONFIG = {
   supportEmail: 'support@zlearn.education',
 };
 
+const getDefaultBaseUrl = () => {
+  if (typeof window !== 'undefined' && (window.location?.hostname === 'localhost' || window.location?.hostname === '127.0.0.1')) {
+    return 'http://localhost:8000/api';
+  }
+  return process.env.NODE_ENV === 'development'
+    ? 'http://localhost:8000/api'
+    : 'https://api.z-learn.app/api';
+};
+
+const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? getDefaultBaseUrl();
+
+// Ensure baseUrl never ends with /courses (service adds /courses/ for professional API)
 export const API_CONFIG = {
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.z-learn.app',
+  baseUrl: rawBaseUrl.replace(/\/courses\/?$/i, ''),
   timeout: 60000,
   retryAttempts: 3,
 };
+
+// Log the API base URL in development
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 API_CONFIG.baseUrl:', API_CONFIG.baseUrl);
+  console.log('🔧 NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+}
 
 export const STORAGE_KEYS = {
   authToken: 'zlearn_auth_token',
