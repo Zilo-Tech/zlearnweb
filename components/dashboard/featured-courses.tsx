@@ -1,6 +1,7 @@
 'use client';
 
 import { useCourses } from '@/lib/hooks/useCourses';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { useEffect } from 'react';
 import { CourseCard } from '@/components/courses/course-card';
 import { Button } from '@/components/ui/button';
@@ -9,10 +10,13 @@ import { ChevronRight } from 'lucide-react';
 
 export function FeaturedCoursesSection() {
     const { featured, loadFeatured, isLoading, userType } = useCourses();
+    const { isAuthenticated, token } = useAuth();
 
     useEffect(() => {
-        loadFeatured();
-    }, [loadFeatured]);
+        if (isAuthenticated && token) {
+            loadFeatured();
+        }
+    }, [loadFeatured, isAuthenticated, token]);
 
     if (isLoading && featured.length === 0) {
         return (

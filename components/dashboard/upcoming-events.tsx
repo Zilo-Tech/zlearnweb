@@ -2,21 +2,26 @@
 
 import { useAppSelector, useAppDispatch } from '@/lib/store/hooks';
 import { useEffect, useMemo } from 'react';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { fetchExamResults } from '@/lib/store/slices/exams.slice';
 import { fetchForums } from '@/lib/store/slices/community.slice';
 import { Calendar, Clock, BookOpen, Users } from 'lucide-react';
 
 export function UpcomingEvents() {
     const dispatch = useAppDispatch();
+    const { isAuthenticated, token } = useAuth();
     const { results: examResults, isLoading: examsLoading } = useAppSelector((state) => state.exams || { results: [] });
     const { forums: communities, isLoading: communityLoading } = useAppSelector((state) => state.community || { forums: [] });
 
     useEffect(() => {
-        // In a real app, we might have a specific endpoint for upcoming events
-        // For now, mirroring the mobile app logic
-        dispatch(fetchExamResults());
-        dispatch(fetchForums({}));
-    }, [dispatch]);
+        // Only fetch if authenticated
+        if (isAuthenticated && token) {
+            // In a real app, we might have a specific endpoint for upcoming events
+            // For now, mirroring the mobile app logic
+            dispatch(fetchExamResults());
+            dispatch(fetchForums({}));
+        }
+    }, [dispatch, isAuthenticated, token]);
 
     const upcomingEvents = useMemo(() => {
         const events = [];

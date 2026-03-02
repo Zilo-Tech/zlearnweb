@@ -1,15 +1,19 @@
 'use client';
 
 import { useGamification } from '@/lib/hooks/useGamification';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function LeaderboardPreview() {
     const { leaderboard, loadLeaderboard, isLoading } = useGamification();
+    const { isAuthenticated, token } = useAuth();
 
     useEffect(() => {
-        loadLeaderboard({ limit: 5, period: 'weekly' });
-    }, [loadLeaderboard]);
+        if (isAuthenticated && token) {
+            loadLeaderboard({ limit: 5, period: 'weekly' });
+        }
+    }, [loadLeaderboard, isAuthenticated, token]);
 
     if (isLoading && leaderboard.length === 0) {
         return (

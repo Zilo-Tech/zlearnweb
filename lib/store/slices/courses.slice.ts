@@ -35,13 +35,13 @@ export const fetchEnrolledCourses = createAsyncThunk('courses/fetchEnrolled', as
 });
 
 export const fetchAvailableCourses = createAsyncThunk('courses/fetchAvailable', async () => {
-  const data = await coursesService.getEnrolled();
+  const data = await coursesService.getAvailable();
   const list = Array.isArray(data) ? data : (data as { results?: Course[] })?.results ?? [];
   return list;
 });
 
 export const fetchFeaturedCourses = createAsyncThunk('courses/fetchFeatured', async () => {
-  const data = await coursesService.getEnrolled();
+  const data = await coursesService.getFeatured();
   const list = Array.isArray(data) ? data : (data as { results?: Course[] })?.results ?? [];
   return list;
 });
@@ -60,19 +60,67 @@ const coursesSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Enrolled courses
+      .addCase(fetchEnrolledCourses.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(fetchEnrolledCourses.fulfilled, (state, action) => {
         state.enrolled = (action.payload ?? []) as Course[];
         state.enrolledCourseIds = state.enrolled.map((c) => c.id);
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(fetchEnrolledCourses.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to load enrolled courses';
+        state.enrolled = [];
+      })
+      // Available courses
+      .addCase(fetchAvailableCourses.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
       })
       .addCase(fetchAvailableCourses.fulfilled, (state, action) => {
         state.available = (action.payload ?? []) as Course[];
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(fetchAvailableCourses.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to load available courses';
+        state.available = [];
+      })
+      // Featured courses
+      .addCase(fetchFeaturedCourses.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
       })
       .addCase(fetchFeaturedCourses.fulfilled, (state, action) => {
         state.featured = (action.payload ?? []) as Course[];
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(fetchFeaturedCourses.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to load featured courses';
+        state.featured = [];
+      })
+      // Course details
+      .addCase(fetchCourseDetails.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
       })
       .addCase(fetchCourseDetails.fulfilled, (state, action) => {
         state.currentCourse = action.payload as Course;
+        state.isLoading = false;
+        state.error = null;
       })
+      .addCase(fetchCourseDetails.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to load course details';
+      })
+      // Enroll in course
       .addCase(enrollInCourse.fulfilled, (state, action) => {
         if (action.payload && !state.enrolledCourseIds.includes(action.payload)) {
           state.enrolledCourseIds.push(action.payload);

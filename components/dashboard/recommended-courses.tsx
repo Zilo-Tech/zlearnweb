@@ -10,12 +10,14 @@ import { Sparkles, ChevronRight } from 'lucide-react';
 
 export function RecommendedCoursesSection() {
     const { recommendations, loadRecommendations, isLoading } = usePersonalization();
-    const { user } = useAuth();
+    const { user, isAuthenticated, token } = useAuth();
     const userType = (user?.user_type as 'academic' | 'professional' | 'exams') ?? undefined;
 
     useEffect(() => {
-        loadRecommendations();
-    }, [loadRecommendations]);
+        if (isAuthenticated && token) {
+            loadRecommendations();
+        }
+    }, [loadRecommendations, isAuthenticated, token]);
 
     if (isLoading && !recommendations) {
         return (

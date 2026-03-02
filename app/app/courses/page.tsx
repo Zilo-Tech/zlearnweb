@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 export default function CoursesPage() {
-    const { user } = useAuth();
+    const { user, isAuthenticated, token } = useAuth();
     const [mounted, setMounted] = useState(false);
     const {
         available,
@@ -33,10 +33,12 @@ export default function CoursesPage() {
     }, []);
 
     useEffect(() => {
-        loadFeatured();
-        loadAvailable();
-        loadEnrolled();
-    }, [loadFeatured, loadAvailable, loadEnrolled]);
+        if (isAuthenticated && token) {
+            loadFeatured();
+            loadAvailable();
+            loadEnrolled();
+        }
+    }, [loadFeatured, loadAvailable, loadEnrolled, isAuthenticated, token]);
 
     const displayCourses = useMemo(() => {
         let courses = [];

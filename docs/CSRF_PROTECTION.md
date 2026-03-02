@@ -115,8 +115,12 @@ Create a `.env.local` file with the following variables:
 # Base URL of your application (required for production)
 NEXT_PUBLIC_BASE_URL=https://yourdomain.com
 
-# Allowed origins for CSRF validation (comma-separated)
+# Allowed origins for CSRF validation (comma-separated).
+# If unset, production uses NEXT_PUBLIC_SITE_URL or VERCEL_URL (and www/non-www variant).
 ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+
+# Optional: canonical site URL. Used as allowed origin when ALLOWED_ORIGINS is not set.
+NEXT_PUBLIC_SITE_URL=https://www.yourdomain.com
 ```
 
 ### Cookie Configuration
@@ -148,7 +152,7 @@ validateOriginHeaders(origin, referer, allowedOrigins)
 ```
 
 **Development**: Allows localhost origins  
-**Production**: Validates against `ALLOWED_ORIGINS` environment variable
+**Production**: Validates against `ALLOWED_ORIGINS`; if unset, allows `NEXT_PUBLIC_SITE_URL` or `VERCEL_URL` (and www/non-www variant)
 
 ### 3. Constant-Time Token Comparison
 
@@ -242,7 +246,7 @@ Consider adding tests for:
 - Secure cookie flag is disabled
 
 **Production:**
-- Must set `ALLOWED_ORIGINS` environment variable
+- Set `ALLOWED_ORIGINS` (comma-separated) or set `NEXT_PUBLIC_SITE_URL` (e.g. `https://www.z-learn.app`) so same-origin requests are allowed
 - Secure cookie flag is enabled (requires HTTPS)
 
 ## Additional Resources

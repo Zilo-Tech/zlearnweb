@@ -1,15 +1,28 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/lib/store/hooks';
 import { loginUser, logoutUser, registerUser, refreshUserProfile, verifyEmail } from '@/lib/store/slices/auth.slice';
+import { persistor } from '@/lib/store';
 import type { LoginCredentials, RegisterData } from '@/lib/types';
 
 export function useAuth() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { user, token, isAuthenticated, onboardingComplete, isLoading, error } = useAppSelector((s) => s.auth);
+
+  // Debug logging in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔐 Auth state:', {
+        hasUser: !!user,
+        hasToken: !!token,
+        isAuthenticated,
+        userName: user?.name,
+      });
+    }
+  }, [user, token, isAuthenticated]);
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
@@ -26,8 +39,24 @@ export function useAuth() {
   );
 
   const logout = useCallback(async () => {
-    await dispatch(logoutUser()).unwrap();
-    router.push('/');
+    try {
+      await dispatch(logoutUser()).unwrap();
+      // Purge persisted state
+      await persistor.purge();
+      // Clear any remaining items in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+      }
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if logout API fails, clear local state and redirect
+      await persistor.purge();
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+      }
+      router.push('/');
+    }
   }, [dispatch, router]);
 
   const refreshProfile = useCallback(() => dispatch(refreshUserProfile()).unwrap(), [dispatch]);

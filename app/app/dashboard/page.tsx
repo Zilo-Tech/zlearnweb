@@ -15,16 +15,20 @@ import { RecommendedCoursesSection } from '@/components/dashboard/recommended-co
 import { useEffect } from 'react';
 import { usePersonalization } from '@/lib/hooks/usePersonalization';
 import { useAppDispatch } from '@/lib/store/hooks';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { fetchLearningAnalytics } from '@/lib/store/slices/progress.slice';
 
 export default function DashboardPage() {
     const { loadDashboard } = usePersonalization();
+    const { isAuthenticated, token } = useAuth();
     const dispatch = useAppDispatch();
 
     useEffect(() => {
-        loadDashboard();
-        dispatch(fetchLearningAnalytics());
-    }, [loadDashboard, dispatch]);
+        if (isAuthenticated && token) {
+            loadDashboard();
+            dispatch(fetchLearningAnalytics());
+        }
+    }, [loadDashboard, dispatch, isAuthenticated, token]);
 
     return (
         <div className="space-y-8 pb-8 max-w-full break-words text-base antialiased">

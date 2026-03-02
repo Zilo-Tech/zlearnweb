@@ -2,14 +2,18 @@
 
 import { TrendingUp, Clock, Award, Target } from 'lucide-react';
 import { useProgress } from '@/lib/hooks/useProgress';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { useEffect } from 'react';
 
 export function StudyInsights() {
     const { learningAnalytics, loadLearningAnalytics, isLoading } = useProgress();
+    const { isAuthenticated, token } = useAuth();
 
     useEffect(() => {
-        loadLearningAnalytics();
-    }, [loadLearningAnalytics]);
+        if (isAuthenticated && token) {
+            loadLearningAnalytics();
+        }
+    }, [loadLearningAnalytics, isAuthenticated, token]);
 
     const studyTime = (learningAnalytics as { study_time_analytics?: { total_study_time_hours?: number } })?.study_time_analytics?.total_study_time_hours || 0;
     const avgScore = (learningAnalytics as { performance_analytics?: { average_quiz_score?: number } })?.performance_analytics?.average_quiz_score || 0;

@@ -8,16 +8,21 @@ import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 
 export function WelcomeHeader() {
-    const { user } = useAuth();
+    const { user, isAuthenticated, token } = useAuth();
     const { learningAnalytics, loadLearningAnalytics } = useProgress();
     const { dashboard, loadDashboard } = usePersonalization();
 
     useEffect(() => {
-        loadLearningAnalytics();
-    }, [loadLearningAnalytics]);
+        if (isAuthenticated && token) {
+            loadLearningAnalytics();
+        }
+    }, [loadLearningAnalytics, isAuthenticated, token]);
+    
     useEffect(() => {
-        loadDashboard();
-    }, [loadDashboard]);
+        if (isAuthenticated && token) {
+            loadDashboard();
+        }
+    }, [loadDashboard, isAuthenticated, token]);
 
     const welcome = dashboard?.welcome_message as { title?: string; message?: string; context?: string } | undefined;
     const getGreeting = () => {
