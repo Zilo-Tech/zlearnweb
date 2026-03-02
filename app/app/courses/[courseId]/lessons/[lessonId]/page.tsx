@@ -30,6 +30,7 @@ export default function LessonViewerPage() {
     const dispatch = useAppDispatch();
 
     const isProfessionalCourse = !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(courseId ?? '');
+    const userType = useAppSelector((s) => s.auth.user?.user_type as 'academic' | 'professional' | 'exams' | undefined);
 
     const course = useAppSelector(selectCurrentCourse);
     const modules = useAppSelector(selectCurrentCourseModules);
@@ -107,13 +108,17 @@ export default function LessonViewerPage() {
                 // Start tracking + update position (professional only)
                 if (isProfessionalCourse) {
                     coursesService.startLessonProgress(lessonId).catch(() => {});
-                    const courseUuid = course?.id ?? (lessonData as { course?: string })?.course;
-                    if (courseUuid) {
-                        coursesService.updateCoursePosition(courseUuid, {
-                            current_module: (lessonData as { module?: string })?.module,
+                }
+                const courseUuid = course?.id ?? (lessonData as { course?: string })?.course ?? (lessonData as { module?: { course?: { id?: string } } })?.module?.course?.id;
+                if (courseUuid) {
+                    coursesService.updateCoursePosition(
+                        courseUuid,
+                        {
+                            current_module: (lessonData as { module?: string })?.module ?? (lessonData as { module?: { id?: string } })?.module?.id,
                             current_lesson: lessonId,
-                        }).catch(() => {});
-                    }
+                        },
+                        isProfessionalCourse ? 'professional' : 'academic'
+                    ).catch(() => {});
                 }
             } catch (error) {
                 console.error("Failed to load lesson:", error);
@@ -297,7 +302,20 @@ export default function LessonViewerPage() {
                         {([...lesson.sections] as LessonSection[])
                             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
                             .map((section) => (
-                                <LessonSectionBlock key={section.id} section={section} />
+                                <LessonSectionBlock
+                                    key={section.id}
+                                    section={section}
+                                    onSectionComplete={
+                                        userType === 'academic'
+                                            ? (sectionId, data) => {
+                                                  coursesService.completeContentSection(sectionId, {
+                                                      time_spent_seconds: data.time_spent_seconds,
+                                                      metadata: data.metadata,
+                                                  }).catch(() => {});
+                                              }
+                                            : undefined
+                                    }
+                                />
                             ))}
                     </div>
                 )}
@@ -312,7 +330,7 @@ export default function LessonViewerPage() {
                     <TabsContent value="description" className="mt-4 space-y-4">
                         {(lesson.content || lesson.description) && (
                             <div
-                                className="prose prose-gray max-w-none text-gray-600 leading-relaxed prose-p:my-2 prose-ul:my-2 prose-ol:my-2"
+                                className="prose prose-gray max-w-none text-gray-600 leading-relaxed prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-a:text-primary-600 prose-a:underline prose-a:pointer-events-auto prose-a:cursor-pointer"
                                 dangerouslySetInnerHTML={{ __html: markdownToHtml(lesson.content || lesson.description || '') }}
                             />
                         )}
@@ -350,7 +368,7 @@ export default function LessonViewerPage() {
                                             )}
                                         </div>
                                     </div>
-                                    {resource.resource_type === 'link' && resource.url && (
+                                    {((resource.resource_type === 'link' || resource.resource_type === 'url') && resource.url) ? (
                                         <a
                                             href={resource.url}
                                             target="_blank"
@@ -362,7 +380,7 @@ export default function LessonViewerPage() {
                                                 Open
                                             </Button>
                                         </a>
-                                    )}
+                                    ) : null}
                                     {resource.file ? (
                                         <Button variant="ghost" size="sm">Download</Button>
                                     ) : null}

@@ -15,6 +15,7 @@ interface VerifyResult {
   issued_date?: string;
   certificate_number?: string;
   message?: string;
+  final_grade?: number | null;
 }
 
 export default function CertificateVerifyPage() {
@@ -32,7 +33,7 @@ export default function CertificateVerifyPage() {
     }
 
     coursesService
-      .verifyCertificate(decodeURIComponent(certificateNumber))
+      .verifyCertificateAny(decodeURIComponent(certificateNumber))
       .then((data) => {
         setResult(data as VerifyResult);
         setError(null);
@@ -100,6 +101,12 @@ export default function CertificateVerifyPage() {
                 <p>
                   <span className="text-sm font-medium text-gray-500">Certificate #:</span>{' '}
                   <span className="font-mono text-gray-900">{result.certificate_number}</span>
+                </p>
+              )}
+              {result.final_grade != null && (
+                <p>
+                  <span className="text-sm font-medium text-gray-500">Final grade:</span>{' '}
+                  <span className="font-medium text-gray-900">{result.final_grade}%</span>
                 </p>
               )}
             </div>

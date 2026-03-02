@@ -13,10 +13,12 @@ import {
     enrollInCourse,
     fetchEnrolledCourses,
     fetchModuleLessons,
+    fetchCertificates,
     selectCurrentCourse,
     selectCurrentCourseModules,
     selectIsEnrolled
 } from '@/lib/store/slices/courses.slice';
+import { coursesService } from '@/lib/services';
 import { toast } from 'sonner';
 import { markdownToHtml } from '@/lib/utils/markdownToHtml';
 
@@ -35,6 +37,9 @@ export default function CourseDetailsPage() {
 
     // Local loading state for enrollment action
     const [isEnrolling, setIsEnrolling] = useState(false);
+    // Academic: course progress for "Request certificate" (100% complete)
+    const [courseProgress, setCourseProgress] = useState<{ overall_progress?: number } | null>(null);
+    const [isRequestingCert, setIsRequestingCert] = useState(false);
 
     const isProfessionalCourse = !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(courseId ?? '');
 
@@ -44,6 +49,14 @@ export default function CourseDetailsPage() {
             dispatch(fetchEnrolledCourses({ forceProfessional: isProfessionalCourse }));
         }
     }, [dispatch, courseId, isProfessionalCourse]);
+
+    // Fetch course progress for academic enrolled users (for Request certificate)
+    useEffect(() => {
+        if (!courseId || !isEnrolled || userType !== 'academic') return;
+        coursesService.getCourseProgress(courseId, 'academic').then((data: any) => {
+            setCourseProgress(data ?? null);
+        }).catch(() => setCourseProgress(null));
+    }, [courseId, isEnrolled, userType]);
 
     useEffect(() => {
         const c = course as { modules?: { id: string; lessons?: unknown[]; lesson_count?: number }[] } | null;
@@ -77,6 +90,24 @@ export default function CourseDetailsPage() {
             }
         } finally {
             setIsEnrolling(false);
+        }
+    };
+
+    const handleRequestCertificate = async () => {
+        if (!course?.id) return;
+        setIsRequestingCert(true);
+        try {
+            const res = await coursesService.requestContentCertificate(course.id) as { certificate?: { certificate_number?: string }; message?: string };
+            toast.success(res.message ?? 'Certificate issued!');
+            await dispatch(fetchCertificates()).unwrap();
+            if (res.certificate?.certificate_number) {
+                router.push(`/certificates/verify/${encodeURIComponent(res.certificate.certificate_number)}`);
+            }
+        } catch (err: any) {
+            const msg = err?.response?.data?.error ?? err?.message ?? 'Failed to request certificate';
+            toast.error(msg);
+        } finally {
+            setIsRequestingCert(false);
         }
     };
 
@@ -127,8 +158,8 @@ export default function CourseDetailsPage() {
                 <div className="space-y-4">
                     <div className="flex items-center gap-2">
                         {(() => {
-                            const cat = course as { category_name?: string; category?: { name?: string } | string };
-                            const label = cat.category_name ?? (typeof cat.category === 'object' ? cat.category?.name : null);
+                            const c = course as { category_name?: string; category?: { name?: string } | string; subject?: { name?: string } };
+                            const label = c.category_name ?? (typeof c.category === 'object' ? c.category?.name : null) ?? c.subject?.name;
                             if (!label) return null;
                             return (
                                 <Badge variant="secondary" className="bg-[#446D6D]/10 text-[#446D6D]">
@@ -145,7 +176,7 @@ export default function CourseDetailsPage() {
                     </h1>
 
                     <div
-                        className="prose prose-gray max-w-none text-gray-600 [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_strong]:text-gray-900"
+                        className="prose prose-gray max-w-none text-gray-600 [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_strong]:text-gray-900 prose-a:text-primary-600 prose-a:underline prose-a:pointer-events-auto prose-a:cursor-pointer"
                         dangerouslySetInnerHTML={{
                             __html: markdownToHtml(course.description ?? ''),
                         }}
@@ -196,13 +227,27 @@ export default function CourseDetailsPage() {
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm font-medium">
                                     <span className="text-gray-700">Your Progress</span>
-                                    <span className="text-[#446D6D]">{Number(course.progress_percentage) || 0}%</span>
+                                    <span className="text-[#446D6D]">
+                                        {Number(courseProgress?.overall_progress ?? course.progress_percentage) || 0}%
+                                    </span>
                                 </div>
-                                <Progress value={Number(course.progress_percentage) || 0} className="h-2" />
+                                <Progress value={Number(courseProgress?.overall_progress ?? course.progress_percentage) || 0} className="h-2" />
                             </div>
                             <Button className="w-full bg-[#446D6D] hover:bg-[#3A5F5F]" size="lg" onClick={handleContinue}>
                                 Continue Learning
                             </Button>
+                            {userType === 'academic' && (courseProgress?.overall_progress ?? 0) >= 100 && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full gap-2 border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                                    size="lg"
+                                    onClick={handleRequestCertificate}
+                                    disabled={isRequestingCert}
+                                >
+                                    {isRequestingCert ? <Loader2 className="h-4 w-4 animate-spin" /> : <Award className="h-4 w-4" />}
+                                    {isRequestingCert ? 'Requesting...' : 'Request certificate'}
+                                </Button>
+                            )}
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -224,11 +269,21 @@ export default function CourseDetailsPage() {
                     <div className="space-y-4 pt-4 border-t border-gray-100">
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                             <Clock className="h-5 w-5 text-gray-400" />
-                            <span>{Number(course.duration_hours) || 0}h content</span>
+                            <span>{(() => {
+                                const c = course as { duration_hours?: number; estimated_hours?: number };
+                                const h = c?.estimated_hours ?? c?.duration_hours;
+                                return `${Number(h) || 0}h content`;
+                            })()}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                             <BookOpen className="h-5 w-5 text-gray-400" />
-                            <span>{Number(course.total_lessons) || 0} lessons</span>
+                            <span>{(() => {
+                                const fromSelector = modules.reduce((sum, m) => sum + (m.lessons?.length ?? 0), 0);
+                                if (fromSelector > 0) return `${fromSelector} lessons`;
+                                const raw = (course as { total_lessons?: number; modules?: { lessons?: unknown[]; lesson_count?: number }[] });
+                                const n = raw?.total_lessons ?? raw?.modules?.reduce((acc, m) => acc + (m.lessons?.length ?? m.lesson_count ?? 0), 0);
+                                return `${Number(n) || 0} lessons`;
+                            })()}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                             <Award className="h-5 w-5 text-gray-400" />

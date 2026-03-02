@@ -81,12 +81,12 @@ export const coursesService = {
     return apiService.post<unknown>(`/content/courses/${courseId}/enroll/`, {});
   },
   
-  // GET /api/courses/progress/{course_id}/ - Course progress (UUID)
+  // GET course progress - professional: /courses/progress/{id}/, academic: /content/progress/courses/{id}/
   getCourseProgress: (courseId: string, userType: UserType = null) => {
     if (userType === 'professional') {
       return apiService.get<unknown>(`${PROFESSIONAL_API}/progress/${courseId}/`);
     }
-    return apiService.get<unknown>(`/content/courses/${courseId}/progress/`);
+    return apiService.get<unknown>(`/content/progress/courses/${courseId}/`);
   },
   
   // GET /api/courses/{course_id}/reviews/ - Course reviews (UUID)
@@ -97,12 +97,17 @@ export const coursesService = {
     return apiService.get<unknown>(`/content/courses/${courseId}/reviews/`);
   },
   
-  // POST /api/courses/reviews/create/ - Create review (course: UUID per docs)
+  // Create review - professional: POST /courses/reviews/create/, academic: POST /content/courses/{id}/reviews/create/
   createCourseReview: (reviewData: { course?: string; rating: number; comment?: string }, userType: UserType = null) => {
     if (userType === 'professional') {
       return apiService.post<unknown>(`${PROFESSIONAL_API}/reviews/create/`, reviewData);
     }
-    return apiService.post<unknown>('/content/reviews/create/', reviewData);
+    const courseId = reviewData.course;
+    if (!courseId) return Promise.reject(new Error('Course ID required for review'));
+    return apiService.post<unknown>(`/content/courses/${courseId}/reviews/create/`, {
+      rating: reviewData.rating,
+      comment: reviewData.comment ?? '',
+    });
   },
   
   // GET /api/courses/sections/ - Course sections (modules)
@@ -119,9 +124,19 @@ export const coursesService = {
     return apiService.get<unknown>(`/content/sections/${sectionId}/`);
   },
   
-  // POST /api/courses/sections/{id}/complete/ - Complete section
+  // POST /api/courses/sections/{id}/complete/ - Complete section (professional)
   completeSection: (sectionId: string) =>
     apiService.post<unknown>(`${PROFESSIONAL_API}/sections/${sectionId}/complete/`, {}),
+
+  // POST /api/content/sections/{section_id}/complete/ - Complete section (academic)
+  completeContentSection: (
+    sectionId: string,
+    data: { time_spent_seconds?: number; metadata?: { video_completed?: boolean; quiz_score?: number } }
+  ) =>
+    apiService.post<{ success?: boolean; message?: string; progress_percentage?: number }>(
+      `/content/sections/${sectionId}/complete/`,
+      data
+    ),
   
   // GET /api/courses/lessons/{id}/interactive/ - Lesson interactive content
   getLessonInteractive: (lessonId: string) =>
@@ -131,33 +146,57 @@ export const coursesService = {
   getLessonNavigation: (lessonId: string) =>
     apiService.get<unknown>(`${PROFESSIONAL_API}/lessons/${lessonId}/navigation/`),
   
-  // POST /api/courses/lessons/{lesson_id}/complete/ - Complete lesson (returns certificate_issued if course completed)
-  completeLesson: (lessonId: string, body?: { time_spent_minutes?: number }) =>
-    apiService.post<{
+  // Complete lesson - professional: /courses/lessons/{id}/complete/, academic: /content/lessons/{id}/complete/
+  completeLesson: (
+    lessonId: string,
+    body?: { time_spent_minutes?: number; metadata?: Record<string, unknown> },
+    isProfessionalCourse?: boolean
+  ) => {
+    const payload = body ?? {};
+    if (isProfessionalCourse) {
+      return apiService.post<{
+        success?: boolean;
+        message?: string;
+        certificate_issued?: boolean;
+        certificate_number?: string;
+        course_completed?: boolean;
+        xp_awarded?: number;
+        xp_earned?: number;
+      }>(`${PROFESSIONAL_API}/lessons/${lessonId}/complete/`, payload);
+    }
+    return apiService.post<{
       success?: boolean;
       message?: string;
-      certificate_issued?: boolean;
-      certificate_number?: string;
-      course_completed?: boolean;
       xp_awarded?: number;
-      xp_earned?: number;
-    }>(`${PROFESSIONAL_API}/lessons/${lessonId}/complete/`, body ?? {}),
+      level_up?: boolean;
+      new_level?: unknown;
+      next_unlocked?: { type?: string; id?: string; title?: string };
+    }>(`/content/lessons/${lessonId}/complete/`, payload);
+  },
 
-  // POST /api/courses/progress/{course_id}/update-position/ - Update current module/lesson
-  updateCoursePosition: (courseId: string, data: { current_module?: string; current_lesson?: string }) =>
-    apiService.post<unknown>(`${PROFESSIONAL_API}/progress/${courseId}/update-position/`, data),
+  // Update course position - professional: /courses/progress/{id}/update-position/, academic: /content/progress/courses/{id}/update-position/
+  updateCoursePosition: (
+    courseId: string,
+    data: { current_module?: string; current_lesson?: string },
+    userType: UserType = null
+  ) => {
+    if (userType === 'professional') {
+      return apiService.post<unknown>(`${PROFESSIONAL_API}/progress/${courseId}/update-position/`, data);
+    }
+    return apiService.post<unknown>(`/content/progress/courses/${courseId}/update-position/`, data);
+  },
 
-  // GET /api/courses/certificates/ - List user's certificates
+  // GET /api/courses/certificates/ - List user's certificates (professional)
   getCertificates: async () => {
     const res = await apiService.get<{ results?: unknown[]; count?: number }>(`${PROFESSIONAL_API}/certificates/`);
     return Array.isArray(res) ? res : (res?.results ?? []);
   },
 
-  // GET /api/courses/certificates/{id}/ - Certificate detail
+  // GET /api/courses/certificates/{id}/ - Certificate detail (professional)
   getCertificateDetail: (certificateId: string) =>
     apiService.get<unknown>(`${PROFESSIONAL_API}/certificates/${certificateId}/`),
 
-  // POST /api/courses/{course_id}/request-certificate/ - Request certificate (manual, if not auto-issued)
+  // POST /api/courses/{course_id}/request-certificate/ - Request certificate (professional)
   requestCertificate: (courseId: string) =>
     apiService.post<{
       certificate?: { certificate_number?: string; pdf_file?: string };
@@ -165,7 +204,7 @@ export const coursesService = {
       message?: string;
     }>(`${PROFESSIONAL_API}/${courseId}/request-certificate/`, {}),
 
-  // GET /api/courses/certificates/verify/{certificate_number}/ - Public verification
+  // GET /api/courses/certificates/verify/{certificate_number}/ - Public verification (professional)
   verifyCertificate: (certificateNumber: string) =>
     apiService.get<{
       valid: boolean;
@@ -176,6 +215,66 @@ export const coursesService = {
       certificate_number?: string;
       message?: string;
     }>(`${PROFESSIONAL_API}/certificates/verify/${encodeURIComponent(certificateNumber)}/`),
+
+  // ============ CONTENT (ACADEMIC) CERTIFICATES ============
+  // GET /api/content/certificates/
+  getContentCertificates: async () => {
+    const res = await apiService.get<unknown[] | { results?: unknown[] }>('/content/certificates/');
+    return Array.isArray(res) ? res : (res as { results?: unknown[] })?.results ?? [];
+  },
+  // GET /api/content/certificates/{certificate_number}/
+  getContentCertificateDetail: (certificateNumber: string) =>
+    apiService.get<unknown>(`/content/certificates/${encodeURIComponent(certificateNumber)}/`),
+  // POST /api/content/courses/{course_id}/request-certificate/
+  requestContentCertificate: (courseId: string) =>
+    apiService.post<{ message?: string; certificate?: { id?: string; certificate_number?: string; pdf_file?: string }; xp_earned?: number }>(
+      `/content/courses/${courseId}/request-certificate/`,
+      {}
+    ),
+  // GET /api/content/certificates/{certificate_number}/verify/ (public)
+  verifyContentCertificate: (certificateNumber: string) =>
+    apiService.get<{
+      valid: boolean;
+      certificate_number?: string;
+      student_name?: string;
+      course_title?: string;
+      issued_date?: string;
+      final_grade?: number | null;
+      is_verified?: boolean;
+      message?: string;
+    }>(`/content/certificates/${encodeURIComponent(certificateNumber)}/verify/`),
+
+  /** Try content verify first, then professional (for public verify page). */
+  async verifyCertificateAny(certificateNumber: string): Promise<{
+    valid: boolean;
+    student_name?: string;
+    course_title?: string;
+    issued_date?: string;
+    certificate_number?: string;
+    message?: string;
+    final_grade?: number | null;
+  }> {
+    try {
+      return (await this.verifyContentCertificate(certificateNumber)) as {
+        valid: boolean;
+        student_name?: string;
+        course_title?: string;
+        issued_date?: string;
+        certificate_number?: string;
+        message?: string;
+        final_grade?: number | null;
+      };
+    } catch {
+      return (await this.verifyCertificate(certificateNumber)) as {
+        valid: boolean;
+        student_name?: string;
+        course_title?: string;
+        issued_date?: string;
+        certificate_number?: string;
+        message?: string;
+      };
+    }
+  },
   
   // POST /api/courses/lessons/{id}/start-progress/ - Start lesson progress
   startLessonProgress: (lessonId: string) =>
@@ -185,6 +284,30 @@ export const coursesService = {
   updateLessonProgress: (lessonId: string, progressData: any) =>
     apiService.post<unknown>(`${PROFESSIONAL_API}/lessons/${lessonId}/update-progress/`, progressData),
   
+  // ============ CONTENT (ACADEMIC) SPECIFIC ============
+  // GET /api/content/subjects/ - List subjects (academic)
+  getSubjects: () => apiService.get<unknown>('/content/subjects/'),
+
+  // GET /api/content/search/ - Full-text search (academic)
+  searchContent: (query: string, params?: { type?: string; subject?: string; difficulty?: string }) => {
+    const searchParams = new URLSearchParams({ q: query });
+    if (params?.type) searchParams.set('type', params.type);
+    if (params?.subject) searchParams.set('subject', params.subject);
+    if (params?.difficulty) searchParams.set('difficulty', params.difficulty);
+    return apiService.get<{
+      query?: string;
+      results?: { courses?: unknown[]; modules?: unknown[]; lessons?: unknown[] };
+      total_results?: number;
+    }>(`/content/search/?${searchParams.toString()}`);
+  },
+
+  // GET /api/content/progress/ - User progress overview (academic)
+  getContentProgressOverview: () => apiService.get<unknown>('/content/progress/'),
+
+  // POST /api/content/lessons/{id}/progress/ - Update lesson progress without completing (academic)
+  updateLessonProgressContent: (lessonId: string, data: { time_spent_minutes?: number; progress_percentage?: number; metadata?: Record<string, unknown> }) =>
+    apiService.post<unknown>(`/content/lessons/${lessonId}/progress/`, data),
+
   // ============ LEGACY/COMPATIBILITY ============
   getModules: (courseIdOrSlug: string, userType: UserType = null) => {
     if (userType === 'professional') {

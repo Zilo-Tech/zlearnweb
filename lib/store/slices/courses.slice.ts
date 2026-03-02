@@ -135,7 +135,14 @@ export const enrollInCourse = createAsyncThunk(
 
 export const fetchCertificates = createAsyncThunk(
   'courses/fetchCertificates',
-  async () => coursesService.getCertificates()
+  async (_, { getState }) => {
+    const state = getState() as { auth: { user: { user_type?: string } | null } };
+    const userType = state.auth.user?.user_type as 'academic' | 'professional' | 'exams' | null;
+    if (userType === 'academic') {
+      return coursesService.getContentCertificates();
+    }
+    return coursesService.getCertificates();
+  }
 );
 
 export const markLessonComplete = createAsyncThunk(
@@ -160,11 +167,11 @@ export const markLessonComplete = createAsyncThunk(
       xp_awarded?: number;
       xp_earned?: number;
     } = {};
-    if (isProfessionalCourse) {
-      apiResponse = (await coursesService.completeLesson(lessonId, {
-        time_spent_minutes: timeSpentMinutes,
-      })) as typeof apiResponse;
-    }
+    apiResponse = (await coursesService.completeLesson(
+      lessonId,
+      { time_spent_minutes: timeSpentMinutes },
+      isProfessionalCourse ?? false
+    )) as typeof apiResponse;
     return { courseId, lessonId, ...apiResponse };
   }
 );
@@ -273,6 +280,7 @@ const LESSON_TYPE_MAP: Record<string, 'video' | 'text' | 'quiz'> = {
 export const selectCurrentCourseModules = (state: { courses: CoursesState }): {
   id: string;
   title: string;
+  description?: string;
   lessons: { id: string; title: string; type: 'video' | 'text' | 'quiz'; duration: string; isCompleted: boolean; isLocked: boolean }[];
 }[] => {
   const course = state.courses.currentCourse;
@@ -288,14 +296,15 @@ export const selectCurrentCourseModules = (state: { courses: CoursesState }): {
 
   const moduleLessons = state.courses.moduleLessonsByModuleId;
 
-  return modules.map((mod: any) => {
+    return modules.map((mod: any) => {
     const rawLessons =
       mod.lessons ?? mod.sections ?? moduleLessons[mod.id] ?? [];
     return {
       id: mod.id,
       title: mod.title ?? mod.name ?? 'Module',
+      description: mod.description,
       lessons: rawLessons.map((les: any) => {
-        const rawType = les.lesson_type ?? les.type ?? 'text';
+        const rawType = les.content_type ?? les.lesson_type ?? les.type ?? 'text';
         return {
           id: les.id,
           title: les.title ?? les.name ?? 'Lesson',
