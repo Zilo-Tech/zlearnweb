@@ -14,7 +14,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useToast } from '@/lib/hooks/useToast';
 
 const verifySchema = z.object({
-    code: z.string().min(6, 'Verification code must be 6 digits').max(6, 'Verification code must be 6 digits'),
+    code: z.string().min(4, 'Verification code must be 6 digits').max(4, 'Verification code must be 6 digits'),
 });
 
 type VerifyFormData = z.infer<typeof verifySchema>;
@@ -109,10 +109,10 @@ function VerifyEmailContent() {
                     <Input
                         id="code"
                         type="text"
-                        placeholder="123456"
+                        placeholder="1234"
                         label="Verification Code"
                         className="text-center text-lg tracking-widest"
-                        maxLength={6}
+                        maxLength={4}
                         error={errors.code?.message}
                         disabled={isLoading}
                         {...register('code')}

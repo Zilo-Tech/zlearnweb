@@ -62,7 +62,8 @@ export function RegisterForm() {
                 name: data.name,
                 email: data.email,
                 password: data.password,
-                password_confirm: data.confirmPassword,
+                confirmPassword: data.confirmPassword,
+                agreeToTerms: data.terms,
             });
 
             toast({

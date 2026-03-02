@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function TrendingCourse() {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -98,6 +99,11 @@ export default function TrendingCourse() {
 
   const goToSlide = (index: number) => {
     setCurrentIndex(index)
+  }
+
+  const router = useRouter();
+  const goToDashboard = () => {
+    router.push('/app/courses');
   }
 
   return (

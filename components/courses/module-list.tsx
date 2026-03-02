@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 interface ModuleListProps {
-    courseSlug: string;
+    courseId: string;
     modules: {
         id: string;
         title: string;
@@ -20,7 +20,7 @@ interface ModuleListProps {
     }[];
 }
 
-export function ModuleList({ courseSlug, modules }: ModuleListProps) {
+export function ModuleList({ courseId, modules }: ModuleListProps) {
     return (
         <div className="space-y-4">
             {modules.map((module, index) => (
@@ -32,13 +32,13 @@ export function ModuleList({ courseSlug, modules }: ModuleListProps) {
                     </div>
 
                     <div className="divide-y divide-gray-100">
-                        {module.lessons.map((lesson) => {
+                        {module.lessons?.map((lesson) => {
                             const Icon = lesson.type === 'video' ? PlayCircle : lesson.type === 'quiz' ? HelpCircle : FileText;
 
                             return (
                                 <Link
                                     key={lesson.id}
-                                    href={lesson.isLocked ? '#' : `/app/courses/${courseSlug}/lessons/${lesson.id}`}
+                                    href={lesson.isLocked ? '#' : `/app/courses/${courseId}/lessons/${lesson.id}`}
                                     className={cn(
                                         "flex items-center justify-between px-4 py-3 transition-colors",
                                         lesson.isLocked
