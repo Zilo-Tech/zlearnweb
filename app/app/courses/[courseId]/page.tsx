@@ -25,7 +25,7 @@ export default function CourseDetailsPage() {
     const dispatch = useAppDispatch();
     const course = useAppSelector(selectCurrentCourse);
     const modules = useAppSelector(selectCurrentCourseModules);
-    const isEnrolled = useAppSelector((state) => selectIsEnrolled(course?.id)(state));
+    const isEnrolled = useAppSelector((state) => selectIsEnrolled(courseId)(state));
     const isLoading = useAppSelector((state) => state.courses.isLoading);
 
     // Local loading state for enrollment action
@@ -78,14 +78,6 @@ export default function CourseDetailsPage() {
         }
     };
 
-    // ... inside render ...
-
-    {/* Course Content */ }
-    <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-900">Course Content</h2>
-        <ModuleList courseId={course.id} modules={modules} />
-    </div>
-
     if (isLoading && !course) {
         return (
             <div className="flex h-96 items-center justify-center">
@@ -109,13 +101,13 @@ export default function CourseDetailsPage() {
                 {/* Header */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-2">
-                        {course.category && (
+                        {course.category != null && (
                             <Badge variant="secondary" className="bg-[#446D6D]/10 text-[#446D6D]">
-                                {typeof course.category === 'object' ? (course.category as any).name : course.category}
+                                {typeof course.category === 'object' ? (course.category as any).name : String(course.category)}
                             </Badge>
                         )}
                         <span className="text-sm text-gray-500">•</span>
-                        <span className="text-sm text-gray-500">{course.level || 'Beginner'}</span>
+                        <span className="text-sm text-gray-500">{course.level ? String(course.level) : 'Beginner'}</span>
                     </div>
 
                     <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
@@ -129,7 +121,7 @@ export default function CourseDetailsPage() {
                     <div className="flex items-center gap-6 text-sm text-gray-500">
                         <div className="flex items-center gap-2">
                             {/* <div className="h-8 w-8 rounded-full bg-gray-200" /> */}
-                            {course.instructor && (
+                            {course.instructor != null && (
                                 <span className="font-medium text-gray-900">
                                     {typeof course.instructor === 'object' ? (course.instructor as any).name : 'Instructor'}
                                 </span>
@@ -137,8 +129,8 @@ export default function CourseDetailsPage() {
                         </div>
                         <div className="flex items-center gap-1 text-yellow-500">
                             <Star className="h-4 w-4 fill-current" />
-                            <span className="font-medium text-gray-900">{course.rating || 0}</span>
-                            <span className="text-gray-500">({course.enrolled_count || 0} students)</span>
+                            <span className="font-medium text-gray-900">{Number(course.rating) || 0}</span>
+                            <span className="text-gray-500">({Number(course.enrolled_count) || 0} students)</span>
                         </div>
                     </div>
                 </div>
@@ -169,9 +161,9 @@ export default function CourseDetailsPage() {
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm font-medium">
                                     <span className="text-gray-700">Your Progress</span>
-                                    <span className="text-[#446D6D]">{course.progress_percentage || 0}%</span>
+                                    <span className="text-[#446D6D]">{Number(course.progress_percentage) || 0}%</span>
                                 </div>
-                                <Progress value={course.progress_percentage || 0} className="h-2" />
+                                <Progress value={Number(course.progress_percentage) || 0} className="h-2" />
                             </div>
                             <Button className="w-full bg-[#446D6D] hover:bg-[#3A5F5F]" size="lg" onClick={handleContinue}>
                                 Continue Learning
@@ -197,11 +189,11 @@ export default function CourseDetailsPage() {
                     <div className="space-y-4 pt-4 border-t border-gray-100">
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                             <Clock className="h-5 w-5 text-gray-400" />
-                            <span>{course.duration_hours || 0}h content</span>
+                            <span>{Number(course.duration_hours) || 0}h content</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                             <BookOpen className="h-5 w-5 text-gray-400" />
-                            <span>{course.total_lessons || 0} lessons</span>
+                            <span>{Number(course.total_lessons) || 0} lessons</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                             <Award className="h-5 w-5 text-gray-400" />

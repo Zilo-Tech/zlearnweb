@@ -54,6 +54,14 @@ export const enrollInCourse = createAsyncThunk('courses/enroll', async (courseId
   return courseId;
 });
 
+export const markLessonComplete = createAsyncThunk(
+  'courses/markLessonComplete',
+  async ({ courseId, lessonId }: { courseId: string; lessonId: string }) => {
+    // TODO: Implement actual API call when backend is ready
+    return { courseId, lessonId };
+  }
+);
+
 const coursesSlice = createSlice({
   name: 'courses',
   initialState,
@@ -125,8 +133,19 @@ const coursesSlice = createSlice({
         if (action.payload && !state.enrolledCourseIds.includes(action.payload)) {
           state.enrolledCourseIds.push(action.payload);
         }
+      })
+      // Mark lesson complete
+      .addCase(markLessonComplete.fulfilled, (state, action) => {
+        // TODO: Update course progress when backend supports it
       });
   },
 });
+
+// Selectors
+export const selectCurrentCourse = (state: { courses: CoursesState }) => state.courses.currentCourse;
+export const selectCurrentCourseModules = (state: { courses: CoursesState }): any[] => 
+  (state.courses.currentCourse?.modules as any[]) || [];
+export const selectIsEnrolled = (courseId: string) => (state: { courses: CoursesState }) => 
+  state.courses.enrolledCourseIds.includes(courseId);
 
 export default coursesSlice.reducer;

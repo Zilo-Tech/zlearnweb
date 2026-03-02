@@ -35,7 +35,7 @@ export default function CoursesPage() {
     useEffect(() => {
         if (isAuthenticated && token) {
             loadFeatured();
-            loadAvailable({ page_size: 100 });
+            loadAvailable();
             loadEnrolled();
         }
     }, [loadFeatured, loadAvailable, loadEnrolled, isAuthenticated, token]);

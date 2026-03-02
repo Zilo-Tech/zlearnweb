@@ -186,7 +186,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ slug: 
                 <div className="space-y-4">
                     <h2 className="text-xl font-bold text-gray-900">Course Content</h2>
                     {modulesForList.length > 0 ? (
-                        <ModuleList courseSlug={slug} modules={modulesForList} />
+                        <ModuleList courseId={course.id} modules={modulesForList} />
                     ) : (
                         <p className="text-gray-500 py-4">No modules available yet.</p>
                     )}
