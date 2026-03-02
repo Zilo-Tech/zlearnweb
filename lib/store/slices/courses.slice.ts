@@ -28,27 +28,47 @@ const initialState: CoursesState = {
   error: null,
 };
 
-export const fetchEnrolledCourses = createAsyncThunk('courses/fetchEnrolled', async () => {
-  const data = await coursesService.getEnrolled();
-  const list = Array.isArray(data) ? data : (data as { results?: Course[] })?.results ?? [];
-  return list;
-});
+export const fetchEnrolledCourses = createAsyncThunk(
+  'courses/fetchEnrolled',
+  async (_, { getState }) => {
+    const state = getState() as { auth: { user: { user_type?: string } | null } };
+    const userType = state.auth.user?.user_type as 'academic' | 'professional' | 'exams' | null;
+    const data = await coursesService.getEnrolled(userType);
+    const list = Array.isArray(data) ? data : (data as { results?: Course[] })?.results ?? [];
+    return list;
+  }
+);
 
-export const fetchAvailableCourses = createAsyncThunk('courses/fetchAvailable', async () => {
-  const data = await coursesService.getAvailable();
-  const list = Array.isArray(data) ? data : (data as { results?: Course[] })?.results ?? [];
-  return list;
-});
+export const fetchAvailableCourses = createAsyncThunk(
+  'courses/fetchAvailable',
+  async (_, { getState }) => {
+    const state = getState() as { auth: { user: { user_type?: string } | null } };
+    const userType = state.auth.user?.user_type as 'academic' | 'professional' | 'exams' | null;
+    const data = await coursesService.getAvailable(userType);
+    const list = Array.isArray(data) ? data : (data as { results?: Course[] })?.results ?? [];
+    return list;
+  }
+);
 
-export const fetchFeaturedCourses = createAsyncThunk('courses/fetchFeatured', async () => {
-  const data = await coursesService.getFeatured();
-  const list = Array.isArray(data) ? data : (data as { results?: Course[] })?.results ?? [];
-  return list;
-});
+export const fetchFeaturedCourses = createAsyncThunk(
+  'courses/fetchFeatured',
+  async (_, { getState }) => {
+    const state = getState() as { auth: { user: { user_type?: string } | null } };
+    const userType = state.auth.user?.user_type as 'academic' | 'professional' | 'exams' | null;
+    const data = await coursesService.getFeatured(userType);
+    const list = Array.isArray(data) ? data : (data as { results?: Course[] })?.results ?? [];
+    return list;
+  }
+);
 
-export const fetchCourseDetails = createAsyncThunk('courses/fetchDetails', async (idOrSlug: string) => {
-  return coursesService.getCourseDetails(idOrSlug) as Promise<Course>;
-});
+export const fetchCourseDetails = createAsyncThunk(
+  'courses/fetchDetails',
+  async (idOrSlug: string, { getState }) => {
+    const state = getState() as { auth: { user: { user_type?: string } | null } };
+    const userType = state.auth.user?.user_type as 'academic' | 'professional' | 'exams' | null;
+    return coursesService.getCourseDetails(idOrSlug, userType) as Promise<Course>;
+  }
+);
 
 export const enrollInCourse = createAsyncThunk('courses/enroll', async (courseId: string) => {
   return courseId;
