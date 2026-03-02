@@ -14,6 +14,8 @@ interface CoursesState {
   userType: 'academic' | 'professional' | 'exams' | null;
   /** Lessons fetched via /enhanced/lessons/?module= - when course detail has modules without lessons */
   moduleLessonsByModuleId: Record<string, unknown[]>;
+  /** Certificates earned by the user */
+  certificates: unknown[];
   isLoading: boolean;
   error: string | null;
 }
@@ -27,6 +29,7 @@ const initialState: CoursesState = {
   enrolledCourseIds: [],
   userType: null,
   moduleLessonsByModuleId: {},
+  certificates: [],
   isLoading: false,
   error: null,
 };
@@ -130,11 +133,39 @@ export const enrollInCourse = createAsyncThunk(
   }
 );
 
+export const fetchCertificates = createAsyncThunk(
+  'courses/fetchCertificates',
+  async () => coursesService.getCertificates()
+);
+
 export const markLessonComplete = createAsyncThunk(
   'courses/markLessonComplete',
-  async ({ courseId, lessonId }: { courseId: string; lessonId: string }) => {
-    // TODO: Implement actual API call when backend is ready
-    return { courseId, lessonId };
+  async (
+    {
+      courseId,
+      lessonId,
+      isProfessionalCourse,
+      timeSpentMinutes,
+    }: {
+      courseId: string;
+      lessonId: string;
+      isProfessionalCourse?: boolean;
+      timeSpentMinutes?: number;
+    }
+  ) => {
+    let apiResponse: {
+      certificate_issued?: boolean;
+      certificate_number?: string;
+      course_completed?: boolean;
+      xp_awarded?: number;
+      xp_earned?: number;
+    } = {};
+    if (isProfessionalCourse) {
+      apiResponse = (await coursesService.completeLesson(lessonId, {
+        time_spent_minutes: timeSpentMinutes,
+      })) as typeof apiResponse;
+    }
+    return { courseId, lessonId, ...apiResponse };
   }
 );
 
@@ -215,9 +246,13 @@ const coursesSlice = createSlice({
       .addCase(fetchModuleLessons.fulfilled, (state, action) => {
         state.moduleLessonsByModuleId = { ...state.moduleLessonsByModuleId, ...action.payload };
       })
+      // Certificates
+      .addCase(fetchCertificates.fulfilled, (state, action) => {
+        state.certificates = (action.payload ?? []) as unknown[];
+      })
       // Mark lesson complete
-      .addCase(markLessonComplete.fulfilled, (state, action) => {
-        // TODO: Update course progress when backend supports it
+      .addCase(markLessonComplete.fulfilled, () => {
+        // Progress is tracked server-side; certificate handling done in component
       });
   },
 });

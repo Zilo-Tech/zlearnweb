@@ -12,7 +12,8 @@ import {
     User,
     Settings,
     HelpCircle,
-    Trophy
+    Trophy,
+    Award
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -24,6 +25,7 @@ interface SidebarProps {
 const sidebarItems = [
     { title: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
     { title: 'Courses', href: '/app/courses', icon: BookOpen },
+    { title: 'Certificates', href: '/app/certificates', icon: Award },
     { title: 'Exams', href: '/app/exams', icon: GraduationCap },
     { title: 'Community', href: '/app/community', icon: Users },
     { title: 'Achievements', href: '/app/achievements', icon: Trophy },

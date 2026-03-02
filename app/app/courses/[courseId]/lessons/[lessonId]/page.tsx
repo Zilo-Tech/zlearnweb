@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { ChevronLeft, CheckCircle, FileText, Loader2, AlertCircle, Target, ExternalLink } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, FileText, Loader2, AlertCircle, Target, ExternalLink, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LessonPlayer } from '@/components/courses/lesson-player';
 import { LessonSectionBlock, type LessonSection } from '@/components/courses/lesson-section-block';
 import { markdownToHtml } from '@/lib/utils/markdownToHtml';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
 import {
     fetchCourseDetails,
@@ -39,9 +40,18 @@ export default function LessonViewerPage() {
 
     // Local state
     const [lesson, setLesson] = useState<any>(null);
+    const [navigation, setNavigation] = useState<{
+        previous_lesson?: string;
+        next_lesson?: string;
+        related_lessons?: string[];
+    } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isCompleting, setIsCompleting] = useState(false);
     const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true);
+    const [certificateModal, setCertificateModal] = useState<{
+        certificateNumber: string;
+        xpEarned?: number;
+    } | null>(null);
 
     // Initial Data Load & Enrollment Check
     useEffect(() => {
@@ -80,15 +90,31 @@ export default function LessonViewerPage() {
     }, [isCheckingEnrollment, isEnrolled, courseId, router]);
 
 
-    // Fetch Lesson Content
+    // Fetch Lesson Content, start progress, and navigation
     useEffect(() => {
         const fetchLesson = async () => {
             if (!isEnrolled && !isCheckingEnrollment) return; // Don't fetch if not enrolled (unless checking)
 
             setIsLoading(true);
             try {
-                const data = await coursesService.getLessonDetails(lessonId, undefined, isProfessionalCourse);
-                setLesson(data);
+                const [lessonData, navData] = await Promise.all([
+                    coursesService.getLessonDetails(lessonId, undefined, isProfessionalCourse),
+                    isProfessionalCourse ? coursesService.getLessonNavigation(lessonId) : Promise.resolve(null),
+                ]);
+                setLesson(lessonData);
+                setNavigation(navData as { previous_lesson?: string; next_lesson?: string; related_lessons?: string[] } | null);
+
+                // Start tracking + update position (professional only)
+                if (isProfessionalCourse) {
+                    coursesService.startLessonProgress(lessonId).catch(() => {});
+                    const courseUuid = course?.id ?? (lessonData as { course?: string })?.course;
+                    if (courseUuid) {
+                        coursesService.updateCoursePosition(courseUuid, {
+                            current_module: (lessonData as { module?: string })?.module,
+                            current_lesson: lessonId,
+                        }).catch(() => {});
+                    }
+                }
             } catch (error) {
                 console.error("Failed to load lesson:", error);
                 toast.error("Failed to load lesson content");
@@ -108,34 +134,49 @@ export default function LessonViewerPage() {
 
         setIsCompleting(true);
         try {
-            await dispatch(markLessonComplete({
+            const result = await dispatch(markLessonComplete({
                 lessonId: lesson.id,
-                courseId: course.id
+                courseId: course.id,
+                isProfessionalCourse,
+                timeSpentMinutes: lesson.estimated_time_minutes ?? lesson.duration_minutes,
             })).unwrap();
+
+            setLesson((prev: any) => ({ ...prev, isCompleted: true }));
+
+            // Certificate earned (last lesson completed)
+            const cert = result as { certificate_issued?: boolean; certificate_number?: string; xp_awarded?: number; xp_earned?: number };
+            if (cert?.certificate_issued && cert?.certificate_number) {
+                setCertificateModal({
+                    certificateNumber: cert.certificate_number,
+                    xpEarned: cert.xp_awarded ?? cert.xp_earned ?? 500,
+                });
+                toast.success("Course completed! Certificate earned!");
+                return;
+            }
 
             toast.success("Lesson marked as complete!");
 
-            // Update local state to reflect completion instantly
-            setLesson((prev: any) => ({ ...prev, isCompleted: true }));
-
-            // Auto-navigate to next lesson
-            const nextLessonId = getNextLessonId();
+            // Auto-navigate to next lesson (prefer API navigation)
+            const nextLessonId = (result as { next_lesson?: string })?.next_lesson ?? navigation?.next_lesson ?? getNextLessonId();
             if (nextLessonId) {
-                toast.success("Moving to next lesson...");
                 setTimeout(() => {
                     router.push(`/app/courses/${courseId}/lessons/${nextLessonId}`);
                 }, 1500);
             } else {
-                toast.success("Course Completed!");
                 setTimeout(() => {
                     router.push(`/app/courses/${courseId}`);
                 }, 1500);
             }
         } catch (error: any) {
-            toast.error(error || "Failed to mark lesson complete");
+            toast.error(error?.message ?? error ?? "Failed to mark lesson complete");
         } finally {
             setIsCompleting(false);
         }
+    };
+
+    const handleCertificateModalClose = () => {
+        setCertificateModal(null);
+        router.push(`/app/certificates`);
     };
 
     const getNextLessonId = () => {
@@ -187,14 +228,39 @@ export default function LessonViewerPage() {
         <div className="flex flex-col gap-6 lg:flex-row">
             {/* Main Content */}
             <div className="flex-1 space-y-6">
-                <div className="flex items-center gap-4 mb-4">
-                    <Link
-                        href={`/app/courses/${courseId}`}
-                        className="flex items-center text-sm text-gray-500 hover:text-gray-900"
-                    >
-                        <ChevronLeft className="h-4 w-4 mr-1" />
-                        Back to Course
-                    </Link>
+                <div className="flex items-center justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-4">
+                        <Link
+                            href={`/app/courses/${courseId}`}
+                            className="flex items-center text-sm text-gray-500 hover:text-gray-900"
+                        >
+                            <ChevronLeft className="h-4 w-4 mr-1" />
+                            Back to Course
+                        </Link>
+                        <nav className="flex items-center gap-2 text-sm">
+                            {navigation?.previous_lesson ? (
+                                <Link
+                                    href={`/app/courses/${courseId}/lessons/${navigation.previous_lesson}`}
+                                    className="flex items-center text-gray-500 hover:text-gray-900"
+                                >
+                                    <ChevronLeft className="h-4 w-4 mr-0.5" />
+                                    Previous
+                                </Link>
+                            ) : null}
+                            {navigation?.previous_lesson && navigation?.next_lesson ? (
+                                <span className="text-gray-300">|</span>
+                            ) : null}
+                            {navigation?.next_lesson ? (
+                                <Link
+                                    href={`/app/courses/${courseId}/lessons/${navigation.next_lesson}`}
+                                    className="flex items-center text-gray-500 hover:text-gray-900"
+                                >
+                                    Next
+                                    <ChevronRight className="h-4 w-4 ml-0.5" />
+                                </Link>
+                            ) : null}
+                        </nav>
+                    </div>
                 </div>
 
                 {(lesson.video_url || lesson.videoUrl) && (
@@ -313,7 +379,51 @@ export default function LessonViewerPage() {
                 </Tabs>
             </div>
 
-            {/* Sidebar / Navigation could go here (e.g., duplicate ModuleList for quick nav) */}
+            {/* Certificate celebration modal */}
+            <Dialog open={!!certificateModal} onOpenChange={(open) => !open && setCertificateModal(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-xl">
+                            <Award className="h-6 w-6 text-amber-500" />
+                            Course Completed!
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <p className="text-gray-600">
+                            Congratulations! You&apos;ve earned a certificate for completing this course.
+                        </p>
+                        {certificateModal && (
+                            <>
+                                <p className="text-sm font-mono text-gray-700 bg-gray-100 px-3 py-2 rounded">
+                                    {certificateModal.certificateNumber}
+                                </p>
+                                {certificateModal.xpEarned && (
+                                    <p className="text-sm text-green-600">
+                                        +{certificateModal.xpEarned} XP awarded
+                                    </p>
+                                )}
+                                <div className="flex gap-2 pt-2">
+                                    <Button
+                                        onClick={handleCertificateModalClose}
+                                        className="bg-[#446D6D] hover:bg-[#3A5F5F]"
+                                    >
+                                        View My Certificates
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            setCertificateModal(null);
+                                            router.push(`/certificates/verify/${certificateModal.certificateNumber}`);
+                                        }}
+                                    >
+                                        Verify Certificate
+                                    </Button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

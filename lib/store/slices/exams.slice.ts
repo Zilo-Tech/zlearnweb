@@ -10,7 +10,7 @@ interface ExamsState {
 const initialState: ExamsState = { results: [], isLoading: false, error: null };
 
 export const fetchExamResults = createAsyncThunk('exams/fetchResults', async () => {
-  const data = await apiService.get<unknown>('/api/exams/results/');
+  const data = await apiService.get<unknown>('/exams/results/');
   return Array.isArray(data) ? data : (data as { results?: unknown[] })?.results ?? [];
 });
 

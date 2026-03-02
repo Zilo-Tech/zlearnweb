@@ -12,7 +12,7 @@ const initialState: CommunityState = { forums: [], isLoading: false, error: null
 export const fetchForums = createAsyncThunk(
   'community/fetchForums',
   async (_: Record<string, unknown>) => {
-    const data = await apiService.get<{ results?: unknown[] }>('/api/community/forums/');
+    const data = await apiService.get<{ results?: unknown[] }>('/community/forums/');
     return Array.isArray(data) ? data : (data as { results?: unknown[] }).results ?? [];
   }
 );

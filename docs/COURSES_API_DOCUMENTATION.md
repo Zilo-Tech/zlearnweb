@@ -5,8 +5,6 @@
 https://api.z-learn.app/api/courses/
 ```
 
-**Important:** If your `.env` (`NEXT_PUBLIC_API_URL`) already includes `/api`, use endpoint paths **without** the `/api` prefix in services (e.g. `/courses/` not `/api/courses/`).
-
 ---
 
 ## 📚 Table of Contents
@@ -21,9 +19,10 @@ https://api.z-learn.app/api/courses/
 9. [Lesson Progress & Navigation](#lesson-progress--navigation)
 10. [Interactive Elements](#interactive-elements)
 11. [Sections & Resources](#sections--resources)
-12. [Common Mistakes](#common-mistakes)
-13. [Frontend Integration & Troubleshooting](#frontend-integration--troubleshooting)
-14. [Complete Frontend Example](#complete-frontend-example)
+12. [Course Progress Tracking](#course-progress-tracking)
+13. [Course Certificates](#course-certificates)
+14. [Common Mistakes](#common-mistakes)
+15. [Complete Frontend Example](#complete-frontend-example)
 
 ---
 
@@ -310,24 +309,12 @@ POST /api/courses/enroll/
 
 **Authentication:** Required
 
-**Request Body (required fields):**
+**Request Body:**
 ```json
 {
-  "course": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "status": "active",
-  "amount_paid": "0",
-  "payment_method": "free",
-  "payment_reference": ""
+  "course": "course-slug-here"
 }
 ```
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `course` | UUID | Yes | Course ID (UUID), **not slug** |
-| `status` | string | Yes | `"active"` |
-| `amount_paid` | string | Yes | `"0"` for free courses |
-| `payment_method` | string | Yes | `"free"` for free enrollment |
-| `payment_reference` | string | Yes | Empty string `""` for free |
 
 **Response Example:**
 ```json
@@ -351,7 +338,7 @@ POST /api/courses/enroll/
 
 **Frontend Example:**
 ```javascript
-const enrollCourse = async (courseId, token, opts = {}) => {
+const enrollCourse = async (courseSlug, token) => {
   const response = await fetch('https://api.z-learn.app/api/courses/enroll/', {
     method: 'POST',
     headers: {
@@ -359,11 +346,7 @@ const enrollCourse = async (courseId, token, opts = {}) => {
       'Authorization': `Bearer ${token}`
     },
     body: JSON.stringify({
-      course: courseId,  // UUID, not slug
-      status: 'active',
-      amount_paid: opts.amount_paid ?? '0',
-      payment_method: opts.payment_method ?? 'free',
-      payment_reference: opts.payment_reference ?? ''
+      course: courseSlug
     })
   });
   
@@ -375,9 +358,9 @@ const enrollCourse = async (courseId, token, opts = {}) => {
   return await response.json();
 };
 
-// Usage - pass course UUID from course detail
+// Usage
 try {
-  const enrollment = await enrollCourse(course.id, userToken);
+  const enrollment = await enrollCourse('ai-fundamentals:-understand-&-use-modern-ai-in-your-work', userToken);
   console.log('Successfully enrolled!', enrollment);
 } catch (error) {
   console.error('Enrollment error:', error.message);
@@ -401,61 +384,43 @@ GET /api/courses/enrollments/
 | `status` | string | active, completed, suspended | 
 | `ordering` | string | enrollment_date, progress_percentage |
 
-**Response (paginated, flat course fields):**
+**Response Example:**
 ```json
-{
-  "pagination": {
-    "count": 3,
-    "total_pages": 1,
-    "current_page": 1,
-    "page_size": 20,
-    "has_next": false,
-    "has_previous": false,
-    "next_page": null,
-    "previous_page": null
-  },
-  "results": [
-    {
+[
+  {
+    "id": "uuid",
+    "course": {
       "id": "uuid",
-      "student": "uuid",
-      "student_name": "John Doe",
-      "course": "3510de7a-e680-4717-9aec-1c67b2341131",
-      "course_title": "AI Fundamentals: Understand & Use Modern AI in Your Work",
-      "course_slug": "ai-fundamentals-understand-use-modern-ai-in-your-work",
-      "status": "active",
-      "progress_percentage": 0.0,
-      "completed_lessons": ["508b9b63-be58-47a9-91c5-0cbb6c0b60dd"],
-      "last_accessed": "2026-03-02T15:23:55Z",
-      "completion_date": null,
-      "amount_paid": "0.00",
-      "payment_method": "free",
-      "payment_reference": "",
-      "created_at": "2026-03-02T15:23:55Z",
-      "updated_at": "2026-03-02T15:23:55Z"
-    }
-  ]
-}
-```
-
-**Frontend normalization required:** The API returns `course` (UUID string), `course_title`, `course_slug`, and `completed_lessons` as flat fields. For enrollment check and UI, normalize to:
-```javascript
-const normalized = results.map(item => ({
-  id: item.course,
-  title: item.course_title,
-  slug: item.course_slug,
-  progress_percentage: item.progress_percentage,
-  completed_lessons: item.completed_lessons ?? []
-}));
-// enrolledCourseIds = normalized.map(c => c.id)
+      "title": "AI Fundamentals",
+      "slug": "ai-fundamentals:-understand-&-use-modern-ai-in-your-work",
+      "thumbnail": "https://..."
+    },
+    "enrollment_date": "2026-03-02T10:30:00Z",
+    "status": "active",
+    "progress_percentage": 35.5,
+    "lessons_completed": 4,
+    "total_lessons": 12,
+    "last_accessed": "2026-03-02T15:20:00Z",
+    "is_completed": false,
+    "completion_date": null
+  }
+]
 ```
 
 **Frontend Example:**
 ```javascript
+// Get all enrollments
 const response = await fetch('https://api.z-learn.app/api/courses/enrollments/', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+const enrollments = await response.json();
+
+// Get only active enrollments
+const active = await fetch('https://api.z-learn.app/api/courses/enrollments/?status=active', {
   headers: { 'Authorization': `Bearer ${token}` }
 });
-const data = await response.json();
-const enrollments = data.results ?? data;
 ```
 
 ---
@@ -1280,18 +1245,16 @@ fetch('https://api.z-learn.app/api/courses/enroll/', {
 
 ---
 
-### ❌ MISTAKE 5: Wrong Enrollment Request Body
+### ❌ MISTAKE 5: Wrong Field Names in Enrollment
 ```javascript
-// WRONG - Missing required fields (causes 400 Bad Request)
-{ "course": "slug-or-uuid" }
-
-// CORRECT - Include all required fields
+// WRONG - Using course ID instead of slug
 {
-  "course": "3510de7a-e680-4717-9aec-1c67b2341131",  // Course UUID
-  "status": "active",
-  "amount_paid": "0",
-  "payment_method": "free",
-  "payment_reference": ""
+  "course": "3510de7a-e680-4717-9aec-1c67b2341131"  // UUID
+}
+
+// CORRECT - Use course slug
+{
+  "course": "ai-fundamentals:-understand-&-use-modern-ai-in-your-work"  // Slug
 }
 ```
 
@@ -1341,99 +1304,6 @@ fetch(`/api/courses/enhanced/lessons/${lessonId}/`) // ✅ Works!
 
 ---
 
-## Frontend Integration & Troubleshooting
-
-### Two Course Systems
-Z-Learn has **two** course APIs. Use the correct one per context:
-
-| System | Path | Use for |
-|--------|------|---------|
-| **Professional** | `/courses/` | Professional development, certifications, career courses |
-| **Academic** | `/content/courses/` | School/curriculum courses |
-
-**Do not** call `/content/courses/` for professional courses (causes 404).
-
----
-
-### Course Detail Routing (Slug vs UUID)
-Route based on **identifier format**, not user type:
-
-| Identifier format | API to use | Example |
-|-------------------|------------|---------|
-| **Slug** (contains hyphens, not UUID) | `/courses/{slug}/` | `ai-fundamentals-understand-use-modern-ai-in-your-work` |
-| **UUID** | `/content/courses/{id}/` | `3510de7a-e680-4717-9aec-1c67b2341131` |
-
-```javascript
-const isUuid = (id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-const endpoint = isUuid(idOrSlug)
-  ? `/content/courses/${idOrSlug}/`
-  : `/courses/${encodeURIComponent(idOrSlug)}/`;
-```
-
----
-
-### Base URL Configuration
-If `NEXT_PUBLIC_API_URL` already includes `/api` (e.g. `https://api.z-learn.app/api`), use paths **without** `/api`:
-- ✅ `/courses/` → `https://api.z-learn.app/api/courses/`
-- ❌ `/api/courses/` → `https://api.z-learn.app/api/api/courses/` (double /api)
-
----
-
-### Enrollments Normalization
-The enrollments API returns flat fields. Normalize for enrollment check and lessons:
-
-```javascript
-function normalizeEnrolled(raw) {
-  const arr = Array.isArray(raw) ? raw : raw?.results ?? [];
-  return arr.map((item) => ({
-    id: item.course,
-    title: item.course_title,
-    slug: item.course_slug,
-    progress_percentage: item.progress_percentage,
-    completed_lessons: item.completed_lessons ?? []
-  }));
-}
-// enrolledCourseIds = normalized.map(c => c.id)  // Use UUID for checks
-```
-
----
-
-### Enrollment Check Logic
-- `enrolledCourseIds` stores **course UUIDs** (from `item.course`)
-- Use `course.id` (UUID) for `selectIsEnrolled`, **not** the URL param (which may be slug)
-- When `course` is loaded: `selectIsEnrolled(course?.id ?? courseId)(state)`
-
----
-
-### Modules & Lessons Format Transformation
-API returns `lesson_type`, `duration_minutes`. UI often expects `type`, `duration` string:
-
-| API field | UI field |
-|-----------|----------|
-| `lesson_type` | `type` |
-| `duration_minutes` | `duration` (e.g. `"30 min"`) |
-| enrollment `completed_lessons` | `isCompleted` per lesson |
-
-```javascript
-lessons.map(les => ({
-  id: les.id,
-  title: les.title,
-  type: les.lesson_type ?? 'text',
-  duration: les.duration_minutes != null ? `${les.duration_minutes} min` : '—',
-  isCompleted: completedLessonIds.has(les.id),
-  isLocked: false
-}));
-```
-
----
-
-### Lesson Links & Course Identifier
-For professional courses, the detail URL uses **slug**. Pass the **same identifier** (slug) to `ModuleList` for lesson links:
-- URL: `/app/courses/ai-fundamentals.../lessons/{lessonId}`
-- `ModuleList courseId={courseIdFromParams}` (slug)
-
----
-
 ## Complete Frontend Example
 
 ```javascript
@@ -1470,20 +1340,14 @@ class CourseCatalog {
     return await response.json();
   }
 
-  async enrollCourse(courseId, token, opts = {}) {
+  async enrollCourse(slug, token) {
     const response = await fetch(`${this.baseURL}/api/courses/enroll/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({
-        course: courseId,
-        status: 'active',
-        amount_paid: opts.amount_paid ?? '0',
-        payment_method: opts.payment_method ?? 'free',
-        payment_reference: opts.payment_reference ?? ''
-      })
+      body: JSON.stringify({ course: slug })
     });
 
     if (!response.ok) {
@@ -1584,9 +1448,9 @@ const course = await api.getCourseDetail('ai-fundamentals:-understand-&-use-mode
 console.log(`Course: ${course.title}`);
 console.log(`Modules: ${course.modules.length}`);
 
-// 4. Enroll in course (requires user to be logged in - pass course UUID)
+// 4. Enroll in course (requires user to be logged in)
 try {
-  const enrollment = await api.enrollCourse(course.id, userToken);
+  const enrollment = await api.enrollCourse(course.slug, userToken);
   console.log('Successfully enrolled!');
 } catch (error) {
   console.error('Enrollment failed:', error.message);
@@ -1832,6 +1696,378 @@ window.addEventListener('beforeunload', () => {
 
 ---
 
+## Course Progress Tracking
+
+### Get Course Progress
+Get detailed progress for a specific course including completed items and current position.
+
+```http
+GET /api/courses/progress/{course_id}/
+```
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "completed_lessons": ["uuid1", "uuid2", "uuid3"],
+  "completed_modules": ["module-uuid1"],
+  "completed_sections": ["section-uuid1", "section-uuid2"],
+  "current_module": "current-module-uuid",
+  "current_lesson": "current-lesson-uuid",
+  "completion_percentage": 65.5,
+  "time_spent_minutes": 420
+}
+```
+
+**Frontend Example:**
+```javascript
+const getCourseProgress = async (courseId, token) => {
+  const response = await fetch(
+    `https://api.z-learn.app/api/courses/progress/${courseId}/`,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }
+  );
+  
+  if (!response.ok) {
+    throw new Error('Not enrolled in this course');
+  }
+  
+  const progress = await response.json();
+  
+  // Update UI
+  console.log(`Course ${progress.completion_percentage}% complete`);
+  console.log(`Time spent: ${progress.time_spent_minutes} minutes`);
+  console.log(`Completed: ${progress.completed_lessons.length} lessons`);
+  
+  return progress;
+};
+```
+
+---
+
+### Update Course Position
+Track user's current position in a course (current module and lesson).
+
+```http
+POST /api/courses/progress/{course_id}/update-position/
+```
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "current_module": "module-uuid",
+  "current_lesson": "lesson-uuid"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Position updated"
+}
+```
+
+**Frontend Example:**
+```javascript
+const updateCoursePosition = async (courseId, moduleId, lessonId, token) => {
+  const response = await fetch(
+    `https://api.z-learn.app/api/courses/progress/${courseId}/update-position/`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        current_module: moduleId,
+        current_lesson: lessonId
+      })
+    }
+  );
+  
+  return await response.json();
+};
+
+// Usage: Save user's position when they switch lessons
+await updateCoursePosition(courseId, moduleId, lessonId, userToken);
+```
+
+---
+
+## Course Certificates
+
+### Get My Certificates
+List all certificates earned by the authenticated user.
+
+```http
+GET /api/courses/certificates/
+```
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "count": 3,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "uuid",
+      "student": "user-uuid",
+      "student_name": "John Doe",
+      "course": "course-uuid",
+      "course_title": "AI Fundamentals: Understand & Use Modern AI in Your Work",
+      "certificate_number": "CERT-A1B2C3D4E5F6",
+      "issued_date": "2024-02-15T10:30:00Z",
+      "pdf_file": "https://example.com/certificates/cert.pdf",
+      "is_verified": true,
+      "created_at": "2024-02-15T10:30:00Z",
+      "updated_at": "2024-02-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+**Frontend Example:**
+```javascript
+const getMyCertificates = async (token) => {
+  const response = await fetch(
+    'https://api.z-learn.app/api/courses/certificates/',
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }
+  );
+  
+  const data = await response.json();
+  
+  // Display certificates
+  data.results.forEach(cert => {
+    console.log(`Certificate: ${cert.certificate_number}`);
+    console.log(`Course: ${cert.course_title}`);
+    console.log(`Issued: ${new Date(cert.issued_date).toLocaleDateString()}`);
+  });
+  
+  return data.results;
+};
+```
+
+---
+
+### Get Certificate Detail
+Get details of a specific certificate.
+
+```http
+GET /api/courses/certificates/{certificate_id}/
+```
+
+**Authentication:** Required
+
+**Response:** Same as certificate object above
+
+---
+
+### Request Course Certificate
+Request a completion certificate after finishing a course.
+
+```http
+POST /api/courses/{course_id}/request-certificate/
+```
+
+**Authentication:** Required
+
+**Response (Success):**
+```json
+{
+  "message": "Certificate issued successfully",
+  "certificate": {
+    "id": "uuid",
+    "student_name": "John Doe",
+    "course_title": "AI Fundamentals",
+    "certificate_number": "CERT-A1B2C3D4E5F6",
+    "issued_date": "2024-02-15T10:30:00Z",
+    "is_verified": true
+  },
+  "xp_earned": 500
+}
+```
+
+**Response (Already Issued):**
+```json
+{
+  "message": "Certificate already issued",
+  "certificate": { ... }
+}
+```
+
+**Response (Not Completed):**
+```json
+{
+  "error": "Course not completed",
+  "completion_percentage": 75.5,
+  "completed_lessons": 10,
+  "total_lessons": 12,
+  "message": "You must complete all lessons before requesting a certificate"
+}
+```
+
+**Frontend Example:**
+```javascript
+const requestCertificate = async (courseId, token) => {
+  const response = await fetch(
+    `https://api.z-learn.app/api/courses/${courseId}/request-certificate/`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+  
+  const result = await response.json();
+  
+  if (response.status === 201) {
+    // Certificate issued
+    console.log('🎉 Certificate issued!');
+    console.log(`Certificate #: ${result.certificate.certificate_number}`);
+    console.log(`XP Earned: ${result.xp_earned}`);
+    return result.certificate;
+  } else if (response.status === 200) {
+    // Already had certificate
+    console.log('Certificate was already issued');
+    return result.certificate;
+  } else {
+    // Not completed
+    console.log(result.message);
+    console.log(`Progress: ${result.completion_percentage}%`);
+    throw new Error(result.error);
+  }
+};
+```
+
+---
+
+### Verify Certificate
+Verify a certificate's authenticity using the certificate number (public endpoint).
+
+```http
+GET /api/courses/certificates/verify/{certificate_number}/
+```
+
+**Authentication:** Not required (public)
+
+**Response (Valid):**
+```json
+{
+  "valid": true,
+  "is_verified": true,
+  "student_name": "John Doe",
+  "course_title": "AI Fundamentals: Understand & Use Modern AI in Your Work",
+  "issued_date": "2024-02-15T10:30:00Z",
+  "certificate_number": "CERT-A1B2C3D4E5F6"
+}
+```
+
+**Response (Invalid):**
+```json
+{
+  "valid": false,
+  "message": "Certificate not found"
+}
+```
+
+**Frontend Example:**
+```javascript
+const verifyCertificate = async (certificateNumber) => {
+  const response = await fetch(
+    `https://api.z-learn.app/api/courses/certificates/verify/${certificateNumber}/`
+  );
+  
+  const result = await response.json();
+  
+  if (result.valid) {
+    console.log('✅ Valid Certificate');
+    console.log(`Student: ${result.student_name}`);
+    console.log(`Course: ${result.course_title}`);
+    console.log(`Issued: ${new Date(result.issued_date).toLocaleDateString()}`);
+  } else {
+    console.log('❌ Invalid Certificate');
+  }
+  
+  return result;
+};
+
+// Usage:
+await verifyCertificate('CERT-A1B2C3D4E5F6');
+```
+
+---
+
+### Automatic Certificate Generation
+
+**Note:** Certificates are automatically generated when you complete the last lesson of a course.
+
+When completing a lesson returns:
+```json
+{
+  "success": true,
+  "message": "Lesson completed and course certificate earned! 🎉",
+  "xp_awarded": 50,
+  "course_completed": true,
+  "certificate_issued": true,
+  "certificate_number": "CERT-A1B2C3D4E5F6"
+}
+```
+
+**Frontend handling:**
+```javascript
+const completeLesson = async (lessonId, token) => {
+  const response = await fetch(
+    `https://api.z-learn.app/api/courses/lessons/${lessonId}/complete/`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        time_spent_minutes: 30
+      })
+    }
+  );
+  
+  const result = await response.json();
+  
+  // Check if course completed and certificate issued
+  if (result.certificate_issued) {
+    // Show celebration modal
+    showCelebrationModal({
+      title: 'Course Completed! 🎉',
+      message: 'Congratulations! You earned a certificate!',
+      certificateNumber: result.certificate_number,
+      xpEarned: 500  // Course completion XP
+    });
+    
+    // Navigate to certificate page
+    navigate(`/certificates/${result.certificate_number}`);
+  }
+  
+  return result;
+};
+```
+
+---
+
 ## Response Status Codes
 
 | Code | Meaning | Common Cause |
@@ -1859,12 +2095,11 @@ window.addEventListener('beforeunload', () => {
 
 If you encounter issues:
 
-1. **See [Frontend Integration & Troubleshooting](#frontend-integration--troubleshooting)** for routing, normalization, and common fixes
-2. **Check the slug format** - Use the exact slug from the course list; URL-encode with `encodeURIComponent(slug)`
-3. **Verify authentication** - Include `Authorization: Bearer {token}` header
-4. **Course detail routing** - Slug → `/courses/`, UUID → `/content/courses/`
-5. **Enrollment body** - Must include `course` (UUID), `status`, `amount_paid`, `payment_method`, `payment_reference`
-6. **Enrollments response** - Extract `data.results`; normalize `course`, `course_title`, `course_slug` → `id`, `title`, `slug`
+1. **Check the slug format** - Use the exact slug from the course list
+2. **Verify authentication** - Include `Authorization: Bearer {token}` header
+3. **URL-encode special characters** - Use `encodeURIComponent(slug)`
+4. **Check base URL** - Use `/api/courses/` not `/api/content/courses/`
+5. **Review error messages** - They usually indicate the exact problem
 
 For additional help, contact the backend team with:
 - Full request URL

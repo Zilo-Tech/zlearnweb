@@ -131,9 +131,51 @@ export const coursesService = {
   getLessonNavigation: (lessonId: string) =>
     apiService.get<unknown>(`${PROFESSIONAL_API}/lessons/${lessonId}/navigation/`),
   
-  // POST /api/courses/lessons/{lesson_id}/complete/ - Complete lesson
-  completeLesson: (lessonId: string) =>
-    apiService.post<unknown>(`${PROFESSIONAL_API}/lessons/${lessonId}/complete/`, {}),
+  // POST /api/courses/lessons/{lesson_id}/complete/ - Complete lesson (returns certificate_issued if course completed)
+  completeLesson: (lessonId: string, body?: { time_spent_minutes?: number }) =>
+    apiService.post<{
+      success?: boolean;
+      message?: string;
+      certificate_issued?: boolean;
+      certificate_number?: string;
+      course_completed?: boolean;
+      xp_awarded?: number;
+      xp_earned?: number;
+    }>(`${PROFESSIONAL_API}/lessons/${lessonId}/complete/`, body ?? {}),
+
+  // POST /api/courses/progress/{course_id}/update-position/ - Update current module/lesson
+  updateCoursePosition: (courseId: string, data: { current_module?: string; current_lesson?: string }) =>
+    apiService.post<unknown>(`${PROFESSIONAL_API}/progress/${courseId}/update-position/`, data),
+
+  // GET /api/courses/certificates/ - List user's certificates
+  getCertificates: async () => {
+    const res = await apiService.get<{ results?: unknown[]; count?: number }>(`${PROFESSIONAL_API}/certificates/`);
+    return Array.isArray(res) ? res : (res?.results ?? []);
+  },
+
+  // GET /api/courses/certificates/{id}/ - Certificate detail
+  getCertificateDetail: (certificateId: string) =>
+    apiService.get<unknown>(`${PROFESSIONAL_API}/certificates/${certificateId}/`),
+
+  // POST /api/courses/{course_id}/request-certificate/ - Request certificate (manual, if not auto-issued)
+  requestCertificate: (courseId: string) =>
+    apiService.post<{
+      certificate?: { certificate_number?: string; pdf_file?: string };
+      xp_earned?: number;
+      message?: string;
+    }>(`${PROFESSIONAL_API}/${courseId}/request-certificate/`, {}),
+
+  // GET /api/courses/certificates/verify/{certificate_number}/ - Public verification
+  verifyCertificate: (certificateNumber: string) =>
+    apiService.get<{
+      valid: boolean;
+      is_verified?: boolean;
+      student_name?: string;
+      course_title?: string;
+      issued_date?: string;
+      certificate_number?: string;
+      message?: string;
+    }>(`${PROFESSIONAL_API}/certificates/verify/${encodeURIComponent(certificateNumber)}/`),
   
   // POST /api/courses/lessons/{id}/start-progress/ - Start lesson progress
   startLessonProgress: (lessonId: string) =>
