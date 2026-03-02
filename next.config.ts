@@ -23,17 +23,12 @@ const nextConfig = {
     ],
     dangerouslyAllowSVG: true,
   },
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
+  typescript: {
+    ignoreBuildErrors: false,
   },
-  // Optimize bundle size for deployment
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error', 'warn'],
-    } : false,
+  eslint: {
+    ignoreDuringBuilds: false,
   },
-}
+};
 
 export default nextConfig;
