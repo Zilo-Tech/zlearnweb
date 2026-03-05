@@ -37,16 +37,29 @@ function pad(n: number): string {
 
 export default function LaunchCountdown() {
   const launchTs = useMemo(getLaunchTimestamp, []);
+  const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(() =>
     computeTimeLeft(launchTs)
   );
 
   useEffect(() => {
+    setMounted(true);
     const tick = () => setTimeLeft(computeTimeLeft(launchTs));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [launchTs]);
+
+  if (!mounted) {
+    // Return a skeleton or static placeholder to avoid hydration mismatch
+    return (
+      <div className="flex flex-wrap items-center gap-2 md:gap-4 invisible">
+        <span className="text-xs md:text-sm text-primary-200 font-bold uppercase tracking-wider">
+          Launching in
+        </span>
+      </div>
+    );
+  }
 
   if (timeLeft.isPast) {
     return (
@@ -100,3 +113,4 @@ export default function LaunchCountdown() {
     </div>
   );
 }
+

@@ -226,5 +226,6 @@ export default function QuizViewerPage() {
                 )}
             </Card>
         </div>
+
     );
 }

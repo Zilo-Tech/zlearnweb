@@ -2,6 +2,11 @@ export interface User {
   id: string;
   email: string;
   name?: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+  display_name?: string;
+  username?: string;
   profile_picture?: string;
   user_type?: 'academic' | 'professional' | 'exams';
   onboarding_complete?: boolean;
@@ -26,6 +31,7 @@ export interface Course {
 export interface LoginCredentials {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface RegisterData {

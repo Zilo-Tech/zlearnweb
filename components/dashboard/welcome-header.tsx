@@ -27,11 +27,20 @@ export function WelcomeHeader() {
     const welcome = dashboard?.welcome_message as { title?: string; message?: string; context?: string } | undefined;
     const userType = (user?.user_type?.toLowerCase?.() ?? '').trim();
     const isExamUser = userType === 'exams';
+
     const getGreeting = () => {
         const hour = new Date().getHours();
         if (hour < 12) return 'Good morning';
         if (hour < 18) return 'Good afternoon';
         return 'Good evening';
+    };
+
+    const getFirstName = () => {
+        if (user?.display_name) return (user.display_name as string).split(' ')[0];
+        if (user?.first_name) return user.first_name as string;
+        if (user?.name) return (user.name as string).split(' ')[0];
+        if (user?.username) return user.username as string;
+        return 'Learner';
     };
 
     const defaultMessage = isExamUser
@@ -44,7 +53,7 @@ export function WelcomeHeader() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
                 <h1 className="text-2xl font-black text-gray-900 md:text-3xl truncate tracking-tight">
-                    {welcome?.title ?? `${getGreeting()}, ${user?.name?.split(' ')[0] || 'Learner'}! 👋`}
+                    {welcome?.title ?? `${getGreeting()}, ${getFirstName()}! 👋`}
                 </h1>
                 <p className="text-gray-600 leading-relaxed">
                     {welcome?.message ?? defaultMessage}
