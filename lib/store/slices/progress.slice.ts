@@ -10,7 +10,7 @@ interface ProgressState {
 const initialState: ProgressState = { learningAnalytics: null, isLoading: false, error: null };
 
 export const fetchLearningAnalytics = createAsyncThunk('progress/fetchAnalytics', async () => {
-  return apiService.get<unknown>('/api/progress/learning-analytics/');
+  return apiService.get<unknown>('/progress/learning-analytics/');
 });
 
 const progressSlice = createSlice({

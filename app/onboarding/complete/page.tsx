@@ -16,7 +16,7 @@ export default function OnboardingCompletePage() {
     const handleFinish = async () => {
         setIsFinishing(true);
         try {
-            await dispatch(completeOnboarding(onboardingData)).unwrap();
+            await dispatch(completeOnboarding(onboardingData as Record<string, unknown>)).unwrap();
             router.push('/app/dashboard');
         } catch (error) {
             console.error('Failed to complete onboarding:', error);

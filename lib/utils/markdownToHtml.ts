@@ -20,7 +20,8 @@ function escapeHtml(text: string): string {
 export function markdownToHtml(markdown: string): string {
   if (!markdown || typeof markdown !== 'string') return '';
 
-  let html = escapeHtml(markdown);
+  const normalized = markdown.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  let html = escapeHtml(normalized);
 
   // Code blocks (fenced)
   html = html.replace(/```[\s\S]*?```/g, (block) => {
@@ -46,8 +47,24 @@ export function markdownToHtml(markdown: string): string {
   html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
   html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
 
-  // Links [text](url)
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary-600 underline">$1</a>');
+  // Images ![alt](url) - before links so link regex doesn't consume
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match, alt, url) => {
+    const safeUrl = String(url).trim().replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const safeAlt = String(alt).trim().replace(/"/g, '&quot;');
+    return `<img src="${safeUrl}" alt="${safeAlt}" class="max-w-full h-auto rounded shadow-sm my-2" loading="lazy" />`;
+  });
+
+  // Links [text](url) - escape URL for safe href (quotes, etc.)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, text, url) => {
+    const safeUrl = String(url).trim().replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-primary-600 underline hover:underline cursor-pointer">${text}</a>`;
+  });
+
+  // Horizontal rules --- or ___ (before list so -* don't become list)
+  html = html.replace(/^(?:---|\*\*\*|___)\s*$/gm, '<hr class="border-gray-200 my-4" />');
+
+  // Blockquotes (> at line start; after escapeHtml '>' is '&gt;')
+  html = html.replace(/^&gt;\s?(.*)$/gm, '<blockquote class="border-l-4 border-primary-200 pl-4 my-2 text-gray-600">$1</blockquote>');
 
   // Unordered list items (- or * at line start)
   html = html.replace(/^[\*\-]\s+(.+)$/gm, '<li>$1</li>');
@@ -58,6 +75,43 @@ export function markdownToHtml(markdown: string): string {
   // Wrap consecutive <li> in <ol> (avoid matching when already inside </ul>)
   html = html.replace(/\n(<li>.*<\/li>\n?)+/g, (match) => `<ol>${match.trim()}</ol>`);
 
+  // Markdown tables: | col1 | col2 | ... then |---| then body rows
+  const tableLine = /^\|(.+)\|$/;
+  const tableLines: string[] = [];
+  const tableBlock: string[] = [];
+  const flushTable = () => {
+    if (tableBlock.length < 2) return;
+    const headerCells = tableBlock[0].split('|').map((c) => c.trim()).filter(Boolean);
+    const isSep = tableBlock[1].replace(/\s/g, '').replace(/-/g, '').replace(/\|/g, '') === '';
+    const bodyStart = isSep ? 2 : 1;
+    let out = '<table class="min-w-full border border-gray-200 text-sm"><thead><tr>';
+    headerCells.forEach((c) => { out += `<th class="border border-gray-200 px-3 py-2 text-left font-medium">${c}</th>`; });
+    out += '</tr></thead><tbody>';
+    for (let i = bodyStart; i < tableBlock.length; i++) {
+      const cells = tableBlock[i].split('|').map((c) => c.trim()).filter(Boolean);
+      out += '<tr>';
+      cells.forEach((c) => { out += `<td class="border border-gray-200 px-3 py-2">${c}</td>`; });
+      out += '</tr>';
+    }
+    out += '</tbody></table>';
+    tableLines.push('<div class="overflow-x-auto my-4 rounded-lg border border-gray-200">' + out + '</div>');
+  };
+  const lineArr = html.split('\n');
+  for (let i = 0; i < lineArr.length; i++) {
+    const line = lineArr[i];
+    if (tableLine.test(line)) {
+      tableBlock.push(line);
+      continue;
+    }
+    if (tableBlock.length > 0) {
+      flushTable();
+      tableBlock.length = 0;
+    }
+    tableLines.push(line);
+  }
+  if (tableBlock.length > 0) flushTable();
+  html = tableLines.join('\n');
+
   // Paragraphs: wrap remaining line blocks in <p>
   const lines = html.split(/\n/);
   const result: string[] = [];
@@ -65,7 +119,7 @@ export function markdownToHtml(markdown: string): string {
   let block: string[] = [];
 
   for (const line of lines) {
-    const isBlockElement = /^<(h[1-6]|ul|ol|li|pre|code)\b/.test(line) || line.startsWith('</');
+    const isBlockElement = /^<(h[1-6]|ul|ol|li|pre|code|table|thead|tbody|tr|th|td|blockquote|hr|div)\b/.test(line) || line.startsWith('</');
     if (isBlockElement || line.trim() === '') {
       if (block.length > 0) {
         result.push('<p>' + block.join('\n') + '</p>');
@@ -91,6 +145,10 @@ export function youtubeEmbedUrl(url: string): string | null {
   if (!url || typeof url !== 'string') return null;
   const trimmed = url.trim();
 
+  // Already an embed URL
+  if (trimmed.includes('youtube.com/embed/') || trimmed.includes('youtu.be/embed/')) {
+    return trimmed;
+  }
   // https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID
   const watchMatch = trimmed.match(/(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
   if (watchMatch) {

@@ -1,201 +1,174 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ModuleList } from '@/components/courses/module-list';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { PlayCircle, Award, Clock, BookOpen, Star, Share2, ArrowLeft } from 'lucide-react';
-import { useCourses } from '@/lib/hooks/useCourses';
-import { useAuth } from '@/lib/hooks/useAuth';
-import { getCourseService } from '@/lib/services/courses.service';
+import { PlayCircle, Award, Clock, BookOpen, Star, Share2, Loader2 } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
+import {
+    fetchCourseDetails,
+    enrollInCourse,
+    fetchEnrolledCourses,
+    fetchModuleLessons,
+    fetchCertificates,
+    selectCurrentCourse,
+    selectCurrentCourseModules,
+    selectIsEnrolled
+} from '@/lib/store/slices/courses.slice';
+import { coursesService } from '@/lib/services';
+import { toast } from 'sonner';
 import { markdownToHtml } from '@/lib/utils/markdownToHtml';
 
-function mapLessons(lessons: any[], completedIds?: Set<string>): { id: string; title: string; type: 'video' | 'text' | 'quiz'; duration: string; isCompleted: boolean; isLocked: boolean }[] {
-    if (!Array.isArray(lessons)) return [];
-    return lessons.map((l: any) => ({
-        id: String(l.id),
-        title: l.title || 'Lesson',
-        type: (l.content_type === 'quiz' || l.lesson_type === 'quiz' ? 'quiz' : l.content_type === 'video' || l.lesson_type === 'video' ? 'video' : 'text') as 'video' | 'text' | 'quiz',
-        duration: l.duration ? `${l.duration}m` : (l.duration_minutes != null ? `${l.duration_minutes}m` : '—'),
-        isCompleted: completedIds ? completedIds.has(String(l.id)) : !!l.is_completed,
-        isLocked: !!l.is_locked,
-    }));
-}
+export default function CourseDetailsPage() {
+    const params = useParams();
+    const courseId = params?.courseId as string; // slug for professional, id for academic
+    const router = useRouter();
+    const dispatch = useAppDispatch();
+    const course = useAppSelector(selectCurrentCourse);
+    const modules = useAppSelector(selectCurrentCourseModules);
+    const userType = useAppSelector((s) => s.auth.user?.user_type as 'academic' | 'professional' | 'exams' | undefined);
+    const enrollmentsCheck = useAppSelector((state) => selectIsEnrolled(course?.id ?? courseId)(state));
+    // Use is_enrolled from course detail API when available; fallback to enrollments list
+    const isEnrolled = course?.is_enrolled ?? enrollmentsCheck;
+    const isLoading = useAppSelector((state) => state.courses.isLoading);
 
-function mapModules(
-    modules: any[],
-    courseSlug: string,
-    fetchedLessons: Record<string, any[]> = {},
-    completedLessonIds?: Set<string>,
-    completedModuleIds?: Set<string>
-): { id: string; title: string; isCompleted: boolean; lessons: ReturnType<typeof mapLessons> }[] {
-    if (!Array.isArray(modules)) return [];
-    return modules.map((m: any) => {
-        const lessons = (m.lessons?.length ? m.lessons : fetchedLessons[String(m.id)]) || [];
-        return {
-            id: String(m.id),
-            title: m.title || 'Module',
-            isCompleted: completedModuleIds ? completedModuleIds.has(String(m.id)) : !!m.is_completed,
-            lessons: mapLessons(lessons, completedLessonIds),
-        };
-    });
-}
+    // Local loading state for enrollment action
+    const [isEnrolling, setIsEnrolling] = useState(false);
+    // Academic: course progress for "Request certificate" (100% complete)
+    const [courseProgress, setCourseProgress] = useState<{ overall_progress?: number } | null>(null);
+    const [isRequestingCert, setIsRequestingCert] = useState(false);
 
-export default function CourseDetailsPage({ params }: { params: Promise<{ courseId: string }> }) {
-    const { courseId } = use(params);
-    const { user } = useAuth();
-    const { currentCourse, loadDetails, loadEnrolled, isLoading, error, isEnrolled, enroll } = useCourses();
-    const [enrolling, setEnrolling] = useState(false);
-    const [moduleLessons, setModuleLessons] = useState<Record<string, any[]>>({});
-    const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
-    const [completedModuleIds, setCompletedModuleIds] = useState<Set<string>>(new Set());
-    const [progressPct, setProgressPct] = useState(0);
-    const userType = (user?.user_type as 'academic' | 'professional' | 'exams') || 'academic';
+    const isProfessionalCourse = !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(courseId ?? '');
 
     useEffect(() => {
-        if (courseId) loadDetails(courseId);
-    }, [courseId, loadDetails]);
+        if (courseId) {
+            dispatch(fetchCourseDetails(courseId));
+            dispatch(fetchEnrolledCourses({ forceProfessional: isProfessionalCourse }));
+        }
+    }, [dispatch, courseId, isProfessionalCourse]);
 
-    // Fetch progress once course is loaded
+    // Fetch course progress for academic enrolled users (for Request certificate)
     useEffect(() => {
-        if (!currentCourse?.id) return;
-        let cancelled = false;
-        (async () => {
-            try {
-                const svc = getCourseService(userType);
-                const prog = await svc.getCourseProgress(currentCourse.id);
-                if (!cancelled && prog) {
-                    setCompletedLessonIds(new Set((prog.completed_lessons ?? []).map(String)));
-                    setCompletedModuleIds(new Set((prog.completed_modules ?? []).map(String)));
-                    setProgressPct(prog.completion_percentage ?? prog.progress_percentage ?? 0);
-                }
-            } catch {
-                // progress not available (not enrolled etc.) — silently ignore
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [currentCourse?.id, userType]);
+        if (!courseId || !isEnrolled || userType !== 'academic') return;
+        coursesService.getCourseProgress(courseId, 'academic').then((data: any) => {
+            setCourseProgress(data ?? null);
+        }).catch(() => setCourseProgress(null));
+    }, [courseId, isEnrolled, userType]);
 
-    // When course has modules but no lessons (e.g. professional API), fetch lessons per module (like mobile).
-    const rawModules = (currentCourse as any)?.modules ?? [];
     useEffect(() => {
-        if (!course || !rawModules.length) return;
-        const svc = getCourseService(userType);
-        const modulesNeedingLessons = rawModules.filter((m: any) => {
-            const hasLessons = Array.isArray(m.lessons) && m.lessons.length > 0;
-            const alreadyFetched = moduleLessons[String(m.id)]?.length;
-            const hasCount = (m.lesson_count ?? m.lessons_count) > 0;
-            return !hasLessons && !alreadyFetched && (hasCount || userType === 'professional');
-        });
-        if (modulesNeedingLessons.length === 0) return;
-        let cancelled = false;
-        (async () => {
-            const next: Record<string, any[]> = {};
-            for (const m of modulesNeedingLessons) {
-                if (cancelled) break;
-                try {
-                    const list = await svc.getModuleLessons(String(m.id));
-                    const arr = Array.isArray(list) ? list : [];
-                    if (!cancelled && arr.length) next[String(m.id)] = arr;
-                } catch {
-                    // ignore per-module errors
-                }
-            }
-            if (!cancelled && Object.keys(next).length > 0) {
-                setModuleLessons((prev) => ({ ...prev, ...next }));
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [currentCourse?.id, rawModules.length, userType, moduleLessons]);
+        const c = course as { modules?: { id: string; lessons?: unknown[]; lesson_count?: number }[] } | null;
+        const mods = c?.modules;
+        if (!mods?.length) return;
+        const needLessons = mods.filter((m) => (m.lesson_count ?? 0) > 0 && !(m.lessons?.length));
+        if (needLessons.length) {
+            dispatch(fetchModuleLessons(needLessons.map((m) => m.id)));
+        }
+    }, [course?.id, course?.modules, dispatch]);
 
-    const course = currentCourse;
-    const enrolled = course && (isEnrolled(course.id, (course as any).slug) || (course as any).is_enrolled);
-
-    // Refresh progress after enrolling
     const handleEnroll = async () => {
-        if (!course?.id || enrolling) return;
-        setEnrolling(true);
+        if (!course) return;
+
+        setIsEnrolling(true);
         try {
-            await enroll(course.id, (course as any).slug);
-            // Refresh enrolled list so isEnrolled() returns true immediately
-            loadEnrolled();
-            // Re-fetch progress
-            try {
-                const svc = getCourseService(userType);
-                const prog = await svc.getCourseProgress(course.id);
-                if (prog) {
-                    setCompletedLessonIds(new Set((prog.completed_lessons ?? []).map(String)));
-                    setCompletedModuleIds(new Set((prog.completed_modules ?? []).map(String)));
-                    setProgressPct(prog.completion_percentage ?? prog.progress_percentage ?? 0);
-                }
-            } catch { /* ignore */ }
-        } catch (e: any) {
-            console.error('Enrollment failed:', e?.message || e);
+            const payload =
+                userType === 'professional'
+                    ? { identifier: course.slug ?? course.id, courseId: course.id }
+                    : { identifier: course.id, courseId: course.id };
+            await dispatch(enrollInCourse(payload)).unwrap();
+            toast.success('Successfully enrolled in course!');
+            await dispatch(fetchCourseDetails(courseId)).unwrap();
+        } catch (error: any) {
+            const msg = error?.message || String(error);
+            if (msg.toLowerCase().includes('already enrolled')) {
+                toast.info('You are already enrolled in this course.');
+                dispatch(fetchCourseDetails(courseId));
+            } else {
+                toast.error(msg || 'Failed to enroll in course');
+            }
         } finally {
-            setEnrolling(false);
+            setIsEnrolling(false);
+        }
+    };
+
+    const handleRequestCertificate = async () => {
+        if (!course?.id) return;
+        setIsRequestingCert(true);
+        try {
+            const res = await coursesService.requestContentCertificate(course.id) as { certificate?: { certificate_number?: string }; message?: string };
+            toast.success(res.message ?? 'Certificate issued!');
+            await dispatch(fetchCertificates()).unwrap();
+            if (res.certificate?.certificate_number) {
+                router.push(`/certificates/verify/${encodeURIComponent(res.certificate.certificate_number)}`);
+            }
+        } catch (err: any) {
+            const msg = err?.response?.data?.error ?? err?.message ?? 'Failed to request certificate';
+            toast.error(msg);
+        } finally {
+            setIsRequestingCert(false);
+        }
+    };
+
+    const handleContinue = () => {
+        // Logic to find next lesson
+        if (course?.last_accessed) {
+            // TODO: Implement resume functionality
+        }
+
+        // Find the first available lesson across all modules
+        let firstLessonId: string | null = null;
+
+        for (const module of modules) {
+            if (module.lessons && module.lessons.length > 0) {
+                firstLessonId = module.lessons[0].id;
+                break;
+            }
+        }
+
+        if (firstLessonId && courseId) {
+            router.push(`/app/courses/${courseId}/lessons/${firstLessonId}`);
+        } else {
+            toast.info('No lessons available yet.');
         }
     };
 
     if (isLoading && !course) {
         return (
-            <div className="grid gap-8 lg:grid-cols-3">
-                <div className="lg:col-span-2 space-y-6 animate-pulse">
-                    <div className="h-8 w-48 bg-gray-200 rounded" />
-                    <div className="h-10 w-3/4 bg-gray-200 rounded" />
-                    <div className="h-4 w-full bg-gray-100 rounded" />
-                    <div className="h-64 bg-gray-100 rounded-xl" />
-                </div>
-                <div className="h-80 bg-gray-100 rounded-2xl animate-pulse" />
+            <div className="flex h-96 items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[#446D6D]" />
             </div>
         );
     }
 
-    if (error || !course) {
+    if (!course) {
         return (
-            <div className="space-y-4">
-                <Link href="/app/courses" className="inline-flex items-center gap-2 text-primary-600 hover:underline">
-                    <ArrowLeft className="h-4 w-4" /> Back to Courses
-                </Link>
-                <div className="rounded-xl bg-red-50 border border-red-100 p-6 text-center">
-                    <p className="text-red-700">{error || 'Course not found.'}</p>
-                    <Button asChild className="mt-4">
-                        <Link href="/app/courses">Browse Courses</Link>
-                    </Button>
-                </div>
+            <div className="flex h-96 items-center justify-center flex-col gap-4">
+                <p className="text-gray-500">Course not found.</p>
+                <Button variant="outline" onClick={() => router.back()}>Go Back</Button>
             </div>
         );
     }
-
-    const categoryLabel = (course as any).category_name ?? course.subject?.name ?? 'Course';
-    const levelLabel = (course as any).level ?? course.difficulty ?? '';
-    const modulesForList = mapModules((course as any).modules ?? [], courseId, moduleLessons, completedLessonIds, completedModuleIds);
-    const lessonCount = modulesForList.reduce((acc, m) => acc + m.lessons.length, 0);
-    const durationHours = (course as any).estimated_hours ?? (course as any).duration_hours ?? 0;
-    const firstLessonId = modulesForList[0]?.lessons?.[0]?.id;
-    const continueLearningHref = firstLessonId
-        ? `/app/courses/${courseId}/lessons/${firstLessonId}`
-        : `/app/courses/${courseId}`;
 
     return (
         <div className="grid gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-8">
-                <Link href="/app/courses" className="inline-flex items-center gap-2 text-primary-600 hover:underline text-sm font-medium">
-                    <ArrowLeft className="h-4 w-4" /> Back to Courses
-                </Link>
-
+                {/* Header */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="bg-[#446D6D]/10 text-[#446D6D]">
-                            {categoryLabel}
-                        </Badge>
-                        {levelLabel && (
-                            <>
-                                <span className="text-sm text-gray-500">•</span>
-                                <span className="text-sm text-gray-500">{levelLabel}</span>
-                            </>
-                        )}
+                        {(() => {
+                            const c = course as { category_name?: string; category?: { name?: string } | string; subject?: { name?: string } };
+                            const label = c.category_name ?? (typeof c.category === 'object' ? c.category?.name : null) ?? c.subject?.name;
+                            if (!label) return null;
+                            return (
+                                <Badge variant="secondary" className="bg-[#446D6D]/10 text-[#446D6D]">
+                                    {label}
+                                </Badge>
+                            );
+                        })()}
+                        <span className="text-sm text-gray-500">•</span>
+                        <span className="text-sm text-gray-500">{course.level ? String(course.level) : 'Beginner'}</span>
                     </div>
 
                     <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
@@ -203,65 +176,114 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                     </h1>
 
                     <div
-                        className="prose prose-gray max-w-none text-lg text-gray-600 leading-relaxed prose-headings:text-gray-900 prose-p:my-2 prose-ul:my-2 prose-ol:my-2"
+                        className="prose prose-gray max-w-none text-gray-600 [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_strong]:text-gray-900 prose-a:text-primary-600 prose-a:underline prose-a:pointer-events-auto prose-a:cursor-pointer"
                         dangerouslySetInnerHTML={{
-                            __html: markdownToHtml(course.description || '') || '<p>No description available.</p>',
+                            __html: markdownToHtml(course.description ?? ''),
                         }}
                     />
 
-                    {(course as any).instructor_name && (
-                        <div className="flex items-center gap-6 text-sm text-gray-500">
-                            <span className="font-medium text-gray-900">{(course as any).instructor_name}</span>
+                    <div className="flex items-center gap-6 text-sm text-gray-500">
+                        <div className="flex items-center gap-2">
+                            {/* <div className="h-8 w-8 rounded-full bg-gray-200" /> */}
+                            {(course as { instructor_name?: string }).instructor_name || course.instructor != null ? (
+                                <span className="font-medium text-gray-900">
+                                    {(course as { instructor_name?: string }).instructor_name ??
+                                        (typeof course.instructor === 'object' ? (course.instructor as { name?: string })?.name : null) ??
+                                        'Instructor'}
+                                </span>
+                            ) : null}
                         </div>
-                    )}
+                        <div className="flex items-center gap-1 text-yellow-500">
+                            <Star className="h-4 w-4 fill-current" />
+                            <span className="font-medium text-gray-900">{Number(course.rating) || 0}</span>
+                            <span className="text-gray-500">({Number(course.enrolled_count) || 0} students)</span>
+                        </div>
+                    </div>
                 </div>
 
+                {/* Course Content */}
                 <div className="space-y-4">
                     <h2 className="text-xl font-bold text-gray-900">Course Content</h2>
-                    {modulesForList.length > 0 ? (
-                        <ModuleList courseId={courseId} modules={modulesForList} />
-                    ) : (
-                        <p className="text-gray-500 py-4">No modules available yet.</p>
-                    )}
+                    <ModuleList courseId={courseId} modules={modules} />
                 </div>
             </div>
 
+            {/* Sidebar */}
             <div className="space-y-6">
                 <div className="sticky top-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-6">
+                    {/* Video Preview Placeholder */}
                     <div className="relative aspect-video w-full rounded-lg bg-gray-900 flex items-center justify-center group cursor-pointer overflow-hidden">
+                        {course.thumbnail ? (
+                            <img src={course.thumbnail} alt={course.title} className="absolute inset-0 w-full h-full object-cover opacity-60" />
+                        ) : (
+                            <div className="absolute inset-0 bg-gray-800" />
+                        )}
                         <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors" />
-                        <PlayCircle className="h-16 w-16 text-white opacity-90 group-hover:scale-110 transition-transform" />
+                        <PlayCircle className="h-16 w-16 text-white opacity-90 group-hover:scale-110 transition-transform z-10" />
                     </div>
 
-                    {progressPct > 0 || enrolled ? (
+                    {isEnrolled ? (
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm font-medium">
                                     <span className="text-gray-700">Your Progress</span>
-                                    <span className="text-[#446D6D]">{Math.round(progressPct)}%</span>
+                                    <span className="text-[#446D6D]">
+                                        {Number(courseProgress?.overall_progress ?? course.progress_percentage) || 0}%
+                                    </span>
                                 </div>
-                                <Progress value={progressPct} className="h-2" />
+                                <Progress value={Number(courseProgress?.overall_progress ?? course.progress_percentage) || 0} className="h-2" />
                             </div>
-                            <Button asChild className="w-full" size="lg">
-                                <Link href={continueLearningHref}>Continue Learning</Link>
+                            <Button className="w-full bg-[#446D6D] hover:bg-[#3A5F5F]" size="lg" onClick={handleContinue}>
+                                Continue Learning
                             </Button>
+                            {userType === 'academic' && (courseProgress?.overall_progress ?? 0) >= 100 && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full gap-2 border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                                    size="lg"
+                                    onClick={handleRequestCertificate}
+                                    disabled={isRequestingCert}
+                                >
+                                    {isRequestingCert ? <Loader2 className="h-4 w-4 animate-spin" /> : <Award className="h-4 w-4" />}
+                                    {isRequestingCert ? 'Requesting...' : 'Request certificate'}
+                                </Button>
+                            )}
                         </div>
                     ) : (
-                        <Button className="w-full" size="lg" onClick={handleEnroll} disabled={enrolling}>
-                            {enrolling ? 'Enrolling…' : 'Enroll Now'}
-                        </Button>
+                        <div className="space-y-4">
+                            <div className="text-2xl font-bold text-gray-900">
+                                {course.is_free ? 'Free' : `$${course.price || 0}`}
+                            </div>
+                            <Button
+                                className="w-full bg-[#446D6D] hover:bg-[#3A5F5F]"
+                                size="lg"
+                                onClick={handleEnroll}
+                                disabled={isEnrolling}
+                            >
+                                {isEnrolling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
+                            </Button>
+                        </div>
                     )}
 
                     <div className="space-y-4 pt-4 border-t border-gray-100">
-                        {durationHours > 0 && (
-                            <div className="flex items-center gap-3 text-sm text-gray-600">
-                                <Clock className="h-5 w-5 text-gray-400" />
-                                <span>{durationHours}h of content</span>
-                            </div>
-                        )}
+                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                            <Clock className="h-5 w-5 text-gray-400" />
+                            <span>{(() => {
+                                const c = course as { duration_hours?: number; estimated_hours?: number };
+                                const h = c?.estimated_hours ?? c?.duration_hours;
+                                return `${Number(h) || 0}h content`;
+                            })()}</span>
+                        </div>
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                             <BookOpen className="h-5 w-5 text-gray-400" />
-                            <span>{lessonCount} lessons</span>
+                            <span>{(() => {
+                                const fromSelector = modules.reduce((sum, m) => sum + (m.lessons?.length ?? 0), 0);
+                                if (fromSelector > 0) return `${fromSelector} lessons`;
+                                const raw = (course as { total_lessons?: number; modules?: { lessons?: unknown[]; lesson_count?: number }[] });
+                                const n = raw?.total_lessons ?? raw?.modules?.reduce((acc, m) => acc + (m.lessons?.length ?? m.lesson_count ?? 0), 0);
+                                return `${Number(n) || 0} lessons`;
+                            })()}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                             <Award className="h-5 w-5 text-gray-400" />

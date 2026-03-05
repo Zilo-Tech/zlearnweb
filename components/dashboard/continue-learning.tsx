@@ -5,14 +5,18 @@ import { Play, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useProgress } from '@/lib/hooks/useProgress';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { useEffect } from 'react';
 
 export function ContinueLearning() {
     const { userProgress, loadUserProgress, isLoading } = useProgress();
+    const { isAuthenticated, token } = useAuth();
 
     useEffect(() => {
-        loadUserProgress();
-    }, [loadUserProgress]);
+        if (isAuthenticated && token) {
+            loadUserProgress();
+        }
+    }, [loadUserProgress, isAuthenticated, token]);
 
     const currentCourse = userProgress?.current_courses?.[0];
 

@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { User } from '@/lib/types';
 import { authService } from '@/lib/services/auth.service';
+import { STORAGE_KEYS } from '@/lib/constants';
 
 interface AuthState {
   user: User | null;
@@ -10,6 +11,33 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
 }
+
+// Helper to get initial state from localStorage
+const getInitialAuthState = (): AuthState => {
+  if (typeof window === 'undefined') {
+    return {
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      onboardingComplete: false,
+      isLoading: false,
+      error: null,
+    };
+  }
+  
+  const token = localStorage.getItem(STORAGE_KEYS.authToken);
+  const userStr = localStorage.getItem(STORAGE_KEYS.user);
+  const user = userStr ? JSON.parse(userStr) : null;
+  
+  return {
+    user,
+    token,
+    isAuthenticated: !!token,
+    onboardingComplete: user?.onboarding_complete ?? false,
+    isLoading: false,
+    error: null,
+  };
+};
 
 const initialState: AuthState = {
   user: null,
@@ -22,13 +50,8 @@ const initialState: AuthState = {
 
 export const loginUser = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
-    try {
-      return await authService.login(credentials);
-    } catch (err: any) {
-      const msg = typeof err === 'string' ? err : err?.message ?? 'Login failed. Please check your credentials.';
-      return rejectWithValue(msg);
-    }
+  async (credentials: { email: string; password: string }) => {
+    return authService.login(credentials);
   }
 );
 
@@ -42,13 +65,8 @@ export const refreshUserProfile = createAsyncThunk('auth/refreshProfile', async 
 
 export const registerUser = createAsyncThunk(
   'auth/register',
-  async (data: { email: string; password: string; name?: string; [key: string]: unknown }, { rejectWithValue }) => {
-    try {
-      return await authService.register(data);
-    } catch (err: any) {
-      const msg = typeof err === 'string' ? err : err?.message ?? 'Registration failed. Please try again.';
-      return rejectWithValue(msg);
-    }
+  async (data: { email: string; password: string; name?: string }) => {
+    return authService.register(data);
   }
 );
 
@@ -67,6 +85,16 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    hydrateAuth: (state) => {
+      const hydrated = getInitialAuthState();
+      state.user = hydrated.user;
+      state.token = hydrated.token;
+      state.isAuthenticated = hydrated.isAuthenticated;
+      state.onboardingComplete = hydrated.onboardingComplete;
+      if (state.token) {
+        console.log('🔄 Auth state hydrated from localStorage');
+      }
+    },
     setUser: (state, action: PayloadAction<User | null>) => {
       state.user = action.payload;
       state.isAuthenticated = !!action.payload;
@@ -76,56 +104,49 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // ── loginUser ──────────────────────────────────────────────────────────
     builder
       .addCase(loginUser.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
+        state.user = action.payload?.user ?? null;
+        state.token = action.payload?.token ?? null;
+        state.isAuthenticated = !!action.payload?.token;
+        state.onboardingComplete = action.payload?.user?.onboarding_complete ?? false;
         state.isLoading = false;
-        state.user = action.payload?.user ?? state.user;
-        state.token = action.payload?.token ?? state.token;
-        state.isAuthenticated = !!state.token;
-        state.onboardingComplete = action.payload?.user?.onboarding_complete ?? state.onboardingComplete;
         state.error = null;
+        console.log('✅ Login successful, token set in Redux:', !!state.token);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = (action.payload as string) ?? action.error.message ?? 'Login failed';
+        state.error = action.error.message ?? 'Login failed';
+        state.isAuthenticated = false;
       })
-    // ── registerUser ───────────────────────────────────────────────────────
-      .addCase(registerUser.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
+      .addCase(logoutUser.fulfilled, () => {
+        console.log('✅ Auth state reset to initial state');
+        return initialState;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload?.user ?? state.user;
-        state.token = action.payload?.token ?? state.token;
-        state.isAuthenticated = !!state.token;
-        state.error = null;
+      .addCase(logoutUser.rejected, () => {
+        console.log('⚠️ Logout rejected, but resetting auth state anyway');
+        return initialState;
       })
-      .addCase(registerUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = (action.payload as string) ?? action.error.message ?? 'Registration failed';
-      })
-    // ── logoutUser ─────────────────────────────────────────────────────────
-      .addCase(logoutUser.fulfilled, () => initialState)
-    // ── refreshUserProfile ─────────────────────────────────────────────────
       .addCase(refreshUserProfile.fulfilled, (state, action) => {
         if (action.payload) state.user = action.payload;
       })
-    // ── verifyEmail ────────────────────────────────────────────────────────
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.user = action.payload?.user ?? null;
+        state.token = action.payload?.token ?? null;
+        state.isAuthenticated = !!action.payload?.token;
+      })
       .addCase(verifyEmail.fulfilled, (state) => {
         state.isAuthenticated = true;
       })
-    // ── completeOnboarding ─────────────────────────────────────────────────
       .addCase(completeOnboarding.fulfilled, (state) => {
         state.onboardingComplete = true;
       });
   },
 });
 
-export const { setUser, switchUserType } = authSlice.actions;
+export const { hydrateAuth, setUser, switchUserType } = authSlice.actions;
 export default authSlice.reducer;

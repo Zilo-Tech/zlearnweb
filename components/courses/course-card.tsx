@@ -41,8 +41,8 @@ export function CourseCard({
     const isSvgFallback = imageSrc.startsWith('https://ui-avatars.com');
     const subjectLabel = course.subject?.name || 'Course';
 
-    // Match mobile: use course.id for detail so content API returns modules with lessons. Professional uses slug.
-    const courseIdentifier = userType === 'professional' ? ((course as any).slug || course.id) : course.id;
+    // Professional API uses slug for course detail URL; academic uses id
+    const courseIdentifier = userType === 'professional' ? (course.slug ?? course.id) : course.id;
     const courseHref = `/app/courses/${courseIdentifier}`;
 
     if (variant === 'compact') {

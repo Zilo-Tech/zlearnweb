@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '@/lib/store/hooks';
 import {
   fetchEnrolledCourses,
@@ -8,58 +8,35 @@ import {
   fetchFeaturedCourses,
   fetchCourseDetails,
   enrollInCourse,
-  completeLessonThunk,
-  setUserType,
 } from '@/lib/store/slices/courses.slice';
-import type { UserCourseType } from '@/lib/services/courses.service';
+import type { Course } from '@/lib/types';
 
 export function useCourses() {
   const dispatch = useAppDispatch();
   const state = useAppSelector((s) => s.courses);
-  // Read user_type from auth — same source of truth as mobile's HomeScreen
-  const authUserType = useAppSelector((s) => s.auth.user?.user_type) as UserCourseType;
-  const userType: UserCourseType = authUserType ?? state.userType ?? null;
+  const userType = useAppSelector((s) => s.auth.user?.user_type as 'academic' | 'professional' | 'exams' | null);
 
-  // Keep courses slice in sync whenever auth user_type changes
-  useEffect(() => {
-    if (authUserType && authUserType !== state.userType) {
-      dispatch(setUserType(authUserType));
-    }
-  }, [authUserType, state.userType, dispatch]);
-
-  const loadEnrolled = useCallback(
-    () => dispatch(fetchEnrolledCourses(userType)),
-    [dispatch, userType]
-  );
-  const loadAvailable = useCallback(
-    (params?: object) => dispatch(fetchAvailableCourses({ userType, params })),
-    [dispatch, userType]
-  );
-  const loadFeatured = useCallback(
-    () => dispatch(fetchFeaturedCourses(userType)),
-    [dispatch, userType]
-  );
+  const loadEnrolled = useCallback(() => dispatch(fetchEnrolledCourses()), [dispatch]);
+  const loadAvailable = useCallback(() => dispatch(fetchAvailableCourses()), [dispatch]);
+  const loadFeatured = useCallback(() => dispatch(fetchFeaturedCourses()), [dispatch]);
   const loadDetails = useCallback(
-    (idOrSlug: string) =>
-      dispatch(fetchCourseDetails({ idOrSlug, userType: userType ?? undefined })).unwrap(),
-    [dispatch, userType]
+    (idOrSlug: string) => dispatch(fetchCourseDetails(idOrSlug)).unwrap(),
+    [dispatch]
   );
   const enroll = useCallback(
-    (courseId: string, courseSlug?: string) =>
-      dispatch(enrollInCourse({ courseId, courseSlug, userType: userType ?? undefined })).unwrap(),
-    [dispatch, userType]
-  );
-  const isEnrolled = useCallback(
-    (courseId: string, courseSlug?: string) => {
-      const ids = state.enrolledCourseIds || [];
-      return ids.includes(courseId) || (!!courseSlug && ids.includes(courseSlug));
+    (course: Course) => {
+      const payload =
+        userType === 'professional'
+          ? { identifier: course.slug ?? course.id, courseId: course.id }
+          : { identifier: course.id, courseId: course.id };
+      return dispatch(enrollInCourse(payload)).unwrap();
     },
-    [state.enrolledCourseIds]
-  );
-  const completeLesson = useCallback(
-    (lessonId: string, _courseId: string, body?: object) =>
-      dispatch(completeLessonThunk({ lessonId, userType: userType ?? undefined, body })).unwrap(),
     [dispatch, userType]
+  );
+
+  const isEnrolled = useCallback(
+    (courseId: string) => (state.enrolledCourseIds || []).includes(courseId),
+    [state.enrolledCourseIds]
   );
 
   return {
@@ -69,7 +46,7 @@ export function useCourses() {
     currentCourse: state.currentCourse ?? null,
     progress: state.progress ?? null,
     enrolledCourseIds: state.enrolledCourseIds ?? [],
-    userType,
+    userType: state.userType ?? null,
     isLoading: state.isLoading ?? false,
     error: state.error ?? null,
     loadEnrolled,
@@ -78,6 +55,6 @@ export function useCourses() {
     loadDetails,
     enroll,
     isEnrolled,
-    completeLesson,
+    completeLesson: async (_lessonId: string, _courseId: string, _body?: object) => {},
   };
 }

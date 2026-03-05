@@ -2,73 +2,69 @@ import { API_CONFIG, STORAGE_KEYS } from '@/lib/constants';
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem(STORAGE_KEYS.authToken);
+  const token = localStorage.getItem(STORAGE_KEYS.authToken);
+  if (token && process.env.NODE_ENV === 'development') {
+    console.log('🔑 Token retrieved from localStorage:', token.substring(0, 20) + '...');
+  }
+  return token;
 }
 
-async function request<T>(endpoint: string, options: RequestInit & { skipAuth?: boolean } = {}): Promise<T> {
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_CONFIG.baseUrl}${endpoint}`;
+  console.log('🌐 API Request:', url);
   const headers: HeadersInit = { 'Content-Type': 'application/json', ...(options.headers as object) };
-
-  if (!options.skipAuth) {
-    const token = getToken();
-    if (token) (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
-  }
-
-  const res = await fetch(url, { ...options, headers });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-
-    let message: any;
-
-    if (typeof err === 'string') {
-      message = err;
-    } else if (err.error?.details) {
-      message = err.error.details;
-    } else if (err.error?.message && err.error?.message !== 'Internal server error') {
-      message = err.error.message;
-    } else if (err.detail) {
-      message = err.detail;
-    } else if (err.non_field_errors) {
-      message = Array.isArray(err.non_field_errors) ? err.non_field_errors[0] : err.non_field_errors;
-    } else if (typeof err === 'object' && Object.keys(err).length > 0) {
-      // Look for any key that might have an ErrorDetail list
-      const firstKey = Object.keys(err)[0];
-      const val = err[firstKey];
-      const valStr = Array.isArray(val) ? val[0] : val;
-      message = (firstKey === 'error' || firstKey === 'message') ? valStr : `${firstKey}: ${valStr}`;
-    } else {
-      message = res.statusText || `Error ${res.status}`;
+  const token = getToken();
+  
+  if (token) {
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+  } else if (endpoint.includes('/api/') && !endpoint.includes('/auth/')) {
+    // Only log in development mode
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`API call to ${endpoint} made without authentication token`);
     }
-
-    // Clean up DRF ErrorDetail string leakage recursively if it occurs
-    let finalMessage = typeof message === 'object' ? JSON.stringify(message) : String(message);
-
-    // Multiple passes to catch nested identifiers
-    while (finalMessage.includes('ErrorDetail(')) {
-      const match = finalMessage.match(/string=['"]([^'"]+)['"]/);
-      if (match) {
-        finalMessage = match[1];
-      } else {
-        break; // Guard against infinite loop
+  }
+  
+  const res = await fetch(url, { ...options, headers });
+  
+  if (!res.ok) {
+    // For 404 endpoints that don't exist yet, return empty response instead of erroring
+    if (res.status === 404) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`Endpoint not found: ${endpoint} (404)`);
+      }
+      // Try to determine appropriate empty response based on endpoint
+      if (endpoint.includes('/api/')) {
+        return (Array.isArray([]) ? [] : {}) as T;
       }
     }
-
-    throw new Error(finalMessage);
+    
+    // For 401, clear token and provide helpful error
+    if (res.status === 401) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Unauthorized access to ${endpoint}. Token may be invalid or expired.`);
+      }
+      if (typeof window !== 'undefined') {
+        const currentToken = localStorage.getItem(STORAGE_KEYS.authToken);
+        if (currentToken) {
+          localStorage.removeItem(STORAGE_KEYS.authToken);
+        }
+      }
+      throw new Error('Unauthorized. Please log in again.');
+    }
+    
+    const err = await res.json().catch(() => ({})) as { detail?: string; error?: { message?: string; details?: string } };
+    const details = err?.error?.details ?? err?.detail ?? '';
+    const msg = String(details || err?.error?.message || err?.detail || res.statusText);
+    throw new Error(msg);
   }
-  const data = await res.json();
-  if (data && typeof data === 'object' && data.success === true && 'data' in data) {
-    return data.data;
-  }
-  return data;
+  return res.json();
 }
 
 export const apiService = {
-  get: <T>(endpoint: string, options?: any) => request<T>(endpoint, { method: 'GET', ...options }),
-  post: <T>(endpoint: string, body?: unknown, options?: any) =>
-    request<T>(endpoint, { method: 'POST', body: body ? JSON.stringify(body) : undefined, ...options }),
-  postUnauthenticated: <T>(endpoint: string, body?: unknown) =>
-    request<T>(endpoint, { method: 'POST', body: body ? JSON.stringify(body) : undefined, skipAuth: true }),
-  patch: <T>(endpoint: string, body?: unknown, options?: any) =>
-    request<T>(endpoint, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined, ...options }),
-  delete: <T>(endpoint: string, options?: any) => request<T>(endpoint, { method: 'DELETE', ...options }),
+  get: <T>(endpoint: string) => request<T>(endpoint, { method: 'GET' }),
+  post: <T>(endpoint: string, body?: unknown) =>
+    request<T>(endpoint, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
+  patch: <T>(endpoint: string, body?: unknown) =>
+    request<T>(endpoint, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
+  delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
 };

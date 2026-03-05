@@ -23,6 +23,9 @@ const nextConfig = {
     ],
     dangerouslyAllowSVG: true,
   },
-}
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+};
 
-module.exports = nextConfig
+export default nextConfig;
