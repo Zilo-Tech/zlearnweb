@@ -25,12 +25,18 @@ export function WelcomeHeader() {
     }, [loadDashboard, isAuthenticated, token]);
 
     const welcome = dashboard?.welcome_message as { title?: string; message?: string; context?: string } | undefined;
+    const userType = (user?.user_type?.toLowerCase?.() ?? '').trim();
+    const isExamUser = userType === 'exams';
     const getGreeting = () => {
         const hour = new Date().getHours();
         if (hour < 12) return 'Good morning';
         if (hour < 18) return 'Good afternoon';
         return 'Good evening';
     };
+
+    const defaultMessage = isExamUser
+        ? 'Ready to continue your exam prep today?'
+        : 'Ready to continue your learning journey today?';
 
     const currentStreak = (learningAnalytics as { learning_insights?: { current_streak?: number } })?.learning_insights?.current_streak || 0;
 
@@ -41,7 +47,7 @@ export function WelcomeHeader() {
                     {welcome?.title ?? `${getGreeting()}, ${user?.name?.split(' ')[0] || 'Learner'}! 👋`}
                 </h1>
                 <p className="text-gray-600 leading-relaxed">
-                    {welcome?.message ?? 'Ready to continue your learning journey today?'}
+                    {welcome?.message ?? defaultMessage}
                 </p>
             </div>
 

@@ -352,14 +352,24 @@ export function LessonSectionBlock({ section, className, onSectionComplete }: Le
 
     if (type === 'quiz') {
         const questions = section.quiz_questions || [];
-        if (questions.length === 0) return null;
+        if (questions.length > 0) {
+            return (
+                <QuizSection
+                    section={section}
+                    questions={questions}
+                    className={className}
+                    onSectionComplete={onSectionComplete}
+                />
+            );
+        }
+        // Quiz section with no questions yet (e.g. exam API omits questions or placeholder)
         return (
-            <QuizSection
-                section={section}
-                questions={questions}
-                className={className}
-                onSectionComplete={onSectionComplete}
-            />
+            <div className={cn('rounded-xl border border-gray-200 bg-amber-50/50 p-5', className)}>
+                {section.title && (
+                    <h3 className="mb-2 text-lg font-semibold text-gray-900">{section.title}</h3>
+                )}
+                <p className="text-sm text-gray-600">No questions in this quiz yet.</p>
+            </div>
         );
     }
 

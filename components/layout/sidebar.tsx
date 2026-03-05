@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useAppSelector } from '@/lib/store/hooks';
 import {
     LayoutDashboard,
     BookOpen,
@@ -22,7 +23,7 @@ interface SidebarProps {
     className?: string;
 }
 
-const sidebarItems = [
+const sidebarItemsDefault = [
     { title: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
     { title: 'Courses', href: '/app/courses', icon: BookOpen },
     { title: 'Certificates', href: '/app/certificates', icon: Award },
@@ -34,8 +35,24 @@ const sidebarItems = [
     { title: 'Help & Support', href: '/app/support', icon: HelpCircle },
 ];
 
+/** For exam users: Exams before Courses in the list */
+function getSidebarItems(isExamUser: boolean) {
+    if (!isExamUser) return sidebarItemsDefault;
+    const items = [...sidebarItemsDefault];
+    const coursesIdx = items.findIndex((i) => i.href === '/app/courses');
+    const examsIdx = items.findIndex((i) => i.href === '/app/exams');
+    if (examsIdx > -1 && coursesIdx > -1 && examsIdx > coursesIdx) {
+        const [examsItem] = items.splice(examsIdx, 1);
+        items.splice(coursesIdx, 0, examsItem);
+    }
+    return items;
+}
+
 export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
     const pathname = usePathname();
+    const userType = (useAppSelector((s) => s.auth.user?.user_type) ?? '').toString().toLowerCase().trim();
+    const isExamUser = userType === 'exams';
+    const sidebarItems = getSidebarItems(isExamUser);
 
     return (
         <>

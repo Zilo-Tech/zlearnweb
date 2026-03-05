@@ -52,10 +52,16 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       throw new Error('Unauthorized. Please log in again.');
     }
     
-    const err = await res.json().catch(() => ({})) as { detail?: string; error?: { message?: string; details?: string } };
-    const details = err?.error?.details ?? err?.detail ?? '';
-    const msg = String(details || err?.error?.message || err?.detail || res.statusText);
-    throw new Error(msg);
+    const err = await res.json().catch(() => ({})) as {
+      detail?: string;
+      error?: string | { message?: string; details?: string };
+    };
+    const errorVal = err?.error;
+    const msg =
+      (typeof errorVal === 'string' ? errorVal : errorVal?.message ?? errorVal?.details) ??
+      err?.detail ??
+      res.statusText;
+    throw new Error(String(msg));
   }
   return res.json();
 }
@@ -64,6 +70,8 @@ export const apiService = {
   get: <T>(endpoint: string) => request<T>(endpoint, { method: 'GET' }),
   post: <T>(endpoint: string, body?: unknown) =>
     request<T>(endpoint, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
+  put: <T>(endpoint: string, body?: unknown) =>
+    request<T>(endpoint, { method: 'PUT', body: body ? JSON.stringify(body) : undefined }),
   patch: <T>(endpoint: string, body?: unknown) =>
     request<T>(endpoint, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
   delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
