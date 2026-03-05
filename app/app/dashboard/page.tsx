@@ -2,6 +2,7 @@
 
 import { WelcomeHeader } from '@/components/dashboard/welcome-header';
 import { ContinueLearning } from '@/components/dashboard/continue-learning';
+import { ContinueExamPrep } from '@/components/dashboard/continue-exam-prep';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { StudyInsights } from '@/components/dashboard/study-insights';
 import { LeaderboardPreview } from '@/components/dashboard/leaderboard-preview';
@@ -11,6 +12,7 @@ import { MotivationCard } from '@/components/dashboard/motivation-card';
 import { StudyRemindersCard } from '@/components/dashboard/study-reminders';
 import { UserTypeSwitcher } from '@/components/dashboard/user-type-switcher';
 import { FeaturedCoursesSection } from '@/components/dashboard/featured-courses';
+import { FeaturedExamsSection } from '@/components/dashboard/featured-exams';
 import { RecommendedCoursesSection } from '@/components/dashboard/recommended-courses';
 import { useEffect } from 'react';
 import { usePersonalization } from '@/lib/hooks/usePersonalization';
@@ -20,8 +22,11 @@ import { fetchLearningAnalytics } from '@/lib/store/slices/progress.slice';
 
 export default function DashboardPage() {
     const { loadDashboard } = usePersonalization();
-    const { isAuthenticated, token } = useAuth();
+    const { user, isAuthenticated, token } = useAuth();
     const dispatch = useAppDispatch();
+
+    const userType = (user?.user_type?.toLowerCase?.() ?? '').trim();
+    const isExamUser = userType === 'exams';
 
     useEffect(() => {
         if (isAuthenticated && token) {
@@ -43,11 +48,18 @@ export default function DashboardPage() {
                         <QuickActions />
                     </div>
 
-                    <ContinueLearning />
-
-                    <FeaturedCoursesSection />
-
-                    <RecommendedCoursesSection />
+                    {isExamUser ? (
+                        <>
+                            <ContinueExamPrep />
+                            <FeaturedExamsSection />
+                        </>
+                    ) : (
+                        <>
+                            <ContinueLearning />
+                            <FeaturedCoursesSection />
+                            <RecommendedCoursesSection />
+                        </>
+                    )}
 
                     <StudyInsights />
                 </div>
