@@ -6,21 +6,42 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useProgress } from '@/lib/hooks/useProgress';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useCourses } from '@/lib/hooks/useCourses';
 import { useEffect } from 'react';
 
 export function ContinueLearning() {
     const { userProgress, loadUserProgress, isLoading } = useProgress();
+    const { enrolled, loadEnrolled, userType } = useCourses();
     const { isAuthenticated, token } = useAuth();
 
     useEffect(() => {
         if (isAuthenticated && token) {
             loadUserProgress();
+            loadEnrolled();
         }
-    }, [loadUserProgress, isAuthenticated, token]);
+    }, [loadUserProgress, loadEnrolled, isAuthenticated, token]);
 
-    const currentCourse = userProgress?.current_courses?.[0];
+    // Try analytics endpoint first; fall back to most-recently-started enrolled course
+    const analyticsCurrentCourse = userProgress?.current_courses?.[0];
 
-    if (isLoading && !currentCourse) {
+    // Find the enrolled course with the highest progress (or first one)
+    const enrolledCurrentCourse = enrolled.length > 0
+        ? [...enrolled].sort((a, b) => {
+            const pa = Number((a as { progress_percentage?: number }).progress_percentage ?? 0);
+            const pb = Number((b as { progress_percentage?: number }).progress_percentage ?? 0);
+            if (pa !== pb) return pb - pa; // highest progress first
+            return 0;
+        })[0]
+        : null;
+
+    const rawCurrentCourse = analyticsCurrentCourse ?? enrolledCurrentCourse;
+
+    // Determine course URL — professional uses slug, academic uses UUID
+    const courseId = (rawCurrentCourse as { id?: string })?.id ?? '';
+    const courseSlug = (rawCurrentCourse as { slug?: string })?.slug ?? '';
+    const courseHref = `/app/courses/${userType === 'professional' ? (courseSlug || courseId) : courseId}`;
+
+    if (isLoading && !rawCurrentCourse) {
         return (
             <div className="rounded-2xl bg-white p-6 border-2 border-primary-200 animate-pulse">
                 <div className="h-6 w-48 bg-primary-100 rounded mb-4" />
@@ -36,7 +57,7 @@ export function ContinueLearning() {
         );
     }
 
-    if (!currentCourse) {
+    if (!rawCurrentCourse) {
         return (
             <div className="rounded-2xl bg-white p-6 border-2 border-primary-200">
                 <div className="flex items-center justify-between mb-4">
@@ -52,6 +73,16 @@ export function ContinueLearning() {
         );
     }
 
+    const currentCourse = rawCurrentCourse as {
+        id?: string;
+        title?: string;
+        slug?: string;
+        subject?: { name?: string };
+        progress_percentage?: number;
+        last_accessed?: string | number;
+        thumbnail?: string;
+    };
+
     return (
         <div className="rounded-2xl bg-white p-6 border-2 border-primary-200">
             <div className="flex items-center justify-between mb-4">
@@ -62,30 +93,39 @@ export function ContinueLearning() {
             </div>
 
             <div className="flex flex-col gap-6 md:flex-row md:items-center">
-                <div className="h-32 w-full shrink-0 rounded-xl bg-primary-700 md:w-48 flex items-center justify-center text-white font-bold text-xl p-4 text-center">
-                    {(currentCourse as { title?: string }).title}
+                <div className="h-32 w-full shrink-0 rounded-xl overflow-hidden md:w-48">
+                    {currentCourse.thumbnail ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={currentCourse.thumbnail} alt={currentCourse.title ?? 'Course'} className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full bg-[#446D6D] flex items-center justify-center text-white font-bold text-sm p-4 text-center">
+                            {currentCourse.title}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex-1 space-y-3">
                     <div>
-                        <h3 className="font-semibold text-gray-900 truncate">{(currentCourse as { title?: string }).title}</h3>
-                        <p className="text-sm text-gray-600">{(currentCourse as { subject?: { name?: string } })?.subject?.name ?? 'Course'}</p>
+                        <h3 className="font-semibold text-gray-900 truncate">{currentCourse.title}</h3>
+                        <p className="text-sm text-gray-600">{currentCourse.subject?.name ?? 'Course'}</p>
                     </div>
 
                     <div className="space-y-2">
                         <div className="flex justify-between text-xs text-gray-600">
-                            <span>{Math.round(Number((currentCourse as { progress_percentage?: number }).progress_percentage) || 0)}% Complete</span>
-                            <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                Last accessed: {new Date(String((currentCourse as { last_accessed?: string | number }).last_accessed || '')).toLocaleDateString()}
-                            </span>
+                            <span>{Math.round(Number(currentCourse.progress_percentage) || 0)}% Complete</span>
+                            {currentCourse.last_accessed && (
+                                <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {new Date(String(currentCourse.last_accessed)).toLocaleDateString()}
+                                </span>
+                            )}
                         </div>
-                        <Progress value={Number((currentCourse as { progress_percentage?: number }).progress_percentage) ?? 0} className="h-2" />
+                        <Progress value={Number(currentCourse.progress_percentage) ?? 0} className="h-2" />
                     </div>
                 </div>
 
-                <Link href={`/app/courses/${(currentCourse as { id?: string }).id ?? ''}`}>
-                    <Button className="w-full md:w-auto shrink-0 font-semibold" size="lg">
+                <Link href={courseHref}>
+                    <Button className="w-full md:w-auto shrink-0 font-semibold bg-[#446D6D] hover:bg-[#3A5F5F]" size="lg">
                         <Play className="mr-2 h-4 w-4 fill-current" />
                         Resume
                     </Button>
