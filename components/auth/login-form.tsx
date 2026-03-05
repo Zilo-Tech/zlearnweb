@@ -27,8 +27,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [backendError, setBackendError] = useState<string | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const { login, error } = useAuth();
+    const { login, isLoading, error } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
 
@@ -47,11 +46,11 @@ export function LoginForm() {
 
     const onSubmit = async (data: LoginFormData) => {
         setBackendError(null);
-        setIsSubmitting(true);
         try {
             await login({
                 email: data.email,
                 password: data.password,
+                rememberMe: data.rememberMe,
             });
 
             toast({
@@ -62,23 +61,14 @@ export function LoginForm() {
 
             router.push('/app/dashboard');
         } catch (err: any) {
-            const errorMessage = err?.message || err || 'Please check your credentials and try again.';
+            const errorMessage = (typeof err === 'string' ? err : err?.message) || 'Something went wrong. Please try again.';
             setBackendError(errorMessage);
-            toast({
-                title: 'Login failed',
-                description: errorMessage,
-                variant: 'destructive',
-            });
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
     // Clear backend error when user starts typing
     useEffect(() => {
-        if (backendError) {
-            setBackendError(null);
-        }
+        setBackendError(null);
     }, []);
 
     return (
@@ -101,7 +91,7 @@ export function LoginForm() {
                         </div>
                     </div>
                 )}
-                <SocialAuth isLoading={isSubmitting} />
+                <SocialAuth isLoading={isLoading} />
 
                 <div className="relative">
                     <div className="absolute inset-0 flex items-center">
@@ -120,7 +110,7 @@ export function LoginForm() {
                             placeholder="name@example.com"
                             label="Email"
                             error={errors.email?.message}
-                            disabled={isSubmitting}
+                            disabled={isLoading}
                             {...register('email')}
                         />
                     </div>
@@ -133,14 +123,14 @@ export function LoginForm() {
                                 placeholder="••••••••"
                                 label="Password"
                                 error={errors.password?.message}
-                                disabled={isSubmitting}
+                                disabled={isLoading}
                                 {...register('password')}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
                                 className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
-                                disabled={isSubmitting}
+                                disabled={isLoading}
                             >
                                 {showPassword ? (
                                     <EyeOff className="h-4 w-4" />
@@ -159,7 +149,7 @@ export function LoginForm() {
                             <Checkbox
                                 id="rememberMe"
                                 {...register('rememberMe')}
-                                disabled={isSubmitting}
+                                disabled={isLoading}
                             />
                             <label
                                 htmlFor="rememberMe"
@@ -176,8 +166,8 @@ export function LoginForm() {
                         </Link>
                     </div>
 
-                    <Button type="submit" className="w-full py-3 rounded-lg font-bold" disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button type="submit" className="w-full py-3 rounded-lg font-bold" disabled={isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Sign in
                     </Button>
                 </form>

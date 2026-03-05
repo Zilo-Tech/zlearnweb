@@ -1,207 +1,267 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { use, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ModuleList } from '@/components/courses/module-list';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { PlayCircle, Award, Clock, BookOpen, Star, Share2, Loader2 } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
-import {
-    fetchCourseDetails,
-    enrollInCourse,
-    fetchEnrolledCourses,
-    selectCurrentCourse,
-    selectCurrentCourseModules,
-    selectIsEnrolled
-} from '@/lib/store/slices/courses.slice';
-import { toast } from 'sonner';
+import { PlayCircle, Award, Clock, BookOpen, Star, Share2, ArrowLeft } from 'lucide-react';
+import { useCourses } from '@/lib/hooks/useCourses';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { getCourseService } from '@/lib/services/courses.service';
+import { markdownToHtml } from '@/lib/utils/markdownToHtml';
 
-export default function CourseDetailsPage() {
-    const params = useParams();
-    const courseId = params?.courseId as string;
-    const router = useRouter();
-    const dispatch = useAppDispatch();
-    const course = useAppSelector(selectCurrentCourse);
-    const modules = useAppSelector(selectCurrentCourseModules);
-    const isEnrolled = useAppSelector((state) => selectIsEnrolled(course?.id)(state));
-    const isLoading = useAppSelector((state) => state.courses.isLoading);
+function mapLessons(lessons: any[], completedIds?: Set<string>): { id: string; title: string; type: 'video' | 'text' | 'quiz'; duration: string; isCompleted: boolean; isLocked: boolean }[] {
+    if (!Array.isArray(lessons)) return [];
+    return lessons.map((l: any) => ({
+        id: String(l.id),
+        title: l.title || 'Lesson',
+        type: (l.content_type === 'quiz' || l.lesson_type === 'quiz' ? 'quiz' : l.content_type === 'video' || l.lesson_type === 'video' ? 'video' : 'text') as 'video' | 'text' | 'quiz',
+        duration: l.duration ? `${l.duration}m` : (l.duration_minutes != null ? `${l.duration_minutes}m` : '—'),
+        isCompleted: completedIds ? completedIds.has(String(l.id)) : !!l.is_completed,
+        isLocked: !!l.is_locked,
+    }));
+}
 
-    // Local loading state for enrollment action
-    const [isEnrolling, setIsEnrolling] = useState(false);
+function mapModules(
+    modules: any[],
+    courseSlug: string,
+    fetchedLessons: Record<string, any[]> = {},
+    completedLessonIds?: Set<string>,
+    completedModuleIds?: Set<string>
+): { id: string; title: string; isCompleted: boolean; lessons: ReturnType<typeof mapLessons> }[] {
+    if (!Array.isArray(modules)) return [];
+    return modules.map((m: any) => {
+        const lessons = (m.lessons?.length ? m.lessons : fetchedLessons[String(m.id)]) || [];
+        return {
+            id: String(m.id),
+            title: m.title || 'Module',
+            isCompleted: completedModuleIds ? completedModuleIds.has(String(m.id)) : !!m.is_completed,
+            lessons: mapLessons(lessons, completedLessonIds),
+        };
+    });
+}
+
+export default function CourseDetailsPage({ params }: { params: Promise<{ courseId: string }> }) {
+    const { courseId } = use(params);
+    const { user } = useAuth();
+    const { currentCourse, loadDetails, loadEnrolled, isLoading, error, isEnrolled, enroll } = useCourses();
+    const [enrolling, setEnrolling] = useState(false);
+    const [moduleLessons, setModuleLessons] = useState<Record<string, any[]>>({});
+    const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
+    const [completedModuleIds, setCompletedModuleIds] = useState<Set<string>>(new Set());
+    const [progressPct, setProgressPct] = useState(0);
+    const userType = (user?.user_type as 'academic' | 'professional' | 'exams') || 'academic';
 
     useEffect(() => {
-        if (courseId) {
-            dispatch(fetchCourseDetails(courseId));
-            // Also ensure enrolled courses are loaded to check status
-            dispatch(fetchEnrolledCourses());
-        }
-    }, [dispatch, courseId]);
+        if (courseId) loadDetails(courseId);
+    }, [courseId, loadDetails]);
 
-    const handleEnroll = async () => {
-        if (!course) return;
-
-        setIsEnrolling(true);
-        try {
-            await dispatch(enrollInCourse(course.id)).unwrap();
-            toast.success('Successfully enrolled in course!');
-            // Refresh details to ensure UI updates
-            dispatch(fetchCourseDetails(course.id));
-        } catch (error: any) {
-            toast.error(error || 'Failed to enroll in course');
-        } finally {
-            setIsEnrolling(false);
-        }
-    };
-
-    const handleContinue = () => {
-        // Logic to find next lesson
-        if (course?.last_accessed) {
-            // TODO: Implement resume functionality
-        }
-
-        // Find the first available lesson across all modules
-        let firstLessonId: string | null = null;
-
-        for (const module of modules) {
-            if (module.lessons && module.lessons.length > 0) {
-                firstLessonId = module.lessons[0].id;
-                break;
+    // Fetch progress once course is loaded
+    useEffect(() => {
+        if (!currentCourse?.id) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const svc = getCourseService(userType);
+                const prog = await svc.getCourseProgress(currentCourse.id);
+                if (!cancelled && prog) {
+                    setCompletedLessonIds(new Set((prog.completed_lessons ?? []).map(String)));
+                    setCompletedModuleIds(new Set((prog.completed_modules ?? []).map(String)));
+                    setProgressPct(prog.completion_percentage ?? prog.progress_percentage ?? 0);
+                }
+            } catch {
+                // progress not available (not enrolled etc.) — silently ignore
             }
-        }
+        })();
+        return () => { cancelled = true; };
+    }, [currentCourse?.id, userType]);
 
-        if (firstLessonId && courseId) {
-            router.push(`/app/courses/${courseId}/lessons/${firstLessonId}`);
-        } else {
-            toast.info('No lessons available yet.');
+    // When course has modules but no lessons (e.g. professional API), fetch lessons per module (like mobile).
+    const rawModules = (currentCourse as any)?.modules ?? [];
+    useEffect(() => {
+        if (!course || !rawModules.length) return;
+        const svc = getCourseService(userType);
+        const modulesNeedingLessons = rawModules.filter((m: any) => {
+            const hasLessons = Array.isArray(m.lessons) && m.lessons.length > 0;
+            const alreadyFetched = moduleLessons[String(m.id)]?.length;
+            const hasCount = (m.lesson_count ?? m.lessons_count) > 0;
+            return !hasLessons && !alreadyFetched && (hasCount || userType === 'professional');
+        });
+        if (modulesNeedingLessons.length === 0) return;
+        let cancelled = false;
+        (async () => {
+            const next: Record<string, any[]> = {};
+            for (const m of modulesNeedingLessons) {
+                if (cancelled) break;
+                try {
+                    const list = await svc.getModuleLessons(String(m.id));
+                    const arr = Array.isArray(list) ? list : [];
+                    if (!cancelled && arr.length) next[String(m.id)] = arr;
+                } catch {
+                    // ignore per-module errors
+                }
+            }
+            if (!cancelled && Object.keys(next).length > 0) {
+                setModuleLessons((prev) => ({ ...prev, ...next }));
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [currentCourse?.id, rawModules.length, userType, moduleLessons]);
+
+    const course = currentCourse;
+    const enrolled = course && (isEnrolled(course.id, (course as any).slug) || (course as any).is_enrolled);
+
+    // Refresh progress after enrolling
+    const handleEnroll = async () => {
+        if (!course?.id || enrolling) return;
+        setEnrolling(true);
+        try {
+            await enroll(course.id, (course as any).slug);
+            // Refresh enrolled list so isEnrolled() returns true immediately
+            loadEnrolled();
+            // Re-fetch progress
+            try {
+                const svc = getCourseService(userType);
+                const prog = await svc.getCourseProgress(course.id);
+                if (prog) {
+                    setCompletedLessonIds(new Set((prog.completed_lessons ?? []).map(String)));
+                    setCompletedModuleIds(new Set((prog.completed_modules ?? []).map(String)));
+                    setProgressPct(prog.completion_percentage ?? prog.progress_percentage ?? 0);
+                }
+            } catch { /* ignore */ }
+        } catch (e: any) {
+            console.error('Enrollment failed:', e?.message || e);
+        } finally {
+            setEnrolling(false);
         }
     };
-
-    // ... inside render ...
-
-    {/* Course Content */ }
-    <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-900">Course Content</h2>
-        <ModuleList courseId={course.id} modules={modules} />
-    </div>
 
     if (isLoading && !course) {
         return (
-            <div className="flex h-96 items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-[#446D6D]" />
+            <div className="grid gap-8 lg:grid-cols-3">
+                <div className="lg:col-span-2 space-y-6 animate-pulse">
+                    <div className="h-8 w-48 bg-gray-200 rounded" />
+                    <div className="h-10 w-3/4 bg-gray-200 rounded" />
+                    <div className="h-4 w-full bg-gray-100 rounded" />
+                    <div className="h-64 bg-gray-100 rounded-xl" />
+                </div>
+                <div className="h-80 bg-gray-100 rounded-2xl animate-pulse" />
             </div>
         );
     }
 
-    if (!course) {
+    if (error || !course) {
         return (
-            <div className="flex h-96 items-center justify-center flex-col gap-4">
-                <p className="text-gray-500">Course not found.</p>
-                <Button variant="outline" onClick={() => router.back()}>Go Back</Button>
+            <div className="space-y-4">
+                <Link href="/app/courses" className="inline-flex items-center gap-2 text-primary-600 hover:underline">
+                    <ArrowLeft className="h-4 w-4" /> Back to Courses
+                </Link>
+                <div className="rounded-xl bg-red-50 border border-red-100 p-6 text-center">
+                    <p className="text-red-700">{error || 'Course not found.'}</p>
+                    <Button asChild className="mt-4">
+                        <Link href="/app/courses">Browse Courses</Link>
+                    </Button>
+                </div>
             </div>
         );
     }
+
+    const categoryLabel = (course as any).category_name ?? course.subject?.name ?? 'Course';
+    const levelLabel = (course as any).level ?? course.difficulty ?? '';
+    const modulesForList = mapModules((course as any).modules ?? [], courseId, moduleLessons, completedLessonIds, completedModuleIds);
+    const lessonCount = modulesForList.reduce((acc, m) => acc + m.lessons.length, 0);
+    const durationHours = (course as any).estimated_hours ?? (course as any).duration_hours ?? 0;
+    const firstLessonId = modulesForList[0]?.lessons?.[0]?.id;
+    const continueLearningHref = firstLessonId
+        ? `/app/courses/${courseId}/lessons/${firstLessonId}`
+        : `/app/courses/${courseId}`;
 
     return (
         <div className="grid gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-8">
-                {/* Header */}
+                <Link href="/app/courses" className="inline-flex items-center gap-2 text-primary-600 hover:underline text-sm font-medium">
+                    <ArrowLeft className="h-4 w-4" /> Back to Courses
+                </Link>
+
                 <div className="space-y-4">
                     <div className="flex items-center gap-2">
-                        {course.category && (
-                            <Badge variant="secondary" className="bg-[#446D6D]/10 text-[#446D6D]">
-                                {typeof course.category === 'object' ? (course.category as any).name : course.category}
-                            </Badge>
+                        <Badge variant="secondary" className="bg-[#446D6D]/10 text-[#446D6D]">
+                            {categoryLabel}
+                        </Badge>
+                        {levelLabel && (
+                            <>
+                                <span className="text-sm text-gray-500">•</span>
+                                <span className="text-sm text-gray-500">{levelLabel}</span>
+                            </>
                         )}
-                        <span className="text-sm text-gray-500">•</span>
-                        <span className="text-sm text-gray-500">{course.level || 'Beginner'}</span>
                     </div>
 
                     <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
                         {course.title}
                     </h1>
 
-                    <p className="text-lg text-gray-600 leading-relaxed">
-                        {course.description}
-                    </p>
+                    <div
+                        className="prose prose-gray max-w-none text-lg text-gray-600 leading-relaxed prose-headings:text-gray-900 prose-p:my-2 prose-ul:my-2 prose-ol:my-2"
+                        dangerouslySetInnerHTML={{
+                            __html: markdownToHtml(course.description || '') || '<p>No description available.</p>',
+                        }}
+                    />
 
-                    <div className="flex items-center gap-6 text-sm text-gray-500">
-                        <div className="flex items-center gap-2">
-                            {/* <div className="h-8 w-8 rounded-full bg-gray-200" /> */}
-                            {course.instructor && (
-                                <span className="font-medium text-gray-900">
-                                    {typeof course.instructor === 'object' ? (course.instructor as any).name : 'Instructor'}
-                                </span>
-                            )}
+                    {(course as any).instructor_name && (
+                        <div className="flex items-center gap-6 text-sm text-gray-500">
+                            <span className="font-medium text-gray-900">{(course as any).instructor_name}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-yellow-500">
-                            <Star className="h-4 w-4 fill-current" />
-                            <span className="font-medium text-gray-900">{course.rating || 0}</span>
-                            <span className="text-gray-500">({course.enrolled_count || 0} students)</span>
-                        </div>
-                    </div>
+                    )}
                 </div>
 
-                {/* Course Content */}
                 <div className="space-y-4">
                     <h2 className="text-xl font-bold text-gray-900">Course Content</h2>
-                    <ModuleList courseId={course.id} modules={modules} />
+                    {modulesForList.length > 0 ? (
+                        <ModuleList courseId={courseId} modules={modulesForList} />
+                    ) : (
+                        <p className="text-gray-500 py-4">No modules available yet.</p>
+                    )}
                 </div>
             </div>
 
-            {/* Sidebar */}
             <div className="space-y-6">
                 <div className="sticky top-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-6">
-                    {/* Video Preview Placeholder */}
                     <div className="relative aspect-video w-full rounded-lg bg-gray-900 flex items-center justify-center group cursor-pointer overflow-hidden">
-                        {course.thumbnail ? (
-                            <img src={course.thumbnail} alt={course.title} className="absolute inset-0 w-full h-full object-cover opacity-60" />
-                        ) : (
-                            <div className="absolute inset-0 bg-gray-800" />
-                        )}
                         <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors" />
-                        <PlayCircle className="h-16 w-16 text-white opacity-90 group-hover:scale-110 transition-transform z-10" />
+                        <PlayCircle className="h-16 w-16 text-white opacity-90 group-hover:scale-110 transition-transform" />
                     </div>
 
-                    {isEnrolled ? (
+                    {progressPct > 0 || enrolled ? (
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm font-medium">
                                     <span className="text-gray-700">Your Progress</span>
-                                    <span className="text-[#446D6D]">{course.progress_percentage || 0}%</span>
+                                    <span className="text-[#446D6D]">{Math.round(progressPct)}%</span>
                                 </div>
-                                <Progress value={course.progress_percentage || 0} className="h-2" />
+                                <Progress value={progressPct} className="h-2" />
                             </div>
-                            <Button className="w-full bg-[#446D6D] hover:bg-[#3A5F5F]" size="lg" onClick={handleContinue}>
-                                Continue Learning
+                            <Button asChild className="w-full" size="lg">
+                                <Link href={continueLearningHref}>Continue Learning</Link>
                             </Button>
                         </div>
                     ) : (
-                        <div className="space-y-4">
-                            <div className="text-2xl font-bold text-gray-900">
-                                {course.is_free ? 'Free' : `$${course.price || 0}`}
-                            </div>
-                            <Button
-                                className="w-full bg-[#446D6D] hover:bg-[#3A5F5F]"
-                                size="lg"
-                                onClick={handleEnroll}
-                                disabled={isEnrolling}
-                            >
-                                {isEnrolling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
-                            </Button>
-                        </div>
+                        <Button className="w-full" size="lg" onClick={handleEnroll} disabled={enrolling}>
+                            {enrolling ? 'Enrolling…' : 'Enroll Now'}
+                        </Button>
                     )}
 
                     <div className="space-y-4 pt-4 border-t border-gray-100">
-                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                            <Clock className="h-5 w-5 text-gray-400" />
-                            <span>{course.duration_hours || 0}h content</span>
-                        </div>
+                        {durationHours > 0 && (
+                            <div className="flex items-center gap-3 text-sm text-gray-600">
+                                <Clock className="h-5 w-5 text-gray-400" />
+                                <span>{durationHours}h of content</span>
+                            </div>
+                        )}
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                             <BookOpen className="h-5 w-5 text-gray-400" />
-                            <span>{course.total_lessons || 0} lessons</span>
+                            <span>{lessonCount} lessons</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-600">
                             <Award className="h-5 w-5 text-gray-400" />

@@ -1,5 +1,6 @@
 'use client';
 
+import { use } from 'react';
 import Link from 'next/link';
 import { Clock, HelpCircle, Trophy, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,8 @@ const EXAM = {
     bestScore: null,
 };
 
-export default function ExamDetailsPage({ params }: { params: { examId: string } }) {
+export default function ExamDetailsPage({ params }: { params: Promise<{ examId: string }> }) {
+    const { examId } = use(params);
     return (
         <div className="mx-auto max-w-3xl space-y-8">
             <div className="space-y-4 text-center">
@@ -79,7 +81,7 @@ export default function ExamDetailsPage({ params }: { params: { examId: string }
 
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
                 <Button size="lg" className="w-full sm:w-auto px-8" asChild>
-                    <Link href={`/app/exams/${params.examId}/take`}>
+                    <Link href={`/app/exams/${examId}/take`}>
                         Start Exam Now
                     </Link>
                 </Button>

@@ -22,8 +22,13 @@ const initialState: AuthState = {
 
 export const loginUser = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string }) => {
-    return authService.login(credentials);
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      return await authService.login(credentials);
+    } catch (err: any) {
+      const msg = typeof err === 'string' ? err : err?.message ?? 'Login failed. Please check your credentials.';
+      return rejectWithValue(msg);
+    }
   }
 );
 
@@ -37,8 +42,13 @@ export const refreshUserProfile = createAsyncThunk('auth/refreshProfile', async 
 
 export const registerUser = createAsyncThunk(
   'auth/register',
-  async (data: { email: string; password: string; name?: string }) => {
-    return authService.register(data);
+  async (data: { email: string; password: string; name?: string; [key: string]: unknown }, { rejectWithValue }) => {
+    try {
+      return await authService.register(data);
+    } catch (err: any) {
+      const msg = typeof err === 'string' ? err : err?.message ?? 'Registration failed. Please try again.';
+      return rejectWithValue(msg);
+    }
   }
 );
 
@@ -66,26 +76,51 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    // ── loginUser ──────────────────────────────────────────────────────────
     builder
+      .addCase(loginUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(loginUser.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.user = action.payload?.user ?? state.user;
         state.token = action.payload?.token ?? state.token;
         state.isAuthenticated = !!state.token;
         state.onboardingComplete = action.payload?.user?.onboarding_complete ?? state.onboardingComplete;
         state.error = null;
       })
-      .addCase(logoutUser.fulfilled, () => initialState)
-      .addCase(refreshUserProfile.fulfilled, (state, action) => {
-        if (action.payload) state.user = action.payload;
+      .addCase(loginUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = (action.payload as string) ?? action.error.message ?? 'Login failed';
+      })
+    // ── registerUser ───────────────────────────────────────────────────────
+      .addCase(registerUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.user = action.payload?.user ?? state.user;
         state.token = action.payload?.token ?? state.token;
         state.isAuthenticated = !!state.token;
+        state.error = null;
       })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = (action.payload as string) ?? action.error.message ?? 'Registration failed';
+      })
+    // ── logoutUser ─────────────────────────────────────────────────────────
+      .addCase(logoutUser.fulfilled, () => initialState)
+    // ── refreshUserProfile ─────────────────────────────────────────────────
+      .addCase(refreshUserProfile.fulfilled, (state, action) => {
+        if (action.payload) state.user = action.payload;
+      })
+    // ── verifyEmail ────────────────────────────────────────────────────────
       .addCase(verifyEmail.fulfilled, (state) => {
         state.isAuthenticated = true;
       })
+    // ── completeOnboarding ─────────────────────────────────────────────────
       .addCase(completeOnboarding.fulfilled, (state) => {
         state.onboardingComplete = true;
       });

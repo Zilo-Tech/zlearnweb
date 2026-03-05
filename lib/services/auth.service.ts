@@ -1,25 +1,24 @@
 import { apiService } from './api.service';
 import { STORAGE_KEYS } from '@/lib/constants';
-import type { User } from '@/lib/types';
-
-export interface LoginResponse {
-  access?: string;
-  refresh?: string;
-  user?: User;
-  token?: string;
-}
+import type { User, LoginCredentials, RegisterData } from '@/lib/types';
 
 export const authService = {
-  async login(credentials: { email: string; password: string }): Promise<{ user: User; token: string }> {
-    const data = await apiService.post<LoginResponse & { user?: User; access?: string }>('/api/auth/login/', credentials);
-    const token = (data as { access?: string }).access || (data as { token?: string }).token || '';
-    const user = (data as { user?: User }).user || (data as User);
-    if (typeof window !== 'undefined') {
+  async login(credentials: LoginCredentials): Promise<{ user: User; token: string }> {
+    const res = await apiService.postUnauthenticated<any>('/api/auth/login/', credentials);
+
+    // Handle wrapped response structure: { success: true, data: { token, user, ... } }
+    const data = res.data || res;
+    const token = data.access || data.token || '';
+    const user = data.user || (data.id ? data : null);
+
+    if (token && typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEYS.authToken, token);
-      if ((data as { refresh?: string }).refresh) {
-        localStorage.setItem(STORAGE_KEYS.refreshToken, (data as { refresh: string }).refresh);
+      if (data.refresh || data.refresh_token) {
+        localStorage.setItem(STORAGE_KEYS.refreshToken, data.refresh || data.refresh_token);
       }
-      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
+      if (user) {
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
+      }
     }
     return { user: user as User, token };
   },
@@ -44,10 +43,18 @@ export const authService = {
     return data;
   },
 
-  async register(data: { email: string; password: string; name?: string }): Promise<{ user: User; token: string }> {
-    const res = await apiService.post<LoginResponse & { user?: User; access?: string }>('/api/auth/register/', data);
-    const token = (res as { access?: string }).access || '';
-    const user = (res as { user?: User }).user || (res as User);
+  async register(data: RegisterData): Promise<{ user: User; token: string }> {
+    const res = await apiService.postUnauthenticated<any>('/api/auth/register/', data);
+    const result = res.data || res;
+    const token = result.access || result.token || '';
+    const user = result.user || (result.id ? result : null);
+
+    if (token && typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.authToken, token);
+      if (user) {
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
+      }
+    }
     return { user: user as User, token };
   },
 

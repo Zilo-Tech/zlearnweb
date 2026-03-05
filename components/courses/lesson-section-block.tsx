@@ -206,9 +206,23 @@ export function LessonSectionBlock({ section, className }: LessonSectionBlockPro
         return null;
     }
 
+    if (type === 'audio') {
+        const url = (section as any).audio_url || section.content_url || '';
+        if (!url) return null;
+        return (
+            <div className={cn('rounded-xl border border-gray-200 bg-gray-900 p-5', className)}>
+                {section.title && (
+                    <h3 className="mb-3 text-sm font-semibold text-gray-200">{section.title}</h3>
+                )}
+                <audio src={url} controls className="w-full" />
+                {section.text_content && (
+                    <p className="mt-3 text-sm text-gray-400">{section.text_content}</p>
+                )}
+            </div>
+        );
+    }
+
     if (type === 'image') {
-        const src = section.image_url || section.content_url || '';
-        if (!src) return null;
         return (
             <div className={cn('rounded-xl border border-gray-200 overflow-hidden bg-gray-50', className)}>
                 {section.title && (

@@ -37,7 +37,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                     {...props}
                 />
                 {error && (
-                    <p className="mt-1 text-sm text-red-500">{error}</p>
+                    <p className="mt-1 text-sm text-red-500">
+                        {typeof error === 'string' ? error : JSON.stringify(error)}
+                    </p>
                 )}
                 {helperText && !error && (
                     <p className="mt-1 text-sm text-gray-500">{helperText}</p>

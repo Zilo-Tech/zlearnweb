@@ -34,7 +34,7 @@ export default function CoursesPage() {
 
     useEffect(() => {
         loadFeatured();
-        loadAvailable({ page_size: 100 });
+        loadAvailable();
         loadEnrolled();
     }, [loadFeatured, loadAvailable, loadEnrolled]);
 
@@ -137,7 +137,7 @@ export default function CoursesPage() {
 
             {error && (
                 <div className="rounded-xl bg-red-50 p-4 border border-red-100 text-red-700 text-sm">
-                    {error}
+                    {typeof error === 'string' ? error : JSON.stringify(error)}
                 </div>
             )}
 

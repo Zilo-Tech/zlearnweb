@@ -1,5 +1,6 @@
 'use client';
 
+import { use } from 'react';
 import Link from 'next/link';
 import { Trophy, CheckCircle, XCircle, Clock, Share2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,8 @@ const RESULTS = {
     xpEarned: 500,
 };
 
-export default function ExamResultsPage({ params }: { params: { examId: string } }) {
+export default function ExamResultsPage({ params }: { params: Promise<{ examId: string }> }) {
+    const { examId } = use(params);
     const percentage = Math.round((RESULTS.score / RESULTS.total) * 100);
     const isPass = percentage >= 50;
 
@@ -74,7 +76,7 @@ export default function ExamResultsPage({ params }: { params: { examId: string }
 
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
                 <Button size="lg" variant="outline" asChild>
-                    <Link href={`/app/exams/${params.examId}/review`}>
+                    <Link href={`/app/exams/${examId}/review`}>
                         Review Answers
                     </Link>
                 </Button>

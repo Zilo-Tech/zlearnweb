@@ -9,6 +9,7 @@ interface ModuleListProps {
     modules: {
         id: string;
         title: string;
+        isCompleted?: boolean;
         lessons: {
             id: string;
             title: string;
@@ -25,10 +26,18 @@ export function ModuleList({ courseId, modules }: ModuleListProps) {
         <div className="space-y-4">
             {modules.map((module, index) => (
                 <div key={module.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+                    <div className={cn(
+                        "px-4 py-3 border-b border-gray-100 flex items-center justify-between",
+                        module.isCompleted ? "bg-green-50" : "bg-gray-50"
+                    )}>
                         <h3 className="font-semibold text-gray-900">
                             Module {index + 1}: {module.title}
                         </h3>
+                        {module.isCompleted && (
+                            <span className="flex items-center gap-1 text-xs font-medium text-green-600">
+                                <CheckCircle className="h-4 w-4" /> Completed
+                            </span>
+                        )}
                     </div>
 
                     <div className="divide-y divide-gray-100">
