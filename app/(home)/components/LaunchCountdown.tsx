@@ -2,8 +2,34 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 
-/** Launch date: 20 days from the first mount (fixed for the session). */
+/**
+ * Launch timestamp: persist a computed target so it doesn't move on each page load.
+ * - On the first visit we set a target = now + 20 * 24h (full 20 days) and store it in
+ *   localStorage. Subsequent visits reuse that timestamp so the countdown actually
+ *   decreases across days instead of always being ~19 days.
+ */
 function getLaunchTimestamp(): number {
+  const storageKey = "zlearn_launch_ts_v1";
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = parseInt(stored, 10);
+        if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+      }
+      // Use full 20 * 24h from now so the initial value shows 20 days (not 19 when
+      // target is set to midnight of the day 20 days ahead).
+      const ts = Date.now() + 20 * 24 * 60 * 60 * 1000;
+      localStorage.setItem(storageKey, String(ts));
+      return ts;
+    }
+  } catch (err) {
+    // If localStorage access fails, fall back to a deterministic date 20 days ahead
+    // at midnight (previous behavior).
+    // eslint-disable-next-line no-console
+    console.warn("Failed to access localStorage for launch timestamp:", err);
+  }
+
   const d = new Date();
   d.setDate(d.getDate() + 20);
   d.setHours(0, 0, 0, 0);
