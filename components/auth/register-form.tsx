@@ -93,7 +93,7 @@ export function RegisterForm() {
 
     return (
         <Card className="border-2 border-primary-200 bg-white shadow-none lg:shadow-md rounded-lg overflow-hidden">
-            <CardHeader className="space-y-0.5 px-0 pt-4 pb-2 lg:px-5 lg:pt-5 lg:pb-3">
+        <CardHeader className="space-y-0.5 px-4 sm:px-6 pt-4 pb-2 lg:px-5 lg:pt-5 lg:pb-3">
                 <CardTitle className="text-xl md:text-2xl font-black tracking-tight text-gray-900">
                     Create an account
                 </CardTitle>
@@ -101,7 +101,7 @@ export function RegisterForm() {
                     Enter your details to get started with Z-Learn
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3 px-0 pb-4 lg:px-5 lg:pb-5 pt-0">
+            <CardContent className="space-y-3 px-4 sm:px-6 pb-4 lg:px-5 lg:pb-5 pt-0">
                 {backendError && (
                     <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4 flex items-start gap-3">
                         <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
@@ -226,7 +226,7 @@ export function RegisterForm() {
                     </Button>
                 </form>
             </CardContent>
-            <CardFooter className="flex flex-wrap items-center justify-center gap-1 px-0 lg:px-5 pt-2 pb-4 lg:pb-5">
+            <CardFooter className="flex flex-wrap items-center justify-center gap-1 px-4 sm:px-6 lg:px-5 pt-2 pb-4 lg:pb-5">
                 <span className="text-sm text-gray-600">Already have an account?</span>
                 <Link href="/auth/login" className="text-sm font-bold text-primary-600 hover:text-primary-800 hover:underline transition">
                     Sign in

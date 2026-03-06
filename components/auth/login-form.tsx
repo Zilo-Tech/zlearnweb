@@ -83,15 +83,15 @@ export function LoginForm() {
 
     return (
         <Card className="border-2 border-primary-200 bg-white shadow-none lg:shadow-md rounded-lg">
-            <CardHeader className="space-y-1 px-0 lg:px-6">
-                <CardTitle className="text-2xl md:text-3xl font-black tracking-tight text-gray-900">
+                <CardHeader className="space-y-0.5 px-4 sm:px-6 pt-4 pb-2 lg:px-5 lg:pt-5 lg:pb-3">
+                    <CardTitle className="text-2xl md:text-3xl font-black tracking-tight text-gray-900">
                     Welcome back
                 </CardTitle>
                 <CardDescription className="text-sm text-gray-600 leading-relaxed">
                     Enter your credentials to access your account
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 px-0 lg:px-6">
+            <CardContent className="space-y-3 px-4 sm:px-6 pb-4 lg:px-5 lg:pb-5 pt-0">
                 {backendError && (
                     <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4 flex items-start gap-3">
                         <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
