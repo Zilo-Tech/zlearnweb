@@ -63,7 +63,7 @@ export default function Learn() {
                       
 
                         {/* Navigation Buttons */}
-                        <div className='flex gap-4 pt-4 w-full'>
+                        <div className='flex gap-4 pt-4 w-full justify-center md:justify-start'>
                             <button
                                 onClick={prevSlide}
                                 className='transition-colors p-3 bg-gray-300 rounded-full'
@@ -81,7 +81,7 @@ export default function Learn() {
                         </div>
 
                         {/* Slide Indicators */}
-                        <div className='flex gap-2 p-3'>
+                        <div className='flex gap-2 p-3 w-full justify-center md:justify-start'>
                             {slides.map((_, index) => (
                                 <button
                                     key={index}
