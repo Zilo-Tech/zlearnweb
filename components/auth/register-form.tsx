@@ -101,7 +101,7 @@ export function RegisterForm() {
                     Enter your details to get started with Z-Learn
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3 px-4 sm:px-6 pb-4 lg:px-5 lg:pb-5 pt-0">
+            <CardContent className="space-y-3 px-4 sm:px-6 pb-6 lg:px-5 lg:pb-5 pt-0">
                 {backendError && (
                     <div className="rounded-lg bg-red-50 border-2 border-red-200 p-4 flex items-start gap-3">
                         <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
@@ -111,19 +111,19 @@ export function RegisterForm() {
                         </div>
                     </div>
                 )}
-                <SocialAuth isLoading={isLoading} />
+                {/* <SocialAuth isLoading={isLoading} /> */}
 
-                <div className="relative">
+                {/* <div className="relative">
                     <div className="absolute inset-0 flex items-center">
                         <span className="w-full border-t-2 border-primary-200" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase tracking-wider">
                         <span className="bg-white px-2 text-gray-500 font-semibold">Or continue with</span>
                     </div>
-                </div>
+                </div> */}
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                         <Input
                             id="name"
                             type="text"
