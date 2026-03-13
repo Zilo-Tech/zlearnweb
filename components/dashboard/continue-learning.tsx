@@ -13,6 +13,8 @@ export function ContinueLearning() {
     const { userProgress, loadUserProgress, isLoading } = useProgress();
     const { enrolled, loadEnrolled, userType } = useCourses();
     const { isAuthenticated, token } = useAuth();
+    const [enrollments, setEnrollments] = useState<any[] | null>(null);
+    const [enrollmentsLoading, setEnrollmentsLoading] = useState(false);
 
     useEffect(() => {
         if (isAuthenticated && token) {

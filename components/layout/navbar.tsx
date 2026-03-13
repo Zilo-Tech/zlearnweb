@@ -14,7 +14,7 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { Menu, Bell, Search, LogOut, User, Settings, BookOpen } from 'lucide-react';
+import { Menu, Bell, LogOut, User, Settings, BookOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface NavbarProps {
@@ -25,7 +25,6 @@ interface NavbarProps {
 export function Navbar({ onMenuClick, className }: NavbarProps) {
     const pathname = usePathname();
     const { user, logout, isAuthenticated } = useAuth();
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
         setMounted(true);
@@ -55,16 +54,12 @@ export function Navbar({ onMenuClick, className }: NavbarProps) {
                 <div className="ml-auto flex items-center gap-4">
                     {mounted && isAuthenticated ? (
                         <>
-                            <Button variant="ghost" size="icon" className="text-gray-500">
-                                <Search className="h-5 w-5" />
-                                <span className="sr-only">Search</span>
-                            </Button>
-
+{/* 
                             <Button variant="ghost" size="icon" className="text-gray-500 relative">
                                 <Bell className="h-5 w-5" />
                                 <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500" />
                                 <span className="sr-only">Notifications</span>
-                            </Button>
+                            </Button> */}
 
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
