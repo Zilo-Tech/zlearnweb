@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { useProgress } from '@/lib/hooks/useProgress';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useCourses } from '@/lib/hooks/useCourses';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export function ContinueLearning() {
     const { userProgress, loadUserProgress, isLoading } = useProgress();

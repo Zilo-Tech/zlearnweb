@@ -56,13 +56,14 @@ export default function ExamLessonPage() {
       }
       return examsService
         .getExamCourseDetails(examId, courseId)
-        .then((c: Record<string, unknown>) => examsService.getModuleDetails((c.id as string), moduleId));
+        .then((c) => examsService.getModuleDetails((c as Record<string, unknown>).id as string, moduleId));
     };
     loadModule()
-      .then((data: Record<string, unknown>) => {
-        const lessons = (data.lessons as Record<string, unknown>[]) ?? [];
+      .then((data) => {
+        const d = data as Record<string, unknown>;
+        const lessons = (d.lessons as Record<string, unknown>[]) ?? [];
         const ordered = [...lessons].sort((a, b) => ((a.order as number) ?? 0) - ((b.order as number) ?? 0));
-        setModuleLessons(ordered.map((l) => ({ id: l.id as string })));
+        setModuleLessons(ordered.map((l: Record<string, unknown>) => ({ id: l.id as string })));
       })
       .catch(() => setModuleLessons([]))
       .finally(() => setModuleListLoaded(true));
@@ -78,13 +79,24 @@ export default function ExamLessonPage() {
       return examsService.getExamCourseDetails(examId, courseId);
     };
     loadCourse()
-      .then((data: Record<string, unknown>) => {
-        const mods = (data.modules as Record<string, unknown>[]) ?? [];
+      .then((data) => {
+        const d = data as Record<string, unknown>;
+        const mods = (d.modules as Record<string, unknown>[]) ?? [];
         const ordered = [...mods].sort((a, b) => ((a.order as number) ?? 0) - ((b.order as number) ?? 0));
         setCourseModules(ordered.map((m) => ({ id: m.id as string, order: (m.order as number) ?? 0 })));
       })
       .catch(() => setCourseModules([]));
   }, [examId, courseId]);
+
+  const getPrevNext = () => {
+    const idx = moduleLessons.findIndex((l) => l.id === lessonId);
+    if (idx < 0) return { prev: null, next: null };
+    return {
+      prev: idx > 0 ? moduleLessons[idx - 1].id : null,
+      next: idx < moduleLessons.length - 1 && idx >= 0 ? moduleLessons[idx + 1].id : null,
+    };
+  };
+  const { prev: previousLessonId, next: nextLessonId } = getPrevNext();
 
   // When at last lesson of module, resolve first lesson of next module (for "Next module" button)
   useEffect(() => {
@@ -101,11 +113,12 @@ export default function ExamLessonPage() {
     const courseUuid = isUuid(courseId) ? courseId : null;
     const resolveCourseUuid = courseUuid
       ? Promise.resolve(courseUuid)
-      : examsService.getExamCourseDetails(examId, courseId).then((c: Record<string, unknown>) => c.id as string);
+      : examsService.getExamCourseDetails(examId, courseId).then((c) => (c as Record<string, unknown>).id as string);
     resolveCourseUuid
       .then((uuid) => examsService.getModuleDetails(uuid, nextMod.id))
-      .then((modData: Record<string, unknown>) => {
-        const lessons = (modData.lessons as Record<string, unknown>[]) ?? [];
+      .then((modData) => {
+        const m = modData as Record<string, unknown>;
+        const lessons = (m.lessons as Record<string, unknown>[]) ?? [];
         const ordered = [...lessons].sort((a, b) => ((a.order as number) ?? 0) - ((b.order as number) ?? 0));
         const first = ordered[0];
         if (first?.id) {
@@ -116,16 +129,6 @@ export default function ExamLessonPage() {
       })
       .catch(() => setNextModuleFirstLesson(null));
   }, [moduleListLoaded, nextLessonId, courseModules, moduleId, examId, courseId]);
-
-  const getPrevNext = () => {
-    const idx = moduleLessons.findIndex((l) => l.id === lessonId);
-    if (idx < 0) return { prev: null, next: null };
-    return {
-      prev: idx > 0 ? moduleLessons[idx - 1].id : null,
-      next: idx < moduleLessons.length - 1 && idx >= 0 ? moduleLessons[idx + 1].id : null,
-    };
-  };
-  const { prev: previousLessonId, next: nextLessonId } = getPrevNext();
 
   const handleComplete = async (): Promise<boolean> => {
     setCompleting(true);

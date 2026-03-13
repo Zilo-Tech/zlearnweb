@@ -1,12 +1,12 @@
 'use client';
 
-import { LucideIcon } from 'lucide-react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface ProgressCardProps {
     label: string;
     value: string | number;
-    icon: LucideIcon;
+    icon: React.ComponentType<{ className?: string; size?: number }>;
     trend?: 'up' | 'down' | 'neutral';
     trendValue?: string;
     colorScheme?: 'blue' | 'green' | 'purple' | 'orange' | 'primary';
