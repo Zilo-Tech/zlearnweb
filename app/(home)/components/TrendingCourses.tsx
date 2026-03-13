@@ -102,8 +102,8 @@ export default function TrendingCourse() {
   }
 
   const router = useRouter();
-  const goToDashboard = () => {
-    router.push('/app/courses');
+  const goToRegister = () => {
+    router.push('/auth/register');
   }
 
   return (
@@ -132,36 +132,44 @@ export default function TrendingCourse() {
             >
               {courses.map((course, index: number) => (
                 <div key={index} className='min-w-full md:min-w-[33.333%] px-2 md:px-4'>
-                  <div className='bg-white rounded border border-gray-900 transition-shadow duration-300 h-full'>
-                    <img
-                      src={course.image}
-                      alt={course.alt}
-                      className='w-full h-48 object-cover'
-                    />
-                    <div className='p-6'>
-                      <div className='flex items-center gap-2 mb-3'>
-                        <span className={`px-3 py-1 text-xs md:text-sm font-semibold rounded border ${course.categoryColor}`}>
-                          {course.category}
-                        </span>
-                        <span className='text-yellow-500 text-xs md:text-sm'>
-                          ★ <span className="text-gray-900">{course.rating}</span>
-                        </span>
-                      </div>
-                      <h1 className='text-lg md:text-xl font-black text-gray-900 border-t-2 py-4 mt-4 border-gray-900'>
-                        {course.title}
-                      </h1>
-                      <p className='text-gray-700 mb-4 text-sm '>
-                        {course.description}
-                      </p>
-                      <div className='flex items-center justify-between'>
-                        <div>
-                          <span className='text-xl md:text-2xl font-black text-gray-900'>{course.price}</span>
-                          {/* <span className='text-xs md:text-sm text-gray-500 line-through ml-2'>$199.99</span> */}
+                  <Link href="/auth/register" className='block h-full'>
+                    <div className='bg-white rounded border border-gray-900 transition-all duration-300 hover:shadow-xl hover:border-primary-500 hover:-translate-y-1 cursor-pointer h-full group'>
+                      <div className='relative'>
+                        <img
+                          src={course.image}
+                          alt={course.alt}
+                          className='w-full h-48 object-cover'
+                        />
+                        <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center'>
+                          <span className='opacity-0 group-hover:opacity-100 transition-all duration-300 bg-primary-500 text-white px-6 py-2 rounded-lg font-bold'>
+                            Sign Up to Enroll
+                          </span>
                         </div>
-                        <span className='text-xs md:text-sm text-primary-600 font-bold'>{course.students} enrolled</span>
+                      </div>
+                      <div className='p-6'>
+                        <div className='flex items-center gap-2 mb-3'>
+                          <span className={`px-3 py-1 text-xs md:text-sm font-semibold rounded border ${course.categoryColor}`}>
+                            {course.category}
+                          </span>
+                          <span className='text-yellow-500 text-xs md:text-sm'>
+                            ★ <span className="text-gray-900">{course.rating}</span>
+                          </span>
+                        </div>
+                        <h1 className='text-lg md:text-xl font-black text-gray-900 border-t-2 py-4 mt-4 border-gray-900 group-hover:text-primary-700 transition-colors'>
+                          {course.title}
+                        </h1>
+                        <p className='text-gray-700 mb-4 text-sm'>
+                          {course.description}
+                        </p>
+                        <div className='flex items-center justify-between'>
+                          <div>
+                            <span className='text-xl md:text-2xl font-black text-gray-900'>{course.price}</span>
+                          </div>
+                          <span className='text-xs md:text-sm text-primary-600 font-bold'>{course.students} enrolled</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               ))}
             </div>
@@ -202,12 +210,12 @@ export default function TrendingCourse() {
         </div>
 
         <div className='text-center mt-12'>
-          <Link href="/app/courses">
+          <Link href="/auth/register">
             <button className='px-10 py-5 text-base md:text-lg bg-primary-500 text-white font-black rounded border-2 border-primary-900 hover:bg-primary-800 transition-all duration-300 transform hover:scale-105 shadow-xl'>
-              BROWSE COURSES & START LEARNING
+              SIGN UP & START LEARNING FREE
             </button>
           </Link>
-          <p className='text-sm text-gray-600 mt-4'>Free to start · Progress saved across app and web</p>
+          <p className='text-sm text-gray-600 mt-4'>Free to start · No credit card required</p>
         </div>
       </div>
     </div>

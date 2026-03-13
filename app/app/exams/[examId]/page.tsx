@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -14,6 +14,9 @@ import {
   PlayCircle,
   Award,
   Share2,
+  Layers,
+  ChevronRight,
+  ArrowLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,21 +33,33 @@ import {
   selectExamsLoading,
   selectIsEnrolledInExam,
 } from '@/lib/store/slices/exams.slice';
+import { examsService } from '@/lib/services';
 import { markdownToHtml } from '@/lib/utils/markdownToHtml';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/hooks/useAuth';
+
+interface DepartmentItem {
+  id: string;
+  title: string;
+  subjects?: { id: string; name: string; code?: string; icon?: string; color?: string }[];
+}
 
 export default function ExamDetailsPage() {
   const params = useParams();
   const examId = params?.examId as string;
   const dispatch = useAppDispatch();
+  const { isAuthenticated } = useAuth();
   const exam = useAppSelector(selectCurrentExam) as Record<string, unknown> | null;
   const enrollments = useAppSelector(selectExamEnrollments) as { exam?: string }[];
   const mockExams = useAppSelector(selectMockExams) as Record<string, unknown>[];
   const isLoading = useAppSelector(selectExamsLoading);
-  const isEnrolled = useAppSelector(selectIsEnrolledInExam(exam?.id as string ?? examId));
+  const isEnrolled = useAppSelector(selectIsEnrolledInExam((exam?.id as string) ?? examId));
 
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [departments, setDepartments] = useState<DepartmentItem[]>([]);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [subjectFilteredCourses, setSubjectFilteredCourses] = useState<Record<string, unknown>[] | null>(null);
 
   useEffect(() => {
     if (examId) {
@@ -58,6 +73,31 @@ export default function ExamDetailsPage() {
       dispatch(fetchMockExams(examId)).catch(() => {});
     }
   }, [dispatch, examId, isEnrolled]);
+
+  useEffect(() => {
+    if (!examId) return;
+    examsService
+      .getExamDepartments(examId)
+      .then((data) => {
+        const arr = Array.isArray(data) ? data : [];
+        setDepartments(arr as DepartmentItem[]);
+      })
+      .catch(() => setDepartments([]));
+  }, [examId]);
+
+  useEffect(() => {
+    if (!examId || !selectedSubjectId) {
+      setSubjectFilteredCourses(null);
+      return;
+    }
+    examsService
+      .getExamCourses(examId, { subject: selectedSubjectId })
+      .then((data) => {
+        const arr = Array.isArray(data) ? data : (data as { results?: unknown[] })?.results ?? [];
+        setSubjectFilteredCourses(arr as Record<string, unknown>[]);
+      })
+      .catch(() => setSubjectFilteredCourses([]));
+  }, [examId, selectedSubjectId]);
 
   const handleEnroll = async () => {
     if (!examId) return;
@@ -80,7 +120,12 @@ export default function ExamDetailsPage() {
     }
   };
 
-  const courses = (exam?.courses as Record<string, unknown>[] | undefined) ?? [];
+  const embeddedCourses = (exam?.courses as Record<string, unknown>[] | undefined) ?? [];
+  const coursesToShow =
+    selectedSubjectId && subjectFilteredCourses !== null
+      ? subjectFilteredCourses
+      : embeddedCourses;
+  const courses = coursesToShow;
   const progress = Number((exam as { progress_percentage?: number })?.progress_percentage) ?? 0;
   // Detail API can embed mock_exams; fall back to slice when fetched separately
   const mockExamsFromDetail = (exam?.mock_exams as Record<string, unknown>[] | undefined) ?? [];
@@ -113,8 +158,26 @@ export default function ExamDetailsPage() {
   const description = (exam.description as string) ?? '';
   const examBoard = exam.exam_board as string | undefined;
   const examDate = exam.exam_date as string | undefined;
+  const schoolName = (exam as { school_name?: string }).school_name as string | undefined;
+  const educationDepartments = (exam as { departments?: { id: string; name: string; school_name?: string }[] }).departments ?? [];
 
   return (
+    <div className="space-y-6">
+      {/* Breadcrumb: Exams > Exam title */}
+      <nav className="flex items-center gap-2 text-sm text-gray-600">
+        <Link
+          href="/app/exams"
+          className="flex items-center gap-1 text-[#446D6D] hover:underline font-medium"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Exams
+        </Link>
+        <ChevronRight className="h-4 w-4 text-gray-400" />
+        <span className="text-gray-900 font-medium truncate max-w-[200px] sm:max-w-md" title={title}>
+          {title}
+        </span>
+      </nav>
+
     <div className="grid gap-8 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-8">
         <div className="flex flex-wrap items-center gap-2">
@@ -129,6 +192,18 @@ export default function ExamDetailsPage() {
             </Badge>
           )}
         </div>
+
+        {(schoolName || educationDepartments.length > 0) && (
+          <p className="text-sm text-gray-600">
+            {schoolName && <span>{schoolName}</span>}
+            {educationDepartments.length > 0 && (
+              <span>
+                {schoolName ? ' · ' : ''}
+                Offered by: {educationDepartments.map((d) => d.name).join(', ')}
+              </span>
+            )}
+          </p>
+        )}
 
         <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">{title}</h1>
 
@@ -145,7 +220,59 @@ export default function ExamDetailsPage() {
           />
         )}
 
+        {/* Departments / Tracks (subject filter) */}
+        {departments.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Layers className="h-5 w-5 text-[#446D6D]" />
+              Tracks & Subjects
+            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedSubjectId(null)}
+                className={cn(
+                  'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
+                  selectedSubjectId === null
+                    ? 'border-[#446D6D] bg-[#446D6D] text-white'
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                )}
+              >
+                All subjects
+              </button>
+              {departments.map((dept) =>
+                (dept.subjects ?? []).map((sub) => (
+                  <button
+                    key={sub.id}
+                    type="button"
+                    onClick={() => setSelectedSubjectId(sub.id)}
+                    className={cn(
+                      'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
+                      selectedSubjectId === sub.id
+                        ? 'border-[#446D6D] bg-[#446D6D] text-white'
+                        : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                    )}
+                  >
+                    {sub.name}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Course content */}
+        {selectedSubjectId && subjectFilteredCourses === null && (
+          <div className="flex items-center gap-2 text-gray-500">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Loading courses for this subject…</span>
+          </div>
+        )}
+        {selectedSubjectId && subjectFilteredCourses !== null && courses.length === 0 && (
+          <p className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-center text-gray-600">
+            No courses in this subject for this exam.
+          </p>
+        )}
         {courses.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-900">Course Content</h2>
@@ -297,15 +424,23 @@ export default function ExamDetailsPage() {
                   ? 'Free'
                   : `${(exam as { currency?: string }).currency === 'USD' ? '$' : ''}${exam.price ?? '—'} ${(exam as { currency?: string }).currency ?? ''}`.trim()}
               </div>
-              <Button
-                className="w-full bg-[#446D6D] hover:bg-[#3A5F5F]"
-                size="lg"
-                onClick={handleEnroll}
-                disabled={isEnrolling}
-              >
-                {isEnrolling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
-              </Button>
+              {!isAuthenticated ? (
+                <Button className="w-full bg-[#446D6D] hover:bg-[#3A5F5F]" size="lg" asChild>
+                  <Link href={`/auth/login?next=${encodeURIComponent(`/app/exams/${examId}`)}`}>
+                    Sign in to enroll
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  className="w-full bg-[#446D6D] hover:bg-[#3A5F5F]"
+                  size="lg"
+                  onClick={handleEnroll}
+                  disabled={isEnrolling}
+                >
+                  {isEnrolling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
+                </Button>
+              )}
             </div>
           )}
 
@@ -340,6 +475,7 @@ export default function ExamDetailsPage() {
           </Button>
         </div>
       </div>
+    </div>
     </div>
   );
 }

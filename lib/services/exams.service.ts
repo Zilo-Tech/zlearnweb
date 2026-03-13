@@ -7,7 +7,7 @@ import { apiService } from './api.service';
 
 export const examsService = {
   // ============ 1. Exam Discovery & Browsing ============
-  /** GET /exams/ - List all exams (public). Query: exam_type, exam_board, is_free, featured, country, status, search, ordering, page, page_size */
+  /** GET /exams/ - List exams (public). school=string, include_global=1|true for school+global. subject=UUID for filtering. */
   getExams: (params?: Record<string, string | boolean | number>) => {
     const search = new URLSearchParams();
     if (params) {
@@ -25,9 +25,22 @@ export const examsService = {
   getExamDetails: (slugOrId: string) =>
     apiService.get<unknown>(`/exams/${encodeURIComponent(slugOrId)}/`),
 
-  /** GET /exams/<exam_id>/courses/ - List courses in exam (public) */
-  getExamCourses: (examId: string) =>
-    apiService.get<unknown>(`/exams/${examId}/courses/`),
+  /** GET /exams/<exam_id>/departments/ - List departments/tracks. Optional: program=<string_id> */
+  getExamDepartments: (examId: string, programId?: string) => {
+    let path = `/exams/${encodeURIComponent(examId)}/departments/`;
+    if (programId) path += `?program=${encodeURIComponent(programId)}`;
+    return apiService.get<{ id: string; title: string; subjects?: { id: string; name: string; code?: string; icon?: string; color?: string }[] }[]>(path);
+  },
+
+  /** GET /exams/<exam_id>/courses/ - List courses. Optional: subject=<content_subject_uuid> */
+  getExamCourses: (examId: string, params?: { subject?: string }) => {
+    const search = new URLSearchParams();
+    if (params?.subject) search.set('subject', params.subject);
+    const q = search.toString();
+    return apiService.get<unknown>(
+      q ? `/exams/${examId}/courses/?${q}` : `/exams/${examId}/courses/`
+    );
+  },
 
   /** GET /exams/<exam_id>/courses/<slug|uuid>/ - Course details (public) */
   getExamCourseDetails: (examId: string, courseSlugOrId: string) =>

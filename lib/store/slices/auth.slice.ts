@@ -100,7 +100,16 @@ const authSlice = createSlice({
       state.isAuthenticated = !!action.payload;
     },
     switchUserType: (state, action: PayloadAction<'academic' | 'professional' | 'exams'>) => {
-      if (state.user) state.user.user_type = action.payload;
+      if (state.user) {
+        state.user.user_type = action.payload;
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(state.user));
+          } catch {
+            // ignore storage errors
+          }
+        }
+      }
     },
   },
   extraReducers: (builder) => {
@@ -142,8 +151,22 @@ const authSlice = createSlice({
       .addCase(verifyEmail.fulfilled, (state) => {
         state.isAuthenticated = true;
       })
-      .addCase(completeOnboarding.fulfilled, (state) => {
+      .addCase(completeOnboarding.fulfilled, (state, action) => {
         state.onboardingComplete = true;
+        const payload = action.payload as { user?: User } | User | null;
+        if (payload && typeof payload === 'object') {
+          const nextUser = 'user' in payload && payload.user ? payload.user : (payload as User);
+          if (nextUser && typeof nextUser === 'object' && ('email' in nextUser || 'user_type' in nextUser)) {
+            state.user = nextUser as User;
+            if (typeof window !== 'undefined') {
+              try {
+                localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(nextUser));
+              } catch {
+                // ignore storage errors
+              }
+            }
+          }
+        }
       });
   },
 });

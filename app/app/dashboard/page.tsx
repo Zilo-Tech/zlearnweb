@@ -36,39 +36,40 @@ export default function DashboardPage() {
     }, [loadDashboard, dispatch, isAuthenticated, token]);
 
     return (
-        <div className="space-y-8 pb-8 max-w-full break-words text-base antialiased">
-            <WelcomeHeader />
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+                <WelcomeHeader />
 
-            <div className="grid gap-8 lg:grid-cols-3">
-                <div className="lg:col-span-2 space-y-8 min-w-0">
-                    <UserTypeSwitcher />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+                    <div className="lg:col-span-8 space-y-6">
+                        <UserTypeSwitcher />
 
-                    <div className="grid gap-8 md:grid-cols-2">
                         <DailyTipCard />
+                        
                         <QuickActions />
+
+                        {isExamUser ? (
+                            <>
+                                <ContinueExamPrep />
+                                <FeaturedExamsSection />
+                            </>
+                        ) : (
+                            <>
+                                <ContinueLearning />
+                                <FeaturedCoursesSection />
+                                <RecommendedCoursesSection />
+                            </>
+                        )}
+
+                        <StudyInsights />
                     </div>
 
-                    {isExamUser ? (
-                        <>
-                            <ContinueExamPrep />
-                            <FeaturedExamsSection />
-                        </>
-                    ) : (
-                        <>
-                            <ContinueLearning />
-                            <FeaturedCoursesSection />
-                            <RecommendedCoursesSection />
-                        </>
-                    )}
-
-                    <StudyInsights />
-                </div>
-
-                <div className="space-y-8">
-                    <UpcomingEvents />
-                    <LeaderboardPreview />
-                    <StudyRemindersCard />
-                    <MotivationCard />
+                    <aside className="lg:col-span-4 space-y-6">
+                        <UpcomingEvents />
+                        <LeaderboardPreview />
+                        <StudyRemindersCard />
+                        <MotivationCard />
+                    </aside>
                 </div>
             </div>
         </div>

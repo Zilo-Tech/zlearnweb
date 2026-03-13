@@ -2,18 +2,33 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { BookOpen, Loader2, Clock, ChevronRight } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { BookOpen, Loader2, Clock, ChevronRight, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { examsService } from '@/lib/services';
 import { markdownToHtml } from '@/lib/utils/markdownToHtml';
+import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
+import { fetchMyEnrollments } from '@/lib/store/slices/exams.slice';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isUuid(s: string): boolean {
+  return UUID_REGEX.test(s ?? '');
+}
 
 export default function ExamCourseDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const examId = params?.examId as string;
   const courseId = params?.courseId as string;
   const [course, setCourse] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [continueLoading, setContinueLoading] = useState(false);
+  const enrollments = useAppSelector((state) => state.exams.enrollments) as Record<string, unknown>[];
+
+  useEffect(() => {
+    if (examId) dispatch(fetchMyEnrollments());
+  }, [examId, dispatch]);
 
   useEffect(() => {
     if (!examId || !courseId) return;
@@ -54,6 +69,59 @@ export default function ExamCourseDetailPage() {
   const difficultyDisplay = course.difficulty_display as string | undefined;
   const learningObjectives = (course.learning_objectives as string[]) ?? [];
   const courseUuid = course.id as string;
+  const sortedModules = [...modules].sort(
+    (a, b) => ((a.order as number) ?? 0) - ((b.order as number) ?? 0)
+  );
+
+  const handleContinue = async () => {
+    if (!sortedModules.length) return;
+    setContinueLoading(true);
+    try {
+      const enrollment = enrollments?.find(
+        (e) => (e.exam as string) === examId || (e.exam as { id?: string })?.id === examId
+      ) as { completed_lessons?: string[] } | undefined;
+      const completedSet = new Set(enrollment?.completed_lessons ?? []);
+
+      for (const mod of sortedModules) {
+        const modLessons = (mod.lessons as Record<string, unknown>[]) ?? [];
+        let lessonIds: string[] = [];
+        if (modLessons.length > 0) {
+          const ordered = [...modLessons].sort((a, b) => ((a.order as number) ?? 0) - ((b.order as number) ?? 0));
+          lessonIds = ordered.map((l) => l.id as string);
+        } else {
+          const modData = await examsService.getModuleDetails(courseUuid, mod.id as string) as Record<string, unknown>;
+          const lessons = (modData.lessons as Record<string, unknown>[]) ?? [];
+          const ordered = [...lessons].sort((a, b) => ((a.order as number) ?? 0) - ((b.order as number) ?? 0));
+          lessonIds = ordered.map((l) => l.id as string);
+        }
+        for (const lid of lessonIds) {
+          if (!completedSet.has(lid)) {
+            router.push(`/app/exams/${examId}/courses/${courseId}/modules/${mod.id}/lessons/${lid}`);
+            return;
+          }
+        }
+      }
+      const firstMod = sortedModules[0];
+      const firstModLessons = (firstMod.lessons as Record<string, unknown>[]) ?? [];
+      const firstLessonId =
+        firstModLessons.length > 0
+          ? (firstModLessons.sort((a, b) => ((a.order as number) ?? 0) - ((b.order as number) ?? 0))[0].id as string)
+          : null;
+      if (!firstLessonId) {
+        const modData = await examsService.getModuleDetails(courseUuid, firstMod.id as string) as Record<string, unknown>;
+        const lessons = (modData.lessons as Record<string, unknown>[]) ?? [];
+        const ordered = [...lessons].sort((a, b) => ((a.order as number) ?? 0) - ((b.order as number) ?? 0));
+        const first = ordered[0];
+        if (first?.id) {
+          router.push(`/app/exams/${examId}/courses/${courseId}/modules/${firstMod.id}/lessons/${first.id}`);
+        }
+      } else {
+        router.push(`/app/exams/${examId}/courses/${courseId}/modules/${firstMod.id}/lessons/${firstLessonId}`);
+      }
+    } finally {
+      setContinueLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -92,6 +160,21 @@ export default function ExamCourseDetailPage() {
             </ul>
           </div>
         )}
+        <div className="mt-6">
+          <Button
+            className="bg-[#446D6D] hover:bg-[#3A5F5F] gap-2"
+            size="lg"
+            onClick={handleContinue}
+            disabled={continueLoading || sortedModules.length === 0}
+          >
+            {continueLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <PlayCircle className="h-5 w-5" />
+            )}
+            Continue learning
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">

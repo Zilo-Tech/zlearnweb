@@ -3,7 +3,7 @@
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useProgress } from '@/lib/hooks/useProgress';
 import { usePersonalization } from '@/lib/hooks/usePersonalization';
-import { Bell } from 'lucide-react';
+import { Bell, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 
@@ -55,17 +55,29 @@ export function WelcomeHeader() {
                 <h1 className="text-2xl font-black text-gray-900 md:text-3xl truncate tracking-tight">
                     {welcome?.title ?? `${getGreeting()}, ${getFirstName()}! 👋`}
                 </h1>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-base md:text-lg text-gray-600 leading-relaxed">
                     {welcome?.message ?? defaultMessage}
                 </p>
             </div>
 
-            <div className="flex items-center gap-3">
-                <div className="hidden md:block text-right">
-                    <p className="text-xs font-bold text-primary-900 uppercase tracking-widest">Daily Streak</p>
-                    <p className="text-sm font-bold text-primary-600">🔥 {currentStreak} {currentStreak === 1 ? 'Day' : 'Days'}</p>
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+                    <Flame className="h-6 w-6 text-orange-500" />
+                    <div>
+                        <p className="text-xs font-semibold text-orange-900 uppercase tracking-wide">
+                            Streak
+                        </p>
+                        <p className="text-lg font-bold text-orange-700">
+                            {currentStreak} {currentStreak === 1 ? 'day' : 'days'}
+                        </p>
+                    </div>
                 </div>
-                <Button size="icon" variant="outline" className="relative border-2 border-primary-200 hover:bg-primary-50">
+
+                <Button
+                    size="icon"
+                    variant="outline"
+                    className="relative h-12 w-12 rounded-xl border-gray-200 hover:bg-gray-50"
+                >
                     <Bell className="h-5 w-5 text-gray-600" />
                     <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
                 </Button>

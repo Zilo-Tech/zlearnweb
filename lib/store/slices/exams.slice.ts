@@ -38,12 +38,17 @@ function toArray(data: unknown): unknown[] {
   const obj = data as { results?: unknown[] };
   return obj?.results ?? [];
 }
+function toPagination(data: unknown): { count: number; results: unknown[] } {
+  const arr = toArray(data);
+  const obj = data as { pagination?: { count?: number } };
+  return { count: obj?.pagination?.count ?? arr.length, results: arr };
+}
 
 export const fetchExams = createAsyncThunk(
   'exams/fetchList',
   async (params?: Record<string, string | boolean | number>) => {
     const data = await examsService.getExams(params);
-    return toArray(data);
+    return toPagination(data).results;
   }
 );
 
