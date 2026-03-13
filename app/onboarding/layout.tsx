@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ProgressIndicator } from '@/components/onboarding/progress-indicator';
+import { ArrowLeft } from 'lucide-react';
 
 // Map routes to step numbers
 const steps: Record<string, number> = {
@@ -35,28 +36,31 @@ export default function OnboardingLayout({
         : 7;
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="border-b bg-white px-4 py-4 md:px-8">
-                <div className="mx-auto flex max-w-4xl items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2 font-bold text-xl text-[#446D6D]">
-                        <div className="h-8 w-8 rounded-lg bg-[#446D6D] flex items-center justify-center text-white">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+            <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm px-4 py-4 md:px-8 sticky top-0 z-50 shadow-sm">
+                <div className="mx-auto flex max-w-5xl items-center justify-between">
+                    <Link href="/" className="flex items-center gap-3 group">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-lg shadow-md transition-transform group-hover:scale-105">
                             Z
                         </div>
-                        <span>Z-Learn</span>
+                        <span className="font-bold text-xl text-gray-900">Learn</span>
                     </Link>
 
-                    <Button variant="ghost" size="sm" asChild>
-                        <Link href="/auth/logout">Save & Exit</Link>
+                    <Button variant="ghost" size="sm" asChild className="font-semibold">
+                        <Link href="/auth/logout" className="flex items-center gap-2">
+                            <ArrowLeft className="h-4 w-4" />
+                            Save & Exit
+                        </Link>
                     </Button>
                 </div>
             </header>
 
-            <main className="mx-auto max-w-4xl p-4 md:p-8">
+            <main className="mx-auto max-w-4xl px-4 py-8 md:px-8 md:py-12">
                 <div className="mb-8">
                     <ProgressIndicator currentStep={currentStep} totalSteps={totalSteps} />
                 </div>
 
-                <div className="rounded-2xl bg-white p-6 shadow-sm md:p-10">
+                <div className="rounded-2xl bg-white border border-gray-200 shadow-lg p-6 md:p-12">
                     {children}
                 </div>
             </main>

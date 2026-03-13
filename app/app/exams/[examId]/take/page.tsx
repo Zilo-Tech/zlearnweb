@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Timer, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,8 @@ const EXAM_DATA = {
     })),
 };
 
-export default function TakeExamPage({ params }: { params: { examId: string } }) {
+export default function TakeExamPage({ params }: { params: Promise<{ examId: string }> }) {
+    const { examId } = use(params);
     const router = useRouter();
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -66,7 +67,7 @@ export default function TakeExamPage({ params }: { params: { examId: string } })
         setIsSubmitting(true);
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
-        router.push(`/app/exams/${params.examId}/results`);
+        router.push(`/app/exams/${examId}/results`);
     };
 
     const currentQuestion = EXAM_DATA.questions[currentQuestionIndex];

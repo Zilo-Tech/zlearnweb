@@ -48,14 +48,18 @@ export function UserTypeSwitcher() {
                 title: `Switched to ${name} mode`,
                 description: `You are now browsing ${name.toLowerCase()} content.`,
             });
-            // Redirect to type-specific onboarding if this type is not yet complete (aligned with mobile)
             const byType = (user as { onboarding_complete_by_type?: Record<string, boolean> })?.onboarding_complete_by_type;
-            const isCompleteForTarget = byType && typeof byType[target] === 'boolean' ? byType[target] : true;
-            if (!isCompleteForTarget) {
-                if (target === 'academic') router.push('/onboarding/profile');
-                else if (target === 'professional') router.push('/onboarding/professional-background');
-                else if (target === 'exams') router.push('/onboarding/exams');
+            const key = target;
+            const keyCap = target.charAt(0).toUpperCase() + target.slice(1);
+            const explicitlyIncomplete =
+                byType &&
+                (byType[key] === false || byType[keyCap] === false || byType[target.toLowerCase()] === false);
+            if (!explicitlyIncomplete) {
+                return;
             }
+            if (target === 'academic') router.push('/onboarding/profile');
+            else if (target === 'professional') router.push('/onboarding/professional-background');
+            else if (target === 'exams') router.push('/onboarding/exams');
         } catch (error: unknown) {
             toast({
                 title: 'Switch failed',
@@ -66,11 +70,11 @@ export function UserTypeSwitcher() {
     };
 
     if (!mounted) {
-        return <div className="rounded-2xl bg-white p-6 border-2 border-primary-200 animate-pulse h-[100px]" />;
+        return <div className="rounded-2xl bg-white p-6 border border-gray-200 animate-pulse h-[100px]" />;
     }
 
     return (
-        <div className="rounded-2xl bg-white p-6 border-2 border-primary-200">
+        <div className="rounded-2xl bg-gradient-to-br from-white to-gray-50 p-6 border border-gray-200 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100 text-primary-700 shrink-0">
@@ -83,7 +87,7 @@ export function UserTypeSwitcher() {
                         )}
                     </div>
                     <div>
-                        <h3 className="font-bold text-primary-900 tracking-tight">
+                        <h3 className="font-bold text-gray-900 mb-0.5">
                             {labels.title}
                         </h3>
                         <p className="text-sm text-gray-600">
@@ -99,12 +103,13 @@ export function UserTypeSwitcher() {
                             variant="outline"
                             onClick={() => handleSwitch(target)}
                             disabled={isLoading}
-                            className="rounded-xl w-full sm:w-auto"
+                            className="rounded-xl w-full sm:w-auto font-medium"
+                            size="sm"
                         >
                             Switch to {target === 'exams' ? 'Exams' : target === 'professional' ? 'Professional' : 'Academic'}
                         </Button>
                     ))}
-                    <Button asChild className="rounded-xl w-full sm:w-auto font-semibold">
+                    <Button asChild className="rounded-xl w-full sm:w-auto font-semibold" size="sm">
                         <Link href={currentType === 'exams' ? '/app/exams' : '/app/courses'}>
                             Explore <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>

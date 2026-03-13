@@ -46,7 +46,7 @@ export function useCourses() {
     currentCourse: state.currentCourse ?? null,
     progress: state.progress ?? null,
     enrolledCourseIds: state.enrolledCourseIds ?? [],
-    userType: state.userType ?? null,
+userType: userType ?? state.userType ?? null,
     isLoading: state.isLoading ?? false,
     error: state.error ?? null,
     loadEnrolled,

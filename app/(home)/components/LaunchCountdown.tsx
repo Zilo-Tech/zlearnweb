@@ -63,66 +63,86 @@ function pad(n: number): string {
 
 export default function LaunchCountdown() {
   const launchTs = useMemo(getLaunchTimestamp, []);
+  const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(() =>
     computeTimeLeft(launchTs)
   );
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     const tick = () => setTimeLeft(computeTimeLeft(launchTs));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [launchTs]);
+  }, [launchTs, mounted]);
+
+  if (!mounted) {
+    return (
+      <div className="flex gap-3 md:gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex flex-col items-center rounded-2xl bg-gray-100 border-2 border-gray-200 px-4 py-3 min-w-[4.5rem] md:min-w-[5rem] animate-pulse">
+            <span className="text-3xl md:text-4xl font-black text-gray-300 leading-tight">00</span>
+            <span className="text-xs font-semibold text-gray-400 mt-1">...</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (timeLeft.isPast) {
     return (
-      <div className="inline-flex items-center gap-2 rounded-lg bg-primary-800/80 px-4 py-2 text-primary-100">
-        <span className="text-sm font-bold uppercase tracking-wider">
-          We&apos;re live!
+      <div className="inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 text-white shadow-lg">
+        <span className="text-base font-bold">
+          We&apos;re Live!
         </span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 md:gap-4">
-      <span className="text-xs md:text-sm text-primary-200 font-bold uppercase tracking-wider">
+    <div className="flex flex-col items-center gap-4">
+      <span className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
         Launching in
       </span>
-      <div className="flex gap-2 md:gap-3">
-        <div className="flex flex-col items-center rounded-lg bg-primary-800/90 px-3 py-2 min-w-[3rem] md:min-w-[4rem]">
-          <span className="text-lg md:text-2xl font-black tabular-nums text-primary-100 leading-tight">
+      <div className="flex gap-3 md:gap-4">
+        <div className="flex flex-col items-center rounded-2xl bg-white border-2 border-gray-200 shadow-md px-4 py-3 min-w-[4.5rem] md:min-w-[5rem] hover:border-primary-300 transition-colors">
+          <span className="text-3xl md:text-4xl font-black tabular-nums text-gray-900 leading-tight">
             {pad(timeLeft.days)}
           </span>
-          <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary-300">
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-1">
             Days
           </span>
         </div>
-        <div className="flex flex-col items-center rounded-lg bg-primary-800/90 px-3 py-2 min-w-[3rem] md:min-w-[4rem]">
-          <span className="text-lg md:text-2xl font-black tabular-nums text-primary-100 leading-tight">
+        <div className="flex flex-col items-center rounded-2xl bg-white border-2 border-gray-200 shadow-md px-4 py-3 min-w-[4.5rem] md:min-w-[5rem] hover:border-primary-300 transition-colors">
+          <span className="text-3xl md:text-4xl font-black tabular-nums text-gray-900 leading-tight">
             {pad(timeLeft.hours)}
           </span>
-          <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary-300">
-            Hrs
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-1">
+            Hours
           </span>
         </div>
-        <div className="flex flex-col items-center rounded-lg bg-primary-800/90 px-3 py-2 min-w-[3rem] md:min-w-[4rem]">
-          <span className="text-lg md:text-2xl font-black tabular-nums text-primary-100 leading-tight">
+        <div className="flex flex-col items-center rounded-2xl bg-white border-2 border-gray-200 shadow-md px-4 py-3 min-w-[4.5rem] md:min-w-[5rem] hover:border-primary-300 transition-colors">
+          <span className="text-3xl md:text-4xl font-black tabular-nums text-gray-900 leading-tight">
             {pad(timeLeft.minutes)}
           </span>
-          <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary-300">
-            Min
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-1">
+            Minutes
           </span>
         </div>
-        <div className="flex flex-col items-center rounded-lg bg-primary-800/90 px-3 py-2 min-w-[3rem] md:min-w-[4rem]">
-          <span className="text-lg md:text-2xl font-black tabular-nums text-primary-100 leading-tight">
+        <div className="flex flex-col items-center rounded-2xl bg-white border-2 border-gray-200 shadow-md px-4 py-3 min-w-[4.5rem] md:min-w-[5rem] hover:border-primary-300 transition-colors">
+          <span className="text-3xl md:text-4xl font-black tabular-nums text-gray-900 leading-tight">
             {pad(timeLeft.seconds)}
           </span>
-          <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary-300">
-            Sec
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-1">
+            Seconds
           </span>
         </div>
       </div>
     </div>
   );
 }
+

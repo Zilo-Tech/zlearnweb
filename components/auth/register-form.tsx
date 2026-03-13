@@ -73,22 +73,15 @@ export function RegisterForm() {
             });
 
             router.push('/auth/verify-email');
-        } catch (error: any) {
-            const errorMessage = error.message || error || 'Something went wrong. Please try again.';
+        } catch (err: any) {
+            const errorMessage = (typeof err === 'string' ? err : err?.message) || 'Something went wrong. Please try again.';
             setBackendError(errorMessage);
-            toast({
-                title: 'Registration failed',
-                description: errorMessage,
-                variant: 'destructive',
-            });
         }
     };
 
     // Clear backend error when user starts typing
     useEffect(() => {
-        if (backendError) {
-            setBackendError(null);
-        }
+        setBackendError(null);
     }, []);
 
     return (
@@ -194,14 +187,14 @@ export function RegisterForm() {
                             control={control}
                             render={({ field }) => (
                                 <Checkbox
-                                id="terms"
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                                disabled={isLoading}
-                                className="mt-1"
+                                    id="terms"
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    disabled={isLoading}
+                                    className="mt-1"
                                 />
                             )}
-                            />
+                        />
                         <label
                             htmlFor="terms"
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-600"

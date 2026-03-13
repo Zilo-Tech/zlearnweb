@@ -14,6 +14,7 @@ import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
 import {
     fetchCourseDetails,
     fetchEnrolledCourses,
+    fetchModuleLessons,
     markLessonComplete,
     selectIsEnrolled,
     selectCurrentCourse,
@@ -59,8 +60,9 @@ export default function LessonViewerPage() {
         const loadData = async () => {
             try {
                 // 1. Ensure course details & enrollment status are loaded
-                // Fetch course details if not present or ID doesn't match
-                if (!course || course.id !== courseId) {
+                // Fetch course details if not present or ID/slug doesn't match (courseId can be slug or UUID)
+                const courseMatches = course && (course.id === courseId || (course as { slug?: string }).slug === courseId);
+                if (!courseMatches) {
                     await dispatch(fetchCourseDetails(courseId)).unwrap();
                 }
 
@@ -78,6 +80,17 @@ export default function LessonViewerPage() {
             loadData();
         }
     }, [dispatch, courseId, course?.id]); // Use optional chaining for course.id
+
+    // Ensure all module lessons are loaded (so next = first lesson of next module when applicable)
+    useEffect(() => {
+        const c = course as { modules?: { id: string; lessons?: unknown[]; lesson_count?: number }[] } | null;
+        const mods = c?.modules;
+        if (!mods?.length) return;
+        const needLessons = mods.filter((m) => (m.lesson_count ?? 0) > 0 && !(m.lessons?.length));
+        if (needLessons.length) {
+            dispatch(fetchModuleLessons(needLessons.map((m) => m.id)));
+        }
+    }, [course?.id, course?.modules, dispatch]);
 
     // Enrollment Redirect Effect
     useEffect(() => {
@@ -161,11 +174,12 @@ export default function LessonViewerPage() {
 
             toast.success("Lesson marked as complete!");
 
-            // Auto-navigate to next lesson (prefer API navigation)
-            const nextLessonId = (result as { next_lesson?: string })?.next_lesson ?? navigation?.next_lesson ?? getNextLessonId();
-            if (nextLessonId) {
+            // Auto-navigate to next lesson (prefer order from course modules, then API)
+            const hasMods = modules?.some((m) => (m.lessons?.length ?? 0) > 0) ?? false;
+            const next = (hasMods ? getNextLessonId() : null) ?? (result as { next_lesson?: string })?.next_lesson ?? navigation?.next_lesson ?? getNextLessonId();
+            if (next) {
                 setTimeout(() => {
-                    router.push(`/app/courses/${courseId}/lessons/${nextLessonId}`);
+                    router.push(`/app/courses/${courseId}/lessons/${next}`);
                 }, 1500);
             } else {
                 setTimeout(() => {
@@ -186,22 +200,80 @@ export default function LessonViewerPage() {
 
     const getNextLessonId = () => {
         if (!modules || modules.length === 0) return null;
-
         let foundCurrent = false;
-
         for (const module of modules) {
             if (!module.lessons) continue;
-
             for (const modLesson of module.lessons) {
-                if (foundCurrent) {
-                    return modLesson.id;
-                }
-                if (modLesson.id === lessonId) {
-                    foundCurrent = true;
-                }
+                if (foundCurrent) return modLesson.id;
+                if (modLesson.id === lessonId) foundCurrent = true;
             }
         }
         return null;
+    };
+
+    const getPreviousLessonId = () => {
+        if (!modules || modules.length === 0) return null;
+        let prevId: string | null = null;
+        for (const module of modules) {
+            if (!module.lessons) continue;
+            for (const modLesson of module.lessons) {
+                if (modLesson.id === lessonId) return prevId;
+                prevId = modLesson.id;
+            }
+        }
+        return null;
+    };
+
+    // Prefer next/prev from course modules when available (reliable order); fallback to API navigation
+    const hasModuleLessons = modules?.some((m) => (m.lessons?.length ?? 0) > 0) ?? false;
+    const previousLessonId = (hasModuleLessons ? getPreviousLessonId() : null) ?? navigation?.previous_lesson ?? getPreviousLessonId();
+    const nextLessonId = (hasModuleLessons ? getNextLessonId() : null) ?? navigation?.next_lesson ?? getNextLessonId();
+
+    // Next is in same module vs first lesson of next module (for button label)
+    const getNextLessonLabel = (): 'same_module' | 'next_module' | null => {
+        if (!nextLessonId || !modules?.length) return null;
+        let currentModuleIndex = -1;
+        let currentLessonIndex = -1;
+        for (let mi = 0; mi < modules.length; mi++) {
+            const mod = modules[mi];
+            const lessons = mod?.lessons ?? [];
+            const li = lessons.findIndex((l) => l.id === lessonId);
+            if (li >= 0) {
+                currentModuleIndex = mi;
+                currentLessonIndex = li;
+                break;
+            }
+        }
+        if (currentModuleIndex < 0) return 'same_module';
+        const currentMod = modules[currentModuleIndex];
+        const nextInSameModule = (currentMod?.lessons ?? [])[currentLessonIndex + 1]?.id;
+        if (nextInSameModule === nextLessonId) return 'same_module';
+        const nextMod = modules[currentModuleIndex + 1];
+        const firstInNextModule = (nextMod?.lessons ?? [])[0]?.id;
+        if (firstInNextModule === nextLessonId) return 'next_module';
+        return 'same_module';
+    };
+    const nextLessonLabel = getNextLessonLabel();
+
+    // Ready when we have navigation (professional) or module list (academic); professional also ready when we have modules
+    const navReady = isProfessionalCourse ? (navigation !== null || hasModuleLessons) : hasModuleLessons;
+    const showBackToCourse = navReady && !nextLessonId;
+
+    const handlePrevious = () => {
+        if (previousLessonId) router.push(`/app/courses/${courseId}/lessons/${previousLessonId}`);
+    };
+
+    const handleNext = async () => {
+        const completed = lesson?.isCompleted || lesson?.completed;
+        if (!completed && lesson && course) {
+            await handleComplete();
+            return;
+        }
+        if (nextLessonId) {
+            router.push(`/app/courses/${courseId}/lessons/${nextLessonId}`);
+        } else {
+            router.push(`/app/courses/${courseId}`);
+        }
     };
 
     if (isCheckingEnrollment || (isLoading && !lesson)) {
@@ -243,21 +315,21 @@ export default function LessonViewerPage() {
                             Back to Course
                         </Link>
                         <nav className="flex items-center gap-2 text-sm">
-                            {navigation?.previous_lesson ? (
+                            {previousLessonId ? (
                                 <Link
-                                    href={`/app/courses/${courseId}/lessons/${navigation.previous_lesson}`}
+                                    href={`/app/courses/${courseId}/lessons/${previousLessonId}`}
                                     className="flex items-center text-gray-500 hover:text-gray-900"
                                 >
                                     <ChevronLeft className="h-4 w-4 mr-0.5" />
                                     Previous
                                 </Link>
                             ) : null}
-                            {navigation?.previous_lesson && navigation?.next_lesson ? (
+                            {previousLessonId && nextLessonId ? (
                                 <span className="text-gray-300">|</span>
                             ) : null}
-                            {navigation?.next_lesson ? (
+                            {nextLessonId ? (
                                 <Link
-                                    href={`/app/courses/${courseId}/lessons/${navigation.next_lesson}`}
+                                    href={`/app/courses/${courseId}/lessons/${nextLessonId}`}
                                     className="flex items-center text-gray-500 hover:text-gray-900"
                                 >
                                     Next
@@ -395,6 +467,70 @@ export default function LessonViewerPage() {
                         <p className="text-gray-500 text-sm">Discussion thread implementation pending...</p>
                     </TabsContent>
                 </Tabs>
+
+                {/* Bottom navigation: Prev / Mark as complete + Next (auto-triggers complete on Next if not done) */}
+                <div className="mt-10 pt-8 border-t border-gray-200">
+                    <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={handlePrevious}
+                            disabled={!previousLessonId}
+                            className="gap-2"
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                            Previous lesson
+                        </Button>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                            {!(lesson.isCompleted || lesson.completed) && (
+                                <Button
+                                    variant="secondary"
+                                    size="lg"
+                                    onClick={handleComplete}
+                                    disabled={isCompleting}
+                                    className="gap-2 order-2 sm:order-1"
+                                >
+                                    {isCompleting ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle className="h-5 w-5" />}
+                                    {isCompleting ? 'Saving...' : 'Mark as complete'}
+                                </Button>
+                            )}
+                            <Button
+                                size="lg"
+                                onClick={handleNext}
+                                disabled={isCompleting || (!navReady && !showBackToCourse)}
+                                className="gap-2 bg-primary-600 hover:bg-primary-700 order-1 sm:order-2"
+                            >
+                                {!navReady ? (
+                                    <>
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                        Loading…
+                                    </>
+                                ) : nextLessonId ? (
+                                    <>
+                                        {lesson.isCompleted || lesson.completed
+                                            ? (nextLessonLabel === 'next_module' ? 'Next module' : 'Next lesson')
+                                            : 'Complete & next'}
+                                        <ChevronRight className="h-5 w-5" />
+                                    </>
+                                ) : (
+                                    <>
+                                        Back to course
+                                        <ChevronRight className="h-5 w-5" />
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-3 text-center sm:text-right">
+                        {!navReady
+                            ? 'Loading lesson list…'
+                            : nextLessonId
+                                ? (lesson.isCompleted || lesson.completed
+                                        ? (nextLessonLabel === 'next_module' ? 'Go to the next module.' : 'Go to the next lesson.')
+                                        : 'Click "Complete & next" to mark this lesson complete and continue.')
+                                : "You’ve reached the end of this course."}
+                    </p>
+                </div>
             </div>
 
             {/* Certificate celebration modal */}

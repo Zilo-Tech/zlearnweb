@@ -71,63 +71,52 @@ function SettingsContent() {
         }
     };
 
-    const labelClass = 'block text-sm font-semibold text-gray-700 mb-1.5';
-    const sectionTitleClass = 'text-lg font-black text-gray-900 tracking-tight';
+    const labelClass = 'block text-sm font-medium text-gray-600 mb-1.5';
+    const sectionTitleClass = 'text-lg font-bold text-gray-900 tracking-tight';
+    const tabTriggerClass =
+        'w-full h-12 min-h-12 flex items-center justify-start gap-3 px-4 rounded-xl text-gray-500 font-medium whitespace-nowrap transition-all duration-200 data-[state=active]:bg-[#446D6D] data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-sm hover:bg-gray-100 hover:text-gray-800 data-[state=active]:hover:bg-[#3A5F5F]';
 
     return (
-        <div className="bg-zinc-50 text-base antialiased min-h-[60vh]">
-            <div className="container max-w-4xl mx-auto px-6 py-10 md:py-12">
+        <div className="min-h-[60vh] text-base antialiased bg-gradient-to-b from-slate-50/80 via-white to-amber-50/30">
+            <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12">
                 {/* Back link */}
                 <Link
                     href="/app/profile"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 mb-6"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-[#446D6D] hover:text-[#3A5F5F] mb-8 rounded-lg px-3 py-1.5 -ml-1 hover:bg-[#446D6D]/10 transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Profile
                 </Link>
 
-                {/* Page header — matches contact / home section pattern */}
+                {/* Page header */}
                 <div className="mb-10">
-                    <p className="text-sm text-primary-600 uppercase tracking-widest font-bold mb-2">
+                    <p className="text-xs font-semibold text-[#446D6D] uppercase tracking-wider mb-2">
                         Account
                     </p>
-                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight mb-2">
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-2">
                         Settings
                     </h1>
-                    <p className="text-lg text-gray-600 leading-relaxed">
+                    <p className="text-gray-600 leading-relaxed max-w-xl">
                         Manage your profile, security, notifications, and preferences.
                     </p>
                 </div>
 
-                <Tabs defaultValue={defaultTab} key={defaultTab} className="flex flex-col gap-6 lg:flex-row">
-                    {/* Tab list: single column, all triggers same size */}
-                    <TabsList className="w-full lg:w-52 shrink-0 h-auto min-h-0 flex flex-col gap-1 p-2 rounded-lg border-2 border-primary-200 bg-white">
-                        <TabsTrigger
-                            value="profile"
-                            className="w-full h-12 min-h-12 flex items-center justify-start gap-3 px-4 rounded-lg text-gray-600 font-medium whitespace-nowrap data-[state=active]:bg-primary-50 data-[state=active]:text-primary-900 data-[state=active]:font-semibold hover:bg-primary-50/50 hover:text-primary-800 transition-colors"
-                        >
-                            <User className="h-4 w-4 shrink-0 text-primary-600" />
+                <Tabs defaultValue={defaultTab} key={defaultTab} className="flex flex-col gap-6 lg:flex-row lg:items-start">
+                    <TabsList className="w-full lg:w-56 lg:shrink-0 lg:self-start lg:sticky lg:top-24 h-auto min-h-0 flex flex-col gap-1.5 p-2 rounded-2xl bg-white/90 backdrop-blur border border-gray-200/80 shadow-lg shadow-gray-200/50">
+                        <TabsTrigger value="profile" className={tabTriggerClass}>
+                            <User className="h-4 w-4 shrink-0 data-[state=active]:text-white text-[#446D6D]" />
                             <span>Profile</span>
                         </TabsTrigger>
-                        <TabsTrigger
-                            value="account"
-                            className="w-full h-12 min-h-12 flex items-center justify-start gap-3 px-4 rounded-lg text-gray-600 font-medium whitespace-nowrap data-[state=active]:bg-primary-50 data-[state=active]:text-primary-900 data-[state=active]:font-semibold hover:bg-primary-50/50 hover:text-primary-800 transition-colors"
-                        >
-                            <Lock className="h-4 w-4 shrink-0 text-primary-600" />
+                        <TabsTrigger value="account" className={tabTriggerClass}>
+                            <Lock className="h-4 w-4 shrink-0 data-[state=active]:text-white text-[#446D6D]" />
                             <span>Account & Security</span>
                         </TabsTrigger>
-                        <TabsTrigger
-                            value="notifications"
-                            className="w-full h-12 min-h-12 flex items-center justify-start gap-3 px-4 rounded-lg text-gray-600 font-medium whitespace-nowrap data-[state=active]:bg-primary-50 data-[state=active]:text-primary-900 data-[state=active]:font-semibold hover:bg-primary-50/50 hover:text-primary-800 transition-colors"
-                        >
-                            <Bell className="h-4 w-4 shrink-0 text-primary-600" />
+                        <TabsTrigger value="notifications" className={tabTriggerClass}>
+                            <Bell className="h-4 w-4 shrink-0 data-[state=active]:text-white text-[#446D6D]" />
                             <span>Notifications</span>
                         </TabsTrigger>
-                        <TabsTrigger
-                            value="preferences"
-                            className="w-full h-12 min-h-12 flex items-center justify-start gap-3 px-4 rounded-lg text-gray-600 font-medium whitespace-nowrap data-[state=active]:bg-primary-50 data-[state=active]:text-primary-900 data-[state=active]:font-semibold hover:bg-primary-50/50 hover:text-primary-800 transition-colors"
-                        >
-                            <Globe className="h-4 w-4 shrink-0 text-primary-600" />
+                        <TabsTrigger value="preferences" className={tabTriggerClass}>
+                            <Globe className="h-4 w-4 shrink-0 data-[state=active]:text-white text-[#446D6D]" />
                             <span>Preferences</span>
                         </TabsTrigger>
                     </TabsList>
@@ -135,19 +124,19 @@ function SettingsContent() {
                     <div className="flex-1 min-w-0 min-h-[420px]">
                         {/* Profile */}
                         <TabsContent value="profile" className="mt-0 data-[state=inactive]:hidden">
-                            <div className="rounded-lg border-2 border-primary-200 bg-white p-6 md:p-8 shadow-sm">
+                            <div className="rounded-2xl border border-gray-200/80 bg-white p-6 md:p-8 shadow-lg shadow-gray-200/40">
                                 <h2 className={sectionTitleClass}>Profile</h2>
                                 <p className="text-gray-600 mb-6">Update your name and bio.</p>
 
                                 <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
-                                    <Avatar className="h-20 w-20 border-2 border-primary-200">
+                                    <Avatar className="h-20 w-20 border-2 border-[#446D6D]/20 shadow-md">
                                         <AvatarImage src={user?.profile_picture} />
-                                        <AvatarFallback className="bg-primary-100 text-primary-800 text-xl font-bold">
+                                        <AvatarFallback className="bg-[#446D6D]/15 text-[#446D6D] text-xl font-bold">
                                             {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex items-center">
-                                        <Button type="button" variant="outline" className="border-2 border-primary-200 hover:bg-primary-50">
+                                        <Button type="button" variant="outline" className="border border-gray-200 rounded-lg hover:bg-[#446D6D]/10 hover:border-[#446D6D]/40 text-gray-700">
                                             Change Avatar
                                         </Button>
                                     </div>
@@ -160,7 +149,7 @@ function SettingsContent() {
                                             id="firstName"
                                             defaultValue={user?.name?.split(' ')[0] ?? ''}
                                             placeholder="First name"
-                                            className="border-2 border-primary-200 focus:ring-primary-500/20"
+                                            className="border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#446D6D]/20 focus:border-[#446D6D] transition-colors"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -169,7 +158,7 @@ function SettingsContent() {
                                             id="lastName"
                                             defaultValue={user?.name?.split(' ').slice(1).join(' ') ?? ''}
                                             placeholder="Last name"
-                                            className="border-2 border-primary-200 focus:ring-primary-500/20"
+                                            className="border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#446D6D]/20 focus:border-[#446D6D] transition-colors"
                                         />
                                     </div>
                                 </div>
@@ -179,7 +168,7 @@ function SettingsContent() {
                                     <Input
                                         id="bio"
                                         placeholder="A short bio about you"
-                                        className="border-2 border-primary-200 focus:ring-primary-500/20"
+                                        className="border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#446D6D]/20 focus:border-[#446D6D] transition-colors"
                                     />
                                 </div>
 
@@ -188,12 +177,12 @@ function SettingsContent() {
                                     <Input
                                         id="location"
                                         placeholder="City, Country"
-                                        className="border-2 border-primary-200 focus:ring-primary-500/20"
+                                        className="border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#446D6D]/20 focus:border-[#446D6D] transition-colors"
                                     />
                                 </div>
 
                                 <div className="mt-8 flex justify-end">
-                                    <Button className="bg-primary-500 hover:bg-primary-600 text-white font-semibold">
+                                    <Button className="bg-[#446D6D] hover:bg-[#3A5F5F] text-white font-semibold rounded-lg shadow-sm">
                                         Save Changes
                                     </Button>
                                 </div>
@@ -202,7 +191,7 @@ function SettingsContent() {
 
                         {/* Account & Security */}
                         <TabsContent value="account" className="mt-0 data-[state=inactive]:hidden">
-                            <div className="rounded-lg border-2 border-primary-200 bg-white p-6 md:p-8 shadow-sm">
+                            <div className="rounded-2xl border border-gray-200/80 bg-white p-6 md:p-8 shadow-lg shadow-gray-200/40">
                                 <h2 className={sectionTitleClass}>Account & Security</h2>
                                 <p className="text-gray-600 mb-6">Email and password.</p>
 
@@ -212,11 +201,11 @@ function SettingsContent() {
                                         id="account-email"
                                         value={user?.email ?? ''}
                                         disabled
-                                        className="bg-primary-50 border-2 border-primary-200"
+                                        className="bg-gray-50 border border-gray-200 rounded-lg text-gray-500"
                                     />
                                 </div>
 
-                                <form onSubmit={handleChangePassword} className="mt-8 pt-8 border-t-2 border-primary-200">
+                                <form onSubmit={handleChangePassword} className="mt-8 pt-8 border-t border-gray-200">
                                     <h3 className={sectionTitleClass}>Change Password</h3>
                                     <p className="text-gray-600 mb-4">Set a new password for your account.</p>
                                     {passwordError && (
@@ -233,7 +222,7 @@ function SettingsContent() {
                                                 placeholder="••••••••"
                                                 disabled={passwordLoading}
                                                 autoComplete="current-password"
-                                                className="border-2 border-primary-200 focus:ring-primary-500/20"
+                                                className="border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#446D6D]/20 focus:border-[#446D6D] transition-colors"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -247,7 +236,7 @@ function SettingsContent() {
                                                 disabled={passwordLoading}
                                                 autoComplete="new-password"
                                                 minLength={8}
-                                                className="border-2 border-primary-200 focus:ring-primary-500/20"
+                                                className="border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#446D6D]/20 focus:border-[#446D6D] transition-colors"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -260,40 +249,40 @@ function SettingsContent() {
                                                 placeholder="••••••••"
                                                 disabled={passwordLoading}
                                                 autoComplete="new-password"
-                                                className="border-2 border-primary-200 focus:ring-primary-500/20"
+                                                className="border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#446D6D]/20 focus:border-[#446D6D] transition-colors"
                                             />
                                         </div>
                                     </div>
                                     <div className="mt-6 flex justify-end">
-                                        <Button type="submit" disabled={passwordLoading} className="bg-primary-500 hover:bg-primary-600 text-white font-semibold">
+                                        <Button type="submit" disabled={passwordLoading} className="bg-[#446D6D] hover:bg-[#3A5F5F] text-white font-semibold rounded-lg">
                                             {passwordLoading ? 'Updating…' : 'Update Password'}
                                         </Button>
                                     </div>
                                 </form>
 
-                                <div className="mt-8 pt-8 border-t-2 border-primary-200">
-                                    <h3 className="text-lg font-bold text-red-600 tracking-tight mb-2">Danger Zone</h3>
+                                <div className="mt-8 pt-8 border-t border-gray-200 rounded-xl bg-red-50/50 border border-red-200/60 p-4">
+                                    <h3 className="text-lg font-bold text-red-700 tracking-tight mb-2">Danger Zone</h3>
                                     <p className="text-sm text-gray-600 mb-3">Permanently delete your account and data.</p>
-                                    <Button variant="destructive" size="sm">Delete Account</Button>
+                                    <Button variant="destructive" size="sm" className="rounded-lg">Delete Account</Button>
                                 </div>
                             </div>
                         </TabsContent>
 
                         {/* Notifications */}
                         <TabsContent value="notifications" className="mt-0 data-[state=inactive]:hidden">
-                            <div className="rounded-lg border-2 border-primary-200 bg-white p-6 md:p-8 shadow-sm">
+                            <div className="rounded-2xl border border-gray-200/80 bg-white p-6 md:p-8 shadow-lg shadow-gray-200/40">
                                 <h2 className={sectionTitleClass}>Notifications</h2>
                                 <p className="text-gray-600 mb-6">Choose how you want to be notified.</p>
 
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between gap-4 rounded-lg border-2 border-primary-200 bg-primary-50/30 p-4">
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50/50 p-4 hover:bg-gray-50 transition-colors">
                                         <div>
                                             <Label className="text-base font-semibold text-gray-900">Email Notifications</Label>
                                             <p className="text-sm text-gray-600 mt-0.5">Receive emails about your account activity.</p>
                                         </div>
                                         <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
                                     </div>
-                                    <div className="flex items-center justify-between gap-4 rounded-lg border-2 border-primary-200 bg-primary-50/30 p-4">
+                                    <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50/50 p-4 hover:bg-gray-50 transition-colors">
                                         <div>
                                             <Label className="text-base font-semibold text-gray-900">Push Notifications</Label>
                                             <p className="text-sm text-gray-600 mt-0.5">Receive push notifications on your device.</p>
@@ -306,7 +295,7 @@ function SettingsContent() {
 
                         {/* Preferences */}
                         <TabsContent value="preferences" className="mt-0 data-[state=inactive]:hidden">
-                            <div className="rounded-lg border-2 border-primary-200 bg-white p-6 md:p-8 shadow-sm">
+                            <div className="rounded-2xl border border-gray-200/80 bg-white p-6 md:p-8 shadow-lg shadow-gray-200/40">
                                 <h2 className={sectionTitleClass}>Preferences</h2>
                                 <p className="text-gray-600 mb-6">Language and appearance.</p>
 
@@ -314,7 +303,7 @@ function SettingsContent() {
                                     <div className="space-y-2">
                                         <Label className={labelClass}>Language</Label>
                                         <Select defaultValue="en">
-                                            <SelectTrigger className="h-11 border-2 border-primary-200 rounded-lg focus:ring-primary-500/20">
+                                            <SelectTrigger className="h-11 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#446D6D]/20 focus:border-[#446D6D]">
                                                 <SelectValue placeholder="Select language" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -324,9 +313,9 @@ function SettingsContent() {
                                         </Select>
                                     </div>
 
-                                    <div className="flex items-center justify-between gap-4 rounded-lg border-2 border-primary-200 bg-primary-50/30 p-4">
+                                    <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50/50 p-4 hover:bg-gray-50 transition-colors">
                                         <div className="flex items-center gap-2">
-                                            <Moon className="h-5 w-5 text-primary-600" />
+                                            <Moon className="h-5 w-5 text-[#446D6D]" />
                                             <div>
                                                 <Label className="text-base font-semibold text-gray-900">Dark Mode</Label>
                                                 <p className="text-sm text-gray-600 mt-0.5">Switch between light and dark themes.</p>
@@ -336,8 +325,8 @@ function SettingsContent() {
                                     </div>
                                 </div>
 
-                                <div className="mt-8 pt-8 border-t-2 border-primary-200 flex justify-end">
-                                    <Button variant="outline" className="border-2 border-primary-200 hover:bg-primary-50 font-semibold" asChild>
+                                <div className="mt-8 pt-8 border-t border-gray-200 flex justify-end">
+                                    <Button variant="outline" className="border border-gray-200 rounded-lg hover:bg-[#446D6D]/10 hover:border-[#446D6D]/40 font-medium" asChild>
                                         <Link href="/app/profile">
                                             <LogOut className="mr-2 h-4 w-4" />
                                             Back to Profile
@@ -356,8 +345,8 @@ function SettingsContent() {
 export default function SettingsPage() {
     return (
         <Suspense fallback={
-            <div className="bg-zinc-50 min-h-[60vh] flex items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+            <div className="min-h-[60vh] flex items-center justify-center bg-gradient-to-b from-slate-50/80 to-amber-50/30">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#446D6D] border-t-transparent" />
             </div>
         }>
             <SettingsContent />

@@ -41,8 +41,11 @@ export function CourseCard({
     const isSvgFallback = imageSrc.startsWith('https://ui-avatars.com');
     const subjectLabel = course.subject?.name || 'Course';
 
-    // Professional API uses slug for course detail URL; academic uses id
-    const courseIdentifier = userType === 'professional' ? (course.slug ?? course.id) : course.id;
+    // Professional API expects slug in URL; academic uses id. Prefer slug when present so links work from dashboard and courses tab.
+    const courseIdentifier =
+        (course.slug != null && String(course.slug).trim() !== '')
+            ? course.slug
+            : course.id;
     const courseHref = `/app/courses/${courseIdentifier}`;
 
     if (variant === 'compact') {

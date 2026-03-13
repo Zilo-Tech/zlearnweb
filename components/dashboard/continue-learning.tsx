@@ -1,16 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { Play, Clock } from 'lucide-react';
+import { Play, Clock, BookOpen, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useProgress } from '@/lib/hooks/useProgress';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useEffect, useState } from 'react';
-import { apiService } from '@/lib/services/api.service';
+import { useCourses } from '@/lib/hooks/useCourses';
+import { useEffect } from 'react';
 
 export function ContinueLearning() {
     const { userProgress, loadUserProgress, isLoading } = useProgress();
+    const { enrolled, loadEnrolled, userType } = useCourses();
     const { isAuthenticated, token } = useAuth();
     const [enrollments, setEnrollments] = useState<any[] | null>(null);
     const [enrollmentsLoading, setEnrollmentsLoading] = useState(false);
@@ -18,132 +19,146 @@ export function ContinueLearning() {
     useEffect(() => {
         if (isAuthenticated && token) {
             loadUserProgress();
+            loadEnrolled();
         }
-    }, [loadUserProgress, isAuthenticated, token]);
+    }, [loadUserProgress, loadEnrolled, isAuthenticated, token]);
 
-    // Fetch user's enrollments and prefer showing them in the Continue Learning block.
-    useEffect(() => {
-        let cancelled = false;
-        async function loadEnrollments() {
-            if (!isAuthenticated) return;
-            setEnrollmentsLoading(true);
-            try {
-                const res = await apiService.get<unknown>('/content/enrollments/');
-                // Support both array responses and paginated { results: [] }
-                const data = Array.isArray(res) ? res : (res && (res as any).results ? (res as any).results : []);
-                if (!cancelled) {
-                    const final = Array.isArray(data) ? data : [];
-                    if (process.env.NODE_ENV === 'development') console.log('📚 Enrollments loaded:', final.length, final);
-                    setEnrollments(final);
-                }
-            } catch (err) {
-                if (!cancelled) setEnrollments([]);
-            } finally {
-                if (!cancelled) setEnrollmentsLoading(false);
-            }
-        }
-        loadEnrollments();
-        return () => {
-            cancelled = true;
-        };
-    }, [isAuthenticated]);
+    // Try analytics endpoint first; fall back to most-recently-started enrolled course
+    const analyticsCurrentCourse = userProgress?.current_courses?.[0];
 
-    // Prefer enrollments from the enrollments endpoint. If there are enrollments,
-    // show the first one as the primary "continue" course. Otherwise fall back to
-    // the progress-based current course (legacy).
-    const currentEnrollment = enrollments && enrollments.length > 0 ? enrollments[0] : null;
-    const currentCourse = currentEnrollment ? (
-        // enrollment shape may vary; try common nested shapes
-        (currentEnrollment.course ?? currentEnrollment) as any
-    ) : userProgress?.current_courses?.[0];
+    // Find the enrolled course with the highest progress (or first one)
+    const enrolledCurrentCourse = enrolled.length > 0
+        ? [...enrolled].sort((a, b) => {
+            const pa = Number((a as { progress_percentage?: number }).progress_percentage ?? 0);
+            const pb = Number((b as { progress_percentage?: number }).progress_percentage ?? 0);
+            if (pa !== pb) return pb - pa; // highest progress first
+            return 0;
+        })[0]
+        : null;
 
-    // Loading state: if either progress or enrollments are loading and we don't
-    // yet have a course to show, display pulse skeleton.
-    if ((isLoading || enrollmentsLoading) && !currentCourse) {
+    const rawCurrentCourse = analyticsCurrentCourse ?? enrolledCurrentCourse;
+
+    // Determine course URL — professional uses slug, academic uses UUID
+    const courseId = (rawCurrentCourse as { id?: string })?.id ?? '';
+    const courseSlug = (rawCurrentCourse as { slug?: string })?.slug ?? '';
+    const courseHref = `/app/courses/${userType === 'professional' ? (courseSlug || courseId) : courseId}`;
+
+    if (isLoading && !rawCurrentCourse) {
         return (
-            <div className="rounded-2xl bg-white p-6 border-2 border-primary-200 animate-pulse">
-                <div className="h-6 w-48 bg-primary-100 rounded mb-4" />
-                <div className="flex flex-col gap-6 md:flex-row">
-                    <div className="h-32 w-full bg-primary-100 rounded-xl md:w-48" />
-                    <div className="flex-1 space-y-3">
-                        <div className="h-4 w-3/4 bg-primary-100 rounded" />
-                        <div className="h-3 w-1/2 bg-primary-100 rounded" />
-                        <div className="h-2 w-full bg-primary-100 rounded" />
+            <div className="rounded-2xl bg-white p-6 md:p-8 border border-gray-200 shadow-sm animate-pulse">
+                <div className="h-7 w-48 bg-gray-100 rounded mb-6" />
+                <div className="flex flex-col lg:flex-row gap-6">
+                    <div className="h-40 w-full lg:w-56 bg-gray-100 rounded-xl shrink-0" />
+                    <div className="flex-1 space-y-4">
+                        <div className="h-6 w-3/4 bg-gray-100 rounded" />
+                        <div className="h-4 w-1/2 bg-gray-100 rounded" />
+                        <div className="h-3 w-full bg-gray-100 rounded" />
                     </div>
                 </div>
             </div>
         );
     }
 
-    if (!currentCourse) {
+    if (!rawCurrentCourse) {
         return (
-            <div className="rounded-2xl bg-white p-6 border-2 border-primary-200">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-primary-900 tracking-tight">Continue Learning</h2>
-                </div>
-                <div className="text-center py-8">
-                    <p className="text-gray-600 mb-4">You haven&apos;t started any courses yet.</p>
+            <div className="rounded-2xl bg-gradient-to-br from-primary-50 to-primary-100 p-8 border border-primary-200">
+                <div className="text-center max-w-md mx-auto">
+                    <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-sm">
+                        <BookOpen className="h-8 w-8 text-primary-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        Start Your Learning Journey
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                        Explore our courses and begin mastering new skills today.
+                    </p>
                     <Link href="/app/courses">
-                        <Button>Browse Courses</Button>
+                        <Button size="lg" className="font-semibold">
+                            Browse Courses
+                        </Button>
                     </Link>
                 </div>
             </div>
         );
     }
 
-    return (
-        <div className="rounded-2xl bg-white p-6 border-2 border-primary-200">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-primary-900 tracking-tight">Continue Learning</h2>
-                <Link href="/app/courses" className="text-sm font-bold text-primary-600 hover:text-primary-800 hover:underline">
-                    View all
-                </Link>
-            </div>
+const currentCourse = rawCurrentCourse as {
+        id?: string;
+        title?: string;
+        slug?: string;
+        subject?: { name?: string };
+        progress_percentage?: number;
+        last_accessed?: string | number;
+        thumbnail?: string;
+    };
+    const progressPercentage = Number(currentCourse.progress_percentage) || 0;
+    const courseTitle = currentCourse.title || 'Untitled Course';
+    const subjectName = currentCourse.subject?.name ?? 'Course';
+    const lastAccessed = currentCourse.last_accessed;
 
-            <div className="flex flex-col gap-6">
-                {/* If there are multiple enrollments, show them as a responsive grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {(enrollments && enrollments.length > 0 ? enrollments : [userProgress?.current_courses?.[0]]).map((item: any, idx: number) => {
-                        const course = (item && (item.course ?? item)) || null;
-                        if (!course) return null;
-                        const progress = Number(item.progress_percentage ?? course.progress_percentage ?? 0) || 0;
-                        const lastAccessed = item.last_accessed ?? course.last_accessed ?? null;
-                        const image = course.thumbnail ?? course.image ?? null;
-                        return (
-                            <div key={course.id ?? idx} className="rounded-lg border p-4 bg-white flex items-center gap-4">
-                                <div className="h-20 w-28 rounded-md overflow-hidden bg-primary-100 flex-shrink-0">
-                                    {image ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={image} alt={course.title ?? 'Course'} className="h-full w-full object-cover" />
-                                    ) : (
-                                        <div className="h-full w-full flex items-center justify-center text-primary-700 font-bold">{(course.title || '').slice(0,2)}</div>
+    return (
+        <div className="rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden">
+            <div className="p-6 md:p-8">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-gray-900">Continue Learning</h2>
+                    <Link
+                        href="/app/courses"
+                        className="text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+                    >
+                        View all courses
+                    </Link>
+                </div>
+
+                <div className="flex flex-col lg:flex-row gap-6">
+                    <div className="relative h-40 w-full lg:w-56 shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-primary-600 to-primary-800 shadow-md">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <BookOpen className="h-12 w-12 text-white opacity-80" />
+                        </div>
+                        <div className="absolute inset-0 bg-black/10" />
+                        <div className="absolute bottom-3 left-3 right-3">
+                            <span className="inline-block rounded-full bg-white/90 backdrop-blur-sm px-3 py-1 text-xs font-bold text-primary-900">
+                                {subjectName}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-between min-w-0">
+                        <div className="space-y-3">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2">
+                                    {courseTitle}
+                                </h3>
+                                <p className="text-sm text-gray-500 flex items-center gap-1.5">
+                                    <Clock className="h-3.5 w-3.5" />
+                                    Last accessed {new Date(String(lastAccessed || '')).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="font-semibold text-gray-700">
+                                        {Math.round(progressPercentage)}% Complete
+                                    </span>
+                                    {progressPercentage > 0 && (
+                                        <span className="flex items-center gap-1 text-green-600 font-medium">
+                                            <CheckCircle2 className="h-4 w-4" />
+                                            In Progress
+                                        </span>
                                     )}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-semibold text-gray-900 truncate">{course.title}</h3>
-                                    <p className="text-sm text-gray-600 truncate">{course.subject?.name ?? course.category ?? 'Course'}</p>
-                                    <div className="mt-2">
-                                        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                                            <span>{Math.round(progress)}% Complete</span>
-                                            <span className="flex items-center gap-1">
-                                                <Clock className="h-3 w-3" />
-                                                {lastAccessed ? new Date(String(lastAccessed)).toLocaleDateString() : 'Not started'}
-                                            </span>
-                                        </div>
-                                        <Progress value={progress} className="h-2" />
-                                    </div>
-                                </div>
-                                <div className="flex-shrink-0">
-                                    <Link href={`/app/courses/${course.id ?? ''}`}>
-                                        <Button className="font-semibold" size="sm">
-                                            <Play className="mr-2 h-4 w-4 fill-current" />
-                                            Resume
-                                        </Button>
-                                    </Link>
-                                </div>
+                                <Progress value={progressPercentage} className="h-2.5" />
                             </div>
-                        );
-                    })}
+                        </div>
+
+                        <div className="mt-6">
+                            <Link href={courseHref}>
+                                <Button className="w-full sm:w-auto font-semibold bg-[#446D6D] hover:bg-[#3A5F5F]" size="lg">
+                                    <Play className="mr-2 h-4 w-4 fill-current" />
+                                    Continue Learning
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

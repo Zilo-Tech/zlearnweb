@@ -16,7 +16,7 @@ import {
     fetchCertificates,
     selectCurrentCourse,
     selectCurrentCourseModules,
-    selectIsEnrolled
+    selectIsEnrolled,
 } from '@/lib/store/slices/courses.slice';
 import { coursesService } from '@/lib/services';
 import { toast } from 'sonner';
@@ -112,21 +112,17 @@ export default function CourseDetailsPage() {
     };
 
     const handleContinue = () => {
-        // Logic to find next lesson
-        if (course?.last_accessed) {
-            // TODO: Implement resume functionality
-        }
-
-        // Find the first available lesson across all modules
-        let firstLessonId: string | null = null;
-
+        // Go to first incomplete lesson (in module order); if all complete, go to first lesson for review
         for (const module of modules) {
-            if (module.lessons && module.lessons.length > 0) {
-                firstLessonId = module.lessons[0].id;
-                break;
+            if (!module.lessons?.length) continue;
+            for (const lesson of module.lessons) {
+                if (!lesson.isCompleted) {
+                    router.push(`/app/courses/${courseId}/lessons/${lesson.id}`);
+                    return;
+                }
             }
         }
-
+        const firstLessonId = modules[0]?.lessons?.[0]?.id;
         if (firstLessonId && courseId) {
             router.push(`/app/courses/${courseId}/lessons/${firstLessonId}`);
         } else {
