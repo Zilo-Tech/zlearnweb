@@ -77,7 +77,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
                 <main className={cn(
                     "flex-1 min-h-[calc(100vh-4rem)] transition-all duration-200 ease-in-out pb-20 md:pb-0 max-w-full break-words",
-                    isAppRoute ? "md:ml-64" : ""
+                    isAppRoute ? "md:ml-72" : ""
                 )}>
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6 lg:py-8">
                         {children}

@@ -101,21 +101,21 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
 
     return (
         <>
-            {/* Overlay */}
+            {/* Overlay: only on mobile when sidebar is open */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 z-30 bg-black/40"
+                    className="fixed inset-0 z-30 bg-black/40 md:hidden"
                     onClick={onClose}
                     aria-hidden
                 />
             )}
 
-            {/* Sidebar panel */}
+            {/* Sidebar panel: always visible on md+, drawer on mobile */}
             <aside
                 className={cn(
                     'fixed left-0 top-0 z-40 h-full w-72 transform bg-white shadow-2xl transition-transform duration-200 ease-in-out overflow-hidden',
                     'md:top-16 md:h-[calc(100vh-4rem)]',
-                    isOpen ? 'translate-x-0' : '-translate-x-full',
+                    isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
                     className
                 )}
             >
