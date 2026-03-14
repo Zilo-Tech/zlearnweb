@@ -322,9 +322,8 @@ export default function LessonViewerPage() {
                     />
                 )}
 
-                {/* <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-900">{lesson.title}</h1>
-                    {/* Removed manual "Mark as Complete" button per UX decision; show read-only status */}
                     {lesson.isCompleted || lesson.completed ? (
                         <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-100">
                             <CheckCircle className="mr-2 h-4 w-4 inline-block" />
@@ -439,7 +438,6 @@ export default function LessonViewerPage() {
                 </Tabs>
             </div>
 
-            {/* Certificate celebration modal */}
             <Dialog open={!!certificateModal} onOpenChange={(open) => !open && setCertificateModal(null)}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
