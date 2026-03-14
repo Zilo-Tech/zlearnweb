@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -8,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { PlayCircle, Award, Clock, BookOpen, Star, Share2, Loader2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
     fetchCourseDetails,
     enrollInCourse,
@@ -108,6 +110,68 @@ export default function CourseDetailsPage() {
             toast.error(msg);
         } finally {
             setIsRequestingCert(false);
+        }
+    };
+
+    // Share dialog state and handlers
+    const [shareOpen, setShareOpen] = useState(false);
+
+    const getCourseLink = () => {
+        try {
+            return `${window.location.origin}/app/courses/${courseId}`;
+        } catch {
+            return `/app/courses/${courseId}`;
+        }
+    };
+
+    const handleNativeShare = async () => {
+        const link = getCourseLink();
+        if ((navigator as any)?.share) {
+            try {
+                await (navigator as any).share({
+                    title: course?.title || 'Z-Learn Course',
+                    text: course?.description ? (course.description as string).slice(0, 140) : 'Check out this course on Z-Learn',
+                    url: link,
+                });
+                setShareOpen(false);
+            } catch (err) {
+                // user cancelled or failed
+            }
+        } else {
+            copyLink();
+        }
+    };
+
+    const shareTo = (platform: 'twitter' | 'facebook' | 'linkedin' | 'whatsapp') => {
+        const link = encodeURIComponent(getCourseLink());
+        const text = encodeURIComponent(`Check out ${course?.title ?? 'this course'} on Z-Learn`);
+        let url = '';
+        switch (platform) {
+            case 'twitter':
+                url = `https://twitter.com/intent/tweet?text=${text}&url=${link}`;
+                break;
+            case 'facebook':
+                url = `https://www.facebook.com/sharer/sharer.php?u=${link}`;
+                break;
+            case 'linkedin':
+                url = `https://www.linkedin.com/sharing/share-offsite/?url=${link}`;
+                break;
+            case 'whatsapp':
+                url = `https://api.whatsapp.com/send?text=${text}%20${link}`;
+                break;
+        }
+        window.open(url, '_blank', 'noopener,noreferrer');
+        setShareOpen(false);
+    };
+
+    const copyLink = async () => {
+        const link = getCourseLink();
+        try {
+            await navigator.clipboard.writeText(link);
+            toast.success('Course link copied to clipboard');
+            setShareOpen(false);
+        } catch {
+            toast.error('Failed to copy link');
         }
     };
 
@@ -287,10 +351,37 @@ export default function CourseDetailsPage() {
                         </div>
                     </div>
 
-                    <Button variant="outline" className="w-full gap-2">
-                        <Share2 className="h-4 w-4" />
-                        Share Course
-                    </Button>
+                    <>
+                        <Button variant="outline" className="w-full gap-2" onClick={() => setShareOpen(true)}>
+                            <Share2 className="h-4 w-4" />
+                            Share Course
+                        </Button>
+
+                        <Dialog open={shareOpen} onOpenChange={(open) => !open && setShareOpen(false)}>
+                            <DialogContent className="sm:max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle className="text-lg font-semibold flex items-center gap-2">
+                                        <Share2 className="h-5 w-5" />
+                                        Share Course
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 py-2">
+                                    <p className="text-sm text-gray-700">Share this course with your friends or colleagues.</p>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        <Button onClick={handleNativeShare} className="w-full">Use device share</Button>
+                                        <Button variant="ghost" onClick={() => shareTo('twitter')} className="w-full">Share on Twitter</Button>
+                                        <Button variant="ghost" onClick={() => shareTo('facebook')} className="w-full">Share on Facebook</Button>
+                                        <Button variant="ghost" onClick={() => shareTo('linkedin')} className="w-full">Share on LinkedIn</Button>
+                                        <Button variant="ghost" onClick={() => shareTo('whatsapp')} className="w-full">Share on WhatsApp</Button>
+                                        <Button variant="ghost" onClick={copyLink} className="w-full">Copy link</Button>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <Button variant="outline" onClick={() => setShareOpen(false)}>Close</Button>
+                                    </div>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    </>
                 </div>
             </div>
         </div>
