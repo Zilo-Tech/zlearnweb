@@ -250,6 +250,41 @@ export default function LessonViewerPage() {
     const previousLessonId = navigation?.previous_lesson ?? getPreviousLessonId();
     const nextLessonId = navigation?.next_lesson ?? getNextLessonId();
 
+    const attemptNavigateToNext = () => {
+        if (!nextLessonId) return;
+
+        const sectionIds = (lesson?.sections ?? []).map((s: any) => s.id);
+        const relevantScores = Object.entries(quizScores)
+            .filter(([k]) => sectionIds.includes(k))
+            .map(([, v]) => v);
+
+        const hasQuizSection = (lesson?.sections ?? []).some((s: any) => {
+            const kind = (s?.type ?? s?.section_type ?? s?.kind ?? '').toString().toLowerCase();
+            return ['quiz', 'question_set', 'assessment'].includes(kind);
+        });
+
+        // No quiz sections detected and no scores recorded -> allow navigation
+        if (!hasQuizSection && relevantScores.length === 0) {
+            router.push(`/app/courses/${courseId}/lessons/${nextLessonId}`);
+            return;
+        }
+
+        // Quiz exists but no score reported yet
+        if (relevantScores.length === 0) {
+            setQuizModal({ type: 'missing' });
+            return;
+        }
+
+        const maxScore = Math.max(...relevantScores);
+        if (maxScore < 70) {
+            setQuizModal({ type: 'fail', score: maxScore });
+            return;
+        }
+
+        // Passed: show pass modal with proceed action
+        setQuizModal({ type: 'pass', score: maxScore, proceed: () => router.push(`/app/courses/${courseId}/lessons/${nextLessonId}`) });
+    };
+
     if (isCheckingEnrollment || (isLoading && !lesson)) {
         return (
             <div className="flex h-screen items-center justify-center">
@@ -280,7 +315,7 @@ export default function LessonViewerPage() {
             {/* Main Content */}
             <div className="flex-1 space-y-6">
                 <div className="flex items-center justify-between gap-4 mb-4">
-                    {/* <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4">
                         <Link
                             href={`/app/courses/${courseId}`}
                             className="flex items-center text-sm text-gray-500 hover:text-gray-900"
@@ -288,30 +323,7 @@ export default function LessonViewerPage() {
                             <ChevronLeft className="h-4 w-4 mr-1" />
                             Back to Course
                         </Link>
-                        <nav className="flex items-center gap-2 text-sm">
-                            {previousLessonId ? (
-                                <Link
-                                    href={`/app/courses/${courseId}/lessons/${previousLessonId}`}
-                                    className="flex items-center text-gray-500 hover:text-gray-900"
-                                >
-                                    <ChevronLeft className="h-4 w-4 mr-0.5" />
-                                    Previous
-                                </Link>
-                            ) : null}
-                            {previousLessonId && nextLessonId ? (
-                                <span className="text-gray-300">|</span>
-                            ) : null}
-                            {nextLessonId ? (
-                                <Link
-                                    href={`/app/courses/${courseId}/lessons/${nextLessonId}`}
-                                    className="flex items-center text-gray-500 hover:text-gray-900"
-                                >
-                                    Next
-                                    <ChevronRight className="h-4 w-4 ml-0.5" />
-                                </Link>
-                            ) : null}
-                        </nav>
-                    </div> */}
+                    </div>
                 </div>
 
                 {(lesson.video_url || lesson.videoUrl) && (
@@ -436,6 +448,32 @@ export default function LessonViewerPage() {
                         <p className="text-gray-500 text-sm">Discussion thread implementation pending...</p>
                     </TabsContent>
                 </Tabs>
+
+                {/* Bottom navigation: professional, centered and clean */}
+                <div className="mt-8 border-t pt-6">
+                    <div className="flex items-center justify-center gap-6">
+                        {previousLessonId ? (
+                            <Link
+                                href={`/app/courses/${courseId}/lessons/${previousLessonId}`}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-gray-200 bg-white text-sm text-gray-700 hover:bg-gray-50"
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                                Previous
+                            </Link>
+                        ) : null}
+
+                        {nextLessonId ? (
+                            <button
+                                onClick={attemptNavigateToNext}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[#446D6D] text-white text-sm hover:bg-[#3A5F5F]"
+                            >
+                                Next
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
+                        ) : null}
+                    </div>
+                </div>
+
             </div>
 
             <Dialog open={!!certificateModal} onOpenChange={(open) => !open && setCertificateModal(null)}>
@@ -503,7 +541,7 @@ export default function LessonViewerPage() {
 
                         {quizModal?.type === 'fail' && (
                             <div className="space-y-3">
-                                <p className="text-sm text-gray-700">You scored {quizModal.score ?? 0}%. This is below the required 70% passing score. Please revisit the lesson and try the quiz again to improve your score.</p>
+                                <p className="text-sm text-gray-700">You scored {quizModal?.score ?? 0}%. This is below the required 70% passing score. Please revisit the lesson and try the quiz again to improve your score.</p>
                                 <div className="flex justify-end gap-2 pt-2">
                                     <Button variant="outline" onClick={() => setQuizModal(null)}>Review lesson</Button>
                                 </div>
@@ -512,10 +550,10 @@ export default function LessonViewerPage() {
 
                         {quizModal?.type === 'pass' && (
                             <div className="space-y-3">
-                                <p className="text-sm text-gray-700">Congratulations — you scored {quizModal.score ?? 0}% on the quiz. You may proceed to the next lesson.</p>
+                                <p className="text-sm text-gray-700">Congratulations — you scored {quizModal?.score ?? 0}% on the quiz. You may proceed to the next lesson.</p>
                                 <div className="flex justify-end gap-2 pt-2">
                                     <Button variant="outline" onClick={() => setQuizModal(null)}>Stay</Button>
-                                    <Button onClick={() => { setQuizModal(null); quizModal?.proceed && quizModal.proceed(); }} className="bg-[#446D6D] hover:bg-[#3A5F5F]">Proceed</Button>
+                                    <Button onClick={() => { const p = quizModal?.proceed; setQuizModal(null); p && p(); }} className="bg-[#446D6D] hover:bg-[#3A5F5F]">Proceed</Button>
                                 </div>
                             </div>
                         )}

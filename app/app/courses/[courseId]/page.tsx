@@ -39,8 +39,8 @@ export default function CourseDetailsPage() {
 
     // Local loading state for enrollment action
     const [isEnrolling, setIsEnrolling] = useState(false);
-    // Academic: course progress for "Request certificate" (100% complete)
-    const [courseProgress, setCourseProgress] = useState<{ overall_progress?: number } | null>(null);
+    // Academic: course progress for "Request certificate" (100% complete) and resume position
+    const [courseProgress, setCourseProgress] = useState<any | null>(null);
     const [isRequestingCert, setIsRequestingCert] = useState(false);
 
     const isProfessionalCourse = !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(courseId ?? '');
@@ -176,7 +176,31 @@ export default function CourseDetailsPage() {
     };
 
     const handleContinue = () => {
-        // Go to first incomplete lesson (in module order); if all complete, go to first lesson for review
+        // If we have a saved course progress (academic), prefer resuming from that position
+        try {
+            const savedLesson = courseProgress?.current_lesson ?? courseProgress?.current_lesson_id ?? courseProgress?.current_lesson_uuid;
+            const savedModule = courseProgress?.current_module ?? courseProgress?.current_module_id ?? courseProgress?.current_module_uuid;
+            if (savedLesson) {
+                router.push(`/app/courses/${courseId}/lessons/${savedLesson}`);
+                return;
+            }
+
+            if (savedModule) {
+                // find that module's first incomplete lesson
+                const mod = modules?.find((m: any) => String(m.id) === String(savedModule));
+                if (mod?.lessons?.length) {
+                    const nextLesson = mod.lessons.find((l: any) => !l.isCompleted) ?? mod.lessons[0];
+                    if (nextLesson?.id) {
+                        router.push(`/app/courses/${courseId}/lessons/${nextLesson.id}`);
+                        return;
+                    }
+                }
+            }
+        } catch (err) {
+            // ignore and fall back
+        }
+
+        // Fallback: Go to first incomplete lesson (in module order); if all complete, go to first lesson for review
         for (const module of modules) {
             if (!module.lessons?.length) continue;
             for (const lesson of module.lessons) {
