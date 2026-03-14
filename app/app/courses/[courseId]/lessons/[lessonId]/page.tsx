@@ -280,7 +280,7 @@ export default function LessonViewerPage() {
             {/* Main Content */}
             <div className="flex-1 space-y-6">
                 <div className="flex items-center justify-between gap-4 mb-4">
-                    <div className="flex items-center gap-4">
+                    {/* <div className="flex items-center gap-4">
                         <Link
                             href={`/app/courses/${courseId}`}
                             className="flex items-center text-sm text-gray-500 hover:text-gray-900"
@@ -311,7 +311,7 @@ export default function LessonViewerPage() {
                                 </Link>
                             ) : null}
                         </nav>
-                    </div>
+                    </div> */}
                 </div>
 
                 {(lesson.video_url || lesson.videoUrl) && (
@@ -322,7 +322,7 @@ export default function LessonViewerPage() {
                     />
                 )}
 
-                <div className="flex items-center justify-between">
+                {/* <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-900">{lesson.title}</h1>
                     {/* Removed manual "Mark as Complete" button per UX decision; show read-only status */}
                     {lesson.isCompleted || lesson.completed ? (
