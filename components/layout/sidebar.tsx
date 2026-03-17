@@ -1,5 +1,6 @@
-'use client';
+"use client";
 
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -85,7 +86,18 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
     const sidebarItems = getSidebarItems(isExamUser);
 
     const displayName = getUserDisplayName(user);
-    const initials = getAvatarInitials(displayName);
+    const [mounted, setMounted] = useState(false);
+    const [initials, setInitials] = useState('');
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (mounted) {
+            setInitials(getAvatarInitials(displayName));
+        }
+    }, [displayName, mounted]);
     const email = user?.email ?? '';
     const avatar = (user as { profile_picture?: string } | null)?.profile_picture ?? '';
 
