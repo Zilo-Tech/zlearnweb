@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { STORAGE_KEYS } from '@/lib/constants';
 
 export interface AIChatMessage {
   id: string;
@@ -38,6 +39,19 @@ export function useAIChat(_options?: { onError?: (e: unknown) => void }) {
     }
   }, [_options]);
 
+  // Get CSRF token for mutating requests. Calls server endpoint which sets
+  // the secure httpOnly cookie and returns the token to include in headers.
+  const getCsrfToken = useCallback(async (): Promise<string | null> => {
+    try {
+      const res = await fetch('/api/csrf', { method: 'GET', credentials: 'same-origin' });
+      if (!res.ok) return null;
+      const data = await res.json().catch(() => ({}));
+      return data?.csrfToken ?? null;
+    } catch {
+      return null;
+    }
+  }, []);
+
   // createConversation accepts optional lessonContext to seed the assistant
   const createConversation = useCallback(async (text?: string, lessonContext?: any) => {
     setIsSending(true);
@@ -55,9 +69,14 @@ export function useAIChat(_options?: { onError?: (e: unknown) => void }) {
       setMessages([userMsg]);
       setCurrentConversation({ id: `conv-${genId()}`, messages: [userMsg] });
 
+      const csrfToken = await getCsrfToken();
+      const maybeToken = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.authToken) : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}) };
+      if (maybeToken) headers['Authorization'] = `Bearer ${maybeToken}`;
       const res = await fetch('/api/ai/lesson-assistant', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        headers,
         body: JSON.stringify({ text: text ?? '', lessonContext }),
       });
       if (!res.ok) throw new Error('AI service error');
@@ -113,9 +132,14 @@ export function useAIChat(_options?: { onError?: (e: unknown) => void }) {
         return { ...conv, messages: merged };
       });
 
+      const csrfToken = await getCsrfToken();
+      const maybeToken = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.authToken) : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}) };
+      if (maybeToken) headers['Authorization'] = `Bearer ${maybeToken}`;
       const res = await fetch('/api/ai/lesson-assistant', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        headers,
         body: JSON.stringify({ text: text ?? '', lessonContext }),
       });
       if (!res.ok) throw new Error('AI service error');
