@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, CheckCircle, FileText, Loader2, AlertCircle, Target, ExternalLink, Award } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, FileText, Loader2, AlertCircle, Target, ExternalLink, Award, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LessonPlayer } from '@/components/courses/lesson-player';
@@ -12,6 +12,7 @@ import { markdownToHtml } from '@/lib/utils/markdownToHtml';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
+import { AITutorDialog } from '@/components/dashboard/ai-tutor-dialog';
 import {
     fetchCourseDetails,
     fetchEnrolledCourses,
@@ -61,6 +62,7 @@ export default function LessonViewerPage() {
         score?: number;
         proceed?: () => void;
     } | null>(null);
+    const [openChat, setOpenChat] = useState(false);
 
     // Initial Data Load & Enrollment Check
     useEffect(() => {
@@ -560,6 +562,30 @@ export default function LessonViewerPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+            {/* AI Tutor: floating toggle + side dialog */}
+            <AITutorDialog
+                open={openChat}
+                onOpenChange={(open) => setOpenChat(open)}
+                initialContext={{
+                    lesson: {
+                        id: lesson?.id,
+                        title: lesson?.title,
+                        learning_objectives: lesson?.learning_objectives,
+                        description: lesson?.description ?? lesson?.content,
+                    },
+                    courseId,
+                    userType,
+                    isProfessionalCourse,
+                }}
+            />
+
+            <button
+                aria-label="Open AI study assistant"
+                onClick={() => setOpenChat((s) => !s)}
+                className="fixed z-50 right-5 bottom-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#446D6D] hover:bg-[#3A5F5F] text-white shadow-lg ring-2 ring-white/60"
+            >
+                <Bot className="h-6 w-6" />
+            </button>
         </div>
     );
 }

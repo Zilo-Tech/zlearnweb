@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Logo from './Logo';
 import NavItems from './NavItems';
 import ActionButton from './ActionButton';
-import ModalSearch from '../Seachbar/ModalSearch';
 import LanguageActions from './LanguageActions';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -59,9 +58,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           )}
         </div>
         <div className="right-section flex items-center gap-2 sm:gap-4 pl-2 sm:pl-4">
-          <div className="py-1">
-            <ModalSearch />
-          </div>
+          {/* Search removed per request */}
           {mounted && showUserMenu ? (
             <DropdownMenu>
                   <DropdownMenuTrigger asChild>

@@ -9,11 +9,14 @@ import { cn } from '@/lib/utils';
 interface AITutorDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    // Optional context passed from the page (lesson, user info, etc.) to personalize replies
+    initialContext?: any;
 }
 
-export function AITutorDialog({ open, onOpenChange }: AITutorDialogProps) {
+export function AITutorDialog({ open, onOpenChange, initialContext }: AITutorDialogProps) {
     const [input, setInput] = useState('');
     const scrollRef = useRef<HTMLDivElement>(null);
+    const isHandlingSendRef = useRef(false);
     const {
         currentConversation,
         isSending,
@@ -36,16 +39,20 @@ export function AITutorDialog({ open, onOpenChange }: AITutorDialogProps) {
 
     const handleSend = async () => {
         const text = input.trim();
-        if (!text || isSending) return;
+        if (!text || isSending || isHandlingSendRef.current) return;
+        // guard against double-submit (rapid Enter + click or duplicate events)
+        isHandlingSendRef.current = true;
         setInput('');
         try {
             if (currentConversation) {
-                await sendMessage(text);
+                await sendMessage(text, initialContext);
             } else {
-                await createConversation(text);
+                await createConversation(text, initialContext);
             }
         } catch {
             // onError already called
+        } finally {
+            isHandlingSendRef.current = false;
         }
     };
 
@@ -65,13 +72,13 @@ export function AITutorDialog({ open, onOpenChange }: AITutorDialogProps) {
                 />
             )}
 
-            {/* Right-side panel */}
+            {/* Right-side panel (now constrained height so it does not fill the entire screen) */}
             <aside
                 className={cn(
-                    'fixed top-0 right-0 z-50 h-full w-full sm:w-[28rem] max-w-[calc(100vw-2rem)]',
-                    'bg-white shadow-2xl border-l border-gray-200',
+                    'fixed right-4 top-8 bottom-8 z-50 w-full sm:w-[28rem] max-w-[calc(100vw-2rem)]',
+                    'bg-white shadow-2xl border border-gray-200',
                     'flex flex-col transition-transform duration-300 ease-out',
-                    'rounded-l-2xl overflow-hidden',
+                    'rounded-2xl overflow-hidden',
                     open ? 'translate-x-0' : 'translate-x-full'
                 )}
             >
